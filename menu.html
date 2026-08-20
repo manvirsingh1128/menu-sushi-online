@@ -156,6 +156,14 @@
         .dish-tag { font-size: 0.68em; font-weight: 700; padding: 3px 8px; border-radius: 20px; display:inline-flex; align-items:center; gap:3px; }
         .dish-tag.spicy { background: #fff0f0; color: #dc2626; }
         .dish-tag.veg { background: #f0fdf4; color: #16a34a; }
+        .card-max1-pill {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: #fff7ed; color: #ea580c;
+            font-size: 0.6em; font-weight: 700; padding: 2px 7px;
+            border-radius: 20px; border: 1.5px solid #fed7aa;
+            margin-right: 6px; vertical-align: middle;
+            white-space: nowrap; letter-spacing: 0.01em;
+        }
         .cat-max1-badge {
             display: inline-flex; align-items: center; gap: 5px;
             background: #fff7ed; color: #ea580c;
@@ -1843,12 +1851,13 @@
                     const tagsHtml = tags.length ? `<div class="dish-tags">${tags.join('')}</div>` : '';
                     const iName = getLang(item,'name');
                     const iDesc = getLang(item,'desc');
+                    const max1Pill = cat.max1 ? `<span class="card-max1-pill">1× <i class="fas fa-user"></i></span>` : '';
 
                     const imgSrc = dishImgs[item.id] || item.img || null;
                     card.innerHTML = `
                         <div class="dish-info" onclick="openDishInfo(${item.id})">
                             ${tagsHtml}
-                            <p class="dish-name">${iName}</p>
+                            <p class="dish-name">${max1Pill}${iName}</p>
                             <p class="dish-desc">${iDesc}</p>
                             <button class="info-btn" onclick="event.stopPropagation();openDishInfo(${item.id})"><i class="fas fa-circle-info"></i> ${(translations[currentLang]||translations.it).infoAllergens}</button>
                         </div>
