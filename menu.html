@@ -683,16 +683,22 @@
 
 
     <!-- POPUP SPIEGAZIONE MAX1 -->
-    <div id="max1-explain-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:1001;justify-content:center;align-items:flex-end;">
-        <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 24px 36px;box-shadow:0 -8px 40px rgba(0,0,0,0.15);animation:slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1) forwards;">
-            <div style="width:36px;height:4px;background:#e0e0e0;border-radius:4px;margin:0 auto 20px;"></div>
-            <div style="font-size:1.6em;margin-bottom:8px;text-align:center;">🍽️</div>
-            <h3 id="m1e-title" style="font-size:1.15em;font-weight:800;color:#111;margin:0 0 8px;text-align:center;letter-spacing:-0.03em;">Piatto già selezionato</h3>
-            <p id="m1e-sub" style="font-size:0.88em;color:#666;margin:0 0 24px;text-align:center;line-height:1.5;">Hai già selezionato il massimo per questa categoria. Siete in più persone allo stesso tavolo?</p>
-            <button id="m1e-add-people" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:14px;font-size:1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+    <div id="max1-explain-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:1001;justify-content:center;align-items:center;">
+        <div style="background:#fff;border-radius:24px;width:92%;max-width:340px;padding:28px 24px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:wpIn 0.22s cubic-bezier(0.34,1.3,0.64,1) forwards;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:36px;height:36px;background:#fff8e1;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-triangle-exclamation" style="color:#f59e0b;font-size:1em;"></i>
+                    </div>
+                    <h2 id="m1e-title" style="font-size:1.15em;font-weight:800;color:#111;margin:0;letter-spacing:-0.03em;">Piatto già selezionato</h2>
+                </div>
+                <button id="m1e-close-x" style="background:#e8e8e8;border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#111;flex-shrink:0;"><i class="fas fa-times"></i></button>
+            </div>
+            <p id="m1e-sub" style="font-size:0.88em;color:#666;margin:0 0 24px;line-height:1.55;">Hai già selezionato il massimo per questa categoria. Siete in più persone allo stesso tavolo?</p>
+            <button id="m1e-add-people" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:14px;font-size:1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
                 <i class="fas fa-users"></i><span id="m1e-add-label">Aggiungi persone</span>
             </button>
-            <button id="m1e-cancel" style="width:100%;padding:14px;background:transparent;color:#888;border:none;border-radius:14px;font-size:0.95em;font-weight:600;cursor:pointer;" id="m1e-annulla">Annulla</button>
+            <button id="m1e-cancel" style="width:100%;padding:13px;background:#f0f0f0;color:#444;border:none;border-radius:14px;font-size:0.95em;font-weight:600;cursor:pointer;">Annulla</button>
         </div>
     </div>
 
@@ -1204,33 +1210,9 @@
             tableSize = ppTempSize;
             document.getElementById('people-label').textContent = tableSize;
             ppOverlay.style.display = 'none';
+            pendingMax1Id = null;
             renderMenu();
             restoreCartUI();
-            // auto-aggiunge il piatto che ha aperto il picker
-            if (pendingMax1Id !== null) {
-                const id = pendingMax1Id;
-                pendingMax1Id = null;
-                const current = cart[id] || 0;
-                if (current < tableSize) {
-                    if (current === 0) {
-                        cart[id] = 1;
-                        const addBtn = document.getElementById(`add-${id}`);
-                        const qtyWrap = document.getElementById(`qty-${id}`);
-                        const dishEl = document.getElementById(`dish-${id}`);
-                        const minusBtn = qtyWrap ? qtyWrap.querySelector('.btn-minus') : null;
-                        if (addBtn) addBtn.style.display = 'none';
-                        if (qtyWrap) qtyWrap.classList.add('show');
-                        if (dishEl) dishEl.classList.add('in-cart');
-                        if (minusBtn) { minusBtn.innerHTML = '<i class="fas fa-trash"></i>'; minusBtn.style.fontSize = '0.75em'; }
-                    } else {
-                        cart[id] = current + 1;
-                        const numEl = document.getElementById(`num-${id}`);
-                        if (numEl) numEl.textContent = cart[id];
-                    }
-                    updateCartBadge();
-                    showAddedToast(id);
-                }
-            }
         });
         function openPeoplePicker() {
             ppTempSize = tableSize;
@@ -1256,6 +1238,10 @@
             openPeoplePicker();
         });
         document.getElementById('m1e-cancel').addEventListener('click', () => {
+            pendingMax1Id = null;
+            m1eOverlay.style.display = 'none';
+        });
+        document.getElementById('m1e-close-x').addEventListener('click', () => {
             pendingMax1Id = null;
             m1eOverlay.style.display = 'none';
         });
