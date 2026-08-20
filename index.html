@@ -1086,8 +1086,10 @@
         document.getElementById('lang-toggle').addEventListener('click', () => { lpOverlay.style.display = 'flex'; });
         document.getElementById('lp-close').addEventListener('click', () => { lpOverlay.style.display = 'none'; });
         lpOverlay.addEventListener('click', e => { if (e.target === lpOverlay) lpOverlay.style.display = 'none'; });
+        let selectedLang = 'it';
         document.querySelectorAll('.lp-opt').forEach(btn => {
             btn.addEventListener('click', () => {
+                selectedLang = btn.dataset.lang;
                 document.querySelectorAll('.lp-opt').forEach(b => {
                     b.style.background = '#f5f5f5'; b.style.border = '2px solid transparent'; b.style.fontWeight = '500';
                 });
@@ -1095,11 +1097,8 @@
             });
         });
         document.getElementById('lp-save').addEventListener('click', () => {
-            const sel = document.querySelector('.lp-opt[style*="solid #111"]');
-            if (sel) {
-                document.getElementById('lang-label').textContent = sel.dataset.label;
-                applyLang(sel.dataset.lang);
-            }
+            document.getElementById('lang-label').textContent = document.querySelector(`.lp-opt[data-lang="${selectedLang}"]`)?.dataset.label || selectedLang.toUpperCase();
+            applyLang(selectedLang);
             lpOverlay.style.display = 'none';
         });
 
