@@ -151,6 +151,16 @@
         .dish-tag.spicy { background: #fff0f0; color: #dc2626; }
         .dish-tag.veg { background: #f0fdf4; color: #16a34a; }
         .dish-tag.max1-card { background: #fff7ed; color: #ea580c; border: 1.5px solid #fed7aa; }
+        .dish-tag.weekend { background: #fdf4ff; color: #9333ea; border: 1.5px solid #e9d5ff; }
+        .dish-num { color: #aaa; font-weight: 400; font-size: 0.82em; margin-right: 3px; }
+        .dish-card.weekend-only { opacity: 0.5; }
+        .dish-card.weekend-only .btn-add { pointer-events: none; opacity: 0.4; }
+        .srch-hl { color: #2563eb; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+        #search-overlay { display:none; position:fixed; inset:0; background:#fff; z-index:200; flex-direction:column; }
+        #search-bar { padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #eee; background:#fff; position:sticky; top:0; }
+        #search-input { flex:1; border:none; outline:none; font-size:1em; font-family:inherit; background:transparent; }
+        .srch-card { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid #f0f0f0; cursor:pointer; active-background:#f5f5f5; }
+        .srch-card:active { background:#f5f5f5; }
         .cat-max1-badge {
             display: inline-flex; align-items: center; gap: 5px;
             background: #fff7ed; color: #ea580c;
@@ -627,6 +637,9 @@
                 <button class="header-icon" id="filter-toggle" title="Filtro"><i class="fas fa-filter"></i></button>
                 <div id="filter-badge"></div>
             </div>
+            <div class="header-icon-wrapper" id="search-toggle-wrapper">
+                <button class="header-icon" id="search-toggle" title="Cerca" onclick="openSearch()"><i class="fas fa-magnifying-glass"></i></button>
+            </div>
             <div class="header-icon-wrapper" id="notes-toggle-wrapper">
                 <button class="header-icon notes" id="notes-toggle" title="Note"><i class="fa-solid fa-pen-to-square"></i></button>
             </div>
@@ -637,6 +650,15 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <div id="search-overlay">
+        <div id="search-bar">
+            <i class="fas fa-magnifying-glass" style="color:#aaa;font-size:0.9em;flex-shrink:0;"></i>
+            <input id="search-input" type="search" autocomplete="off">
+            <button onclick="closeSearch()" style="border:none;background:none;font-size:1.1em;color:#555;cursor:pointer;padding:4px;flex-shrink:0;"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="search-results"></div>
     </div>
 
     <div id="sticky-tabs">
@@ -945,6 +967,10 @@
                 max1explainCancel: 'Annulla',
                 max1notice: n => `Per questa categoria puoi selezionare <strong>${n === 1 ? 'un solo piatto' : n + ' piatti'}</strong>.`,
                 allergenNames: { gluten:'Glutine', crustaceans:'Crostacei', eggs:'Uova', fish:'Pesce', peanuts:'Arachidi', soy:'Soia', milk:'Latte', nuts:'Frutta a guscio', celery:'Sedano', mustard:'Senape', sesame:'Sesamo', sulphites:'Solfiti', lupin:'Lupini', molluscs:'Molluschi' },
+                weekendTag: 'Solo Weekend',
+                weekendTagInfo: 'Disponibile solo sabato, domenica e festivi',
+                searchPlaceholder: 'Cerca piatto o numero…',
+                searchNoResults: 'Nessun risultato',
             },
             en: {
                 allergens: 'Allergens',
@@ -1000,6 +1026,10 @@
                 max1explainCancel: 'Cancel',
                 max1notice: n => `You can select <strong>${n === 1 ? 'only one dish' : n + ' dishes'}</strong> from this category.`,
                 allergenNames: { gluten:'Gluten', crustaceans:'Crustaceans', eggs:'Eggs', fish:'Fish', peanuts:'Peanuts', soy:'Soy', milk:'Milk', nuts:'Tree nuts', celery:'Celery', mustard:'Mustard', sesame:'Sesame', sulphites:'Sulphites', lupin:'Lupin', molluscs:'Molluscs' },
+                weekendTag: 'Weekend Only',
+                weekendTagInfo: 'Available on weekends and holidays only',
+                searchPlaceholder: 'Search dish or number…',
+                searchNoResults: 'No results',
             },
             zh: {
                 allergens: '过敏原',
@@ -1055,6 +1085,10 @@
                 max1explainCancel: '取消',
                 max1notice: n => `此类别最多可选择<strong>${n === 1 ? '一道菜' : n + '道菜'}</strong>。`,
                 allergenNames: { gluten:'麸质', crustaceans:'甲壳类', eggs:'鸡蛋', fish:'鱼', peanuts:'花生', soy:'大豆', milk:'牛奶', nuts:'坚果', celery:'芹菜', mustard:'芥末', sesame:'芝麻', sulphites:'亚硫酸盐', lupin:'羽扇豆', molluscs:'软体动物' },
+                weekendTag: '仅限周末',
+                weekendTagInfo: '仅在周末及节假日供应',
+                searchPlaceholder: '搜索菜品或编号…',
+                searchNoResults: '无结果',
             }
         };
 
@@ -1150,9 +1184,11 @@
                 });
             }
 
-            // Re-render menu in new language + ripristina stato carrello
+            // Re-render menu in new language + ripristina stato carrello + posizione scroll
+            const _savedY = window.scrollY;
             renderMenu();
             restoreCartUI();
+            window.scrollTo(0, _savedY);
         }
 
         // POPUP CAMERIERE
@@ -1287,6 +1323,9 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-input').addEventListener('input', e => doSearch(e.target.value));
+            document.getElementById('search-overlay').addEventListener('keydown', e => { if (e.key === 'Escape') closeSearch(); });
+
             const overlay = document.getElementById('wp-overlay');
             const wpMain = document.getElementById('wp-main');
             const wpOk = document.getElementById('wp-ok');
@@ -1774,6 +1813,68 @@
         const cart = {};
         let tableSize = 1;
 
+        const isWeekend = () => { const d = new Date().getDay(); return d === 0 || d === 6; };
+        function getTabLabel(cat) {
+            let name = getLang(cat, 'name');
+            name = name.replace(/^(Secondi|Main Courses?)\s+/i, '');
+            const amp = name.indexOf(' & ');
+            if (amp > 0) name = name.substring(0, amp);
+            return name;
+        }
+        function highlight(text, query) {
+            if (!query) return text;
+            const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp('(' + esc + ')', 'gi'), '<span class="srch-hl">$1</span>');
+        }
+        function openSearch() {
+            const overlay = document.getElementById('search-overlay');
+            const inp = document.getElementById('search-input');
+            const t = translations[currentLang] || translations.it;
+            inp.placeholder = t.searchPlaceholder || 'Cerca piatto o numero…';
+            overlay.style.display = 'flex';
+            document.getElementById('search-results').innerHTML = '';
+            setTimeout(() => inp.focus(), 80);
+        }
+        function closeSearch() {
+            document.getElementById('search-overlay').style.display = 'none';
+            document.getElementById('search-input').value = '';
+        }
+        function doSearch(rawQuery) {
+            const t = translations[currentLang] || translations.it;
+            const resultsEl = document.getElementById('search-results');
+            const q = rawQuery.trim().toLowerCase();
+            if (!q) { resultsEl.innerHTML = ''; return; }
+            const matches = [];
+            menuData.forEach(cat => {
+                cat.items.forEach(item => {
+                    const num = String(item.id);
+                    const nameIT = (item.name || '').toLowerCase();
+                    const nameEN = (item.nameEn || '').toLowerCase();
+                    const nameZH = (item.nameZh || '').toLowerCase();
+                    if (num === q || num.startsWith(q) || nameIT.includes(q) || nameEN.includes(q) || nameZH.includes(q)) {
+                        matches.push({...item, _catName: getLang(cat,'name')});
+                    }
+                });
+            });
+            if (!matches.length) {
+                resultsEl.innerHTML = `<p style="text-align:center;color:#aaa;padding:40px 20px;font-size:0.9em;">${t.searchNoResults || 'Nessun risultato'}</p>`;
+                return;
+            }
+            resultsEl.innerHTML = matches.map(item => {
+                const dName = getLang(item, 'name');
+                const imgSrc = dishImgs[item.id] || item.img || null;
+                const imgHtml = imgSrc
+                    ? `<img src="${imgSrc}" style="width:60px;height:60px;object-fit:cover;border-radius:10px;flex-shrink:0;">`
+                    : `<div style="width:60px;height:60px;background:#f0f0f0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:1.1em;flex-shrink:0;"><i class="fas fa-bowl-rice"></i></div>`;
+                return `<div class="srch-card" onclick="closeSearch();openDishInfo(${item.id})">
+                    <div style="flex:1;min-width:0;">
+                        <p style="margin:0 0 2px;font-size:1em;font-weight:700;color:#111;"><span style="color:#aaa;font-weight:400;font-size:0.85em;">${highlight(String(item.id), rawQuery.trim())}. </span>${highlight(dName, rawQuery.trim())}</p>
+                        <p style="margin:0;font-size:0.78em;color:#aaa;">${item._catName}</p>
+                    </div>
+                    ${imgHtml}
+                </div>`;
+            }).join('');
+        }
         function renderMenu() {
             const container = document.getElementById('menu-content');
             container.innerHTML = '';
@@ -1789,7 +1890,7 @@
             allCats.forEach((cat, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'cat-tab' + (idx === 0 ? ' active' : '');
-                btn.textContent = getLang(cat,'name');
+                btn.textContent = getTabLabel(cat);
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
                     btn.classList.add('active');
@@ -1833,18 +1934,22 @@
                     const allText = (nameOnly + ' ' + (item.desc||'')).toLowerCase();
                     const isSpicy = allText.includes('piccante') || allText.includes('spicy');
                     const isVeg = /vegetarian[oa]?|veggie/.test(nameOnly);
+                    const isWkndDish = item.desc && item.desc.toLowerCase().includes('solo weekend');
+                    const wkndOk = isWeekend();
+                    if (cat.max1) tags.unshift(`<span class="dish-tag max1-card"><i class="fas fa-user"></i> Max 1</span>`);
                     if (isSpicy) tags.push(`<span class="dish-tag spicy"><i class="fas fa-fire"></i> ${t.spicyTag||'Piccante'}</span>`);
                     if (isVeg) tags.push(`<span class="dish-tag veg"><i class="fas fa-leaf"></i> ${t.vegTag||'Veg'}</span>`);
-                    if (cat.max1) tags.unshift(`<span class="dish-tag max1-card"><i class="fas fa-user"></i> Max 1</span>`);
+                    if (isWkndDish) tags.push(`<span class="dish-tag weekend"><i class="fas fa-calendar-week"></i> ${t.weekendTag||'Solo Weekend'}</span>`);
                     const tagsHtml = tags.length ? `<div class="dish-tags">${tags.join('')}</div>` : '';
                     const iName = getLang(item,'name');
                     const iDesc = getLang(item,'desc');
+                    if (isWkndDish && !wkndOk) card.classList.add('weekend-only');
 
                     const imgSrc = dishImgs[item.id] || item.img || null;
                     card.innerHTML = `
                         <div class="dish-info" onclick="openDishInfo(${item.id})">
                             ${tagsHtml}
-                            <p class="dish-name">${iName}</p>
+                            <p class="dish-name"><span class="dish-num">${item.id}.</span> ${iName}</p>
                             <p class="dish-desc">${iDesc}</p>
                             <button class="info-btn" onclick="event.stopPropagation();openDishInfo(${item.id})"><i class="fas fa-circle-info"></i> ${(translations[currentLang]||translations.it).infoAllergens}</button>
                         </div>
@@ -2000,6 +2105,13 @@
         }
 
         function cartChangeQty(id, delta) {
+            if (delta > 0) {
+                const catOfItem = menuData.find(c => c.items.some(i => i.id == id));
+                if (catOfItem && catOfItem.max1 && (cart[id] || 0) >= tableSize) {
+                    openMax1Explain(id);
+                    return;
+                }
+            }
             const newQty = (cart[id] || 0) + delta;
             if (newQty <= 0) {
                 delete cart[id];
@@ -2114,8 +2226,13 @@
             if (!item) return;
             diCurrentId = id;
 
-            document.getElementById('di-name').textContent = getLang(item,'name');
-            document.getElementById('di-desc').textContent = getLang(item,'desc');
+            const tLang = translations[currentLang] || translations.it;
+            document.getElementById('di-name').textContent = `${item.id}. ${getLang(item,'name')}`;
+            const rawDesc = getLang(item,'desc');
+            const isWkndItem = item.desc && item.desc.toLowerCase().includes('solo weekend');
+            document.getElementById('di-desc').textContent = isWkndItem
+                ? rawDesc.replace(/\(?\s*solo weekend e festivi[^)]*\)?\s*/gi, '').trim() + ' — ' + (tLang.weekendTagInfo || 'Solo weekend e festivi')
+                : rawDesc;
 
             const hero = document.getElementById('di-hero');
             const icon = document.getElementById('di-hero-icon');
@@ -2146,9 +2263,10 @@
             // allergeni inline nel popup principale
             const allerSection = document.getElementById('di-allergens-section');
             const inlineWrap = document.getElementById('di-allergens-inline');
+            const tA = translations[currentLang] || translations.it;
             if (present.length) {
                 inlineWrap.innerHTML = present.map(a =>
-                    `<span class="di-allergen-pill"><i class="fas ${a.icon}"></i>${a.label}</span>`
+                    `<span class="di-allergen-pill"><i class="fas ${a.icon}"></i>${(tA.allergenNames && tA.allergenNames[a.key]) || a.label}</span>`
                 ).join('');
                 allerSection.style.display = '';
             } else {
@@ -2160,7 +2278,7 @@
             const allerGrid = document.getElementById('price-allergens-grid');
             if (present.length) {
                 allerGrid.innerHTML = present.map(a =>
-                    `<div class="di-allergen-chip present"><i class="fas ${a.icon}"></i>${a.label}</div>`
+                    `<div class="di-allergen-chip present"><i class="fas ${a.icon}"></i>${(tA.allergenNames && tA.allergenNames[a.key]) || a.label}</div>`
                 ).join('');
                 allerWrap.style.display = '';
             } else {
