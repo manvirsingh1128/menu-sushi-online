@@ -452,16 +452,30 @@
             text-align: center; color: #111; letter-spacing: -0.04em;
         }
 
-        /* RIGA DETTAGLI */
-        #di-details-link {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 13px 15px; background: #f5f5f5; border-radius: 14px;
-            border: none; font-family: inherit; cursor: pointer; width: 100%;
-            text-align: left; transition: background 0.13s;
+        /* ALLERGENI NEL POPUP */
+        #di-allergens-inline {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-bottom: 18px;
         }
-        #di-details-link:active { background: #ebebeb; }
-        #di-details-link span { font-size: 0.92em; font-weight: 600; color: #222; }
-        #di-details-link i { font-size: 0.78em; color: #999; }
+        .di-allergen-pill {
+            display: flex; align-items: center; gap: 5px;
+            background: #f5f5f5; border-radius: 20px;
+            padding: 5px 10px 5px 8px;
+            font-size: 0.72em; font-weight: 600; color: #c62828;
+        }
+        .di-allergen-pill i { font-size: 1em; }
+
+        /* LINK DETTAGLI SOTTILE */
+        #di-details-link {
+            display: inline-block;
+            border: none; background: none; font-family: inherit;
+            cursor: pointer; padding: 0; margin-top: 4px;
+            font-size: 0.76em; font-weight: 500; color: #bbb;
+            text-decoration: underline; text-underline-offset: 3px;
+            text-decoration-color: #ddd;
+            touch-action: manipulation;
+        }
+        #di-details-link:active { color: #888; }
 
         /* POPUP PREZZO */
         #price-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:1200; justify-content:center; align-items:center; }
@@ -615,6 +629,7 @@
             <div id="di-body">
                 <h2 id="di-name"></h2>
                 <p id="di-desc"></p>
+                <div id="di-allergens-inline"></div>
                 <div id="di-max1-notice" style="display:none;">
                     <i class="fas fa-circle-info"></i>
                     <span>Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
@@ -629,10 +644,7 @@
                         <button class="di-qty-btn" id="di-btn-plus" onclick="diSetQty(diQty + 1)">+</button>
                     </div>
                 </div>
-                <button id="di-details-link" onclick="document.getElementById('price-overlay').classList.add('open')">
-                    <span>Dettagli &amp; Prezzo</span>
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                <button id="di-details-link" onclick="document.getElementById('price-overlay').classList.add('open')">Dettagli &amp; Prezzo</button>
             </div>
         </div>
     </div>
@@ -1057,8 +1069,20 @@
             document.getElementById('di-max1-notice').style.display = item.max1 ? 'flex' : 'none';
             document.getElementById('price-value').textContent = item.price || '—';
 
-            // allergeni nel popup dettagli
             const present = allergenList.filter(a => item.allergens && item.allergens.includes(a.key));
+
+            // allergeni inline nel popup principale
+            const inlineWrap = document.getElementById('di-allergens-inline');
+            if (present.length) {
+                inlineWrap.innerHTML = present.map(a =>
+                    `<span class="di-allergen-pill"><i class="fas ${a.icon}"></i>${a.label}</span>`
+                ).join('');
+                inlineWrap.style.display = 'flex';
+            } else {
+                inlineWrap.style.display = 'none';
+            }
+
+            // allergeni anche nel popup dettagli
             const allerWrap = document.getElementById('price-allergens-wrap');
             const allerGrid = document.getElementById('price-allergens-grid');
             if (present.length) {
