@@ -12,38 +12,50 @@
     <style>
         * { box-sizing: border-box; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; -webkit-user-select: none; }
         button, a, [onclick] { touch-action: manipulation; } /* blocca double-tap zoom su elementi interattivi */
-        html, body { touch-action: pan-y; } /* blocca zoom e pan laterale a livello compositor — nessun JS coinvolto */
+        html, body { touch-action: pan-y; }
         body {
-            background-color: #ffffff;
-            color: #1a1a1a;
-            margin: 0; padding: 0;
-            line-height: 1.6; font-weight: 400;
+            background-color: #ffffff; color: #1a1a1a;
+            margin: 0; padding: 0; line-height: 1.6; font-weight: 400;
+            padding-top: 130px; /* 70px header + 60px tabs */
             padding-bottom: 100px;
         }
         body.scroll-locked {
-            /* scroll lock per iOS: non usa overflow:hidden che rompe fixed */
             position: fixed; width: 100%; overflow-y: scroll;
         }
 
-        /* ── STICKY HEADER ── */
-        /* Tecnica Instagram/Twitter: trasla l'intero sticky verso l'alto di 70px (altezza header).
-           Le tab rimangono visibili perché partono a Y=70 nel container → appaiono a Y=0.
-           Nessun overflow:hidden necessario → iOS scroll non si rompe. */
-        #sticky-top {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(255,255,255,0.88);
+        /* ── HEADER FISSO (solo logo + icone) ── */
+        #sticky-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 70px;
+            z-index: 101;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(255,255,255,0.92);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
             transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
             will-change: transform;
         }
-        #sticky-top.header-hidden { transform: translateY(-70px); }
-        .main-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 24px; height: 70px;
-            border-bottom: 1px solid rgba(0,0,0,0.08);
+
+        /* ── TAB BAR FISSO ── */
+        #sticky-tabs {
+            position: fixed; top: 70px; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            will-change: transform;
         }
+
+        /* Entrambi traslano su di 70px → tabs appaiono a top:0, header sparisce */
+        #sticky-header.header-hidden,
+        #sticky-tabs.header-hidden {
+            transform: translateY(-70px);
+        }
+
+        .main-header { display: none; } /* rimosso, non più usato */
+        .header-right { display: flex; align-items: center; gap: 4px; }
         .header-left, .header-center, .header-right {
             flex: 1;
             display: flex;
@@ -368,7 +380,7 @@
         /* QUANTITÀ — centrata, grande */
         #di-qty-row {
             display: flex; align-items: center; justify-content: center;
-            gap: 28px; margin-bottom: auto; padding: 8px 0 24px;
+            gap: 28px; padding: 8px 0 24px;
         }
         .di-qty-btn {
             width: 52px; height: 52px; border-radius: 50%;
@@ -377,7 +389,7 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: opacity 0.2s;
         }
-        .di-qty-btn.hidden-btn { opacity: 0; pointer-events: none; }
+        .di-qty-btn.hidden-btn { visibility: hidden; }
         #di-qty-num {
             font-size: 2em; font-weight: 800; min-width: 36px;
             text-align: center; color: #111; transition: color 0.2s;
@@ -406,10 +418,9 @@
 </head>
 <body>
 
-    <div id="sticky-top">
-    <header class="main-header">
+    <div id="sticky-header">
         <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant Logo" class="logo">
-        <div class="header-right" style="margin-left:auto;display:flex;align-items:center;gap:4px;">
+        <div class="header-right">
             <div class="header-icon-wrapper" id="filter-toggle-wrapper">
                 <button class="header-icon" id="filter-toggle" title="Filtro"><i class="fas fa-filter"></i></button>
                 <div id="filter-badge"></div>
@@ -424,15 +435,17 @@
                 </button>
             </div>
         </div>
-    </header>
-    <div id="category-tabs-wrap" style="position:relative;">
-        <div id="category-tabs"></div>
-        <div id="tabs-more-wrap">
-            <div id="tabs-more-btn">···
-                <select id="cats-select" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;"></select>
+    </div>
+
+    <div id="sticky-tabs">
+        <div id="category-tabs-wrap" style="position:relative;">
+            <div id="category-tabs"></div>
+            <div id="tabs-more-wrap">
+                <div id="tabs-more-btn">···
+                    <select id="cats-select" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;"></select>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 
     <main id="menu-content"></main>
@@ -602,15 +615,21 @@
         // Usa solo transform sul compositor thread → zero reflow, zero jank.
         let _lastScrollY = window.scrollY;
         let _ticking = false;
-        const stickyTop = document.getElementById('sticky-top');
+        const _stickyH = document.getElementById('sticky-header');
+        const _stickyT = document.getElementById('sticky-tabs');
         window.addEventListener('scroll', () => {
             if (_ticking) return;
             _ticking = true;
             requestAnimationFrame(() => {
                 const y = window.scrollY;
                 const delta = y - _lastScrollY;
-                if (delta > 5 && y > 90) stickyTop.classList.add('header-hidden');
-                else if (delta < -5) stickyTop.classList.remove('header-hidden');
+                if (delta > 5 && y > 90) {
+                    _stickyH.classList.add('header-hidden');
+                    _stickyT.classList.add('header-hidden');
+                } else if (delta < -5) {
+                    _stickyH.classList.remove('header-hidden');
+                    _stickyT.classList.remove('header-hidden');
+                }
                 _lastScrollY = y;
                 _ticking = false;
             });
@@ -884,7 +903,7 @@
         }
 
         function initScrollSpy() {
-            const stickyH = document.getElementById('sticky-top').offsetHeight;
+            const stickyH = (document.getElementById('sticky-header').offsetHeight || 70) + (document.getElementById('sticky-tabs').offsetHeight || 60);
             const sections = document.querySelectorAll('.menu-category');
             const tabs = document.querySelectorAll('.cat-tab');
             let isClicking = false;
