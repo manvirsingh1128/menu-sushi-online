@@ -352,16 +352,33 @@
             position: relative;
         }
 
-        /* X — angolo in alto a destra della card */
+        /* HERO placeholder */
+        #di-hero {
+            width: 100%; height: 180px; flex-shrink: 0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-radius: 24px 24px 0 0;
+            position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #di-hero-icon {
+            font-size: 56px; opacity: 0.18; color: #fff; pointer-events: none;
+        }
+        #di-hero-grad {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.45) 100%);
+        }
+
+        /* X — sopra l'hero, frosted */
         #di-close {
-            position: absolute; top: 14px; right: 14px; z-index: 4;
-            width: 32px; height: 32px; border-radius: 50%; border: none;
-            background: #f0f0f0; color: #555; cursor: pointer;
+            position: absolute; top: 12px; right: 12px; z-index: 10;
+            width: 34px; height: 34px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.38); color: #fff; cursor: pointer;
             display: flex; align-items: center; justify-content: center; padding: 0;
             touch-action: manipulation;
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
         }
-        #di-close i { font-size: 12px; line-height: 1; }
-        #di-close:active { background: #e0e0e0; }
+        #di-close i { font-size: 13px; line-height: 1; }
+        #di-close:active { background: rgba(0,0,0,0.55); }
 
         /* BODY */
         #di-body {
@@ -431,7 +448,7 @@
         /* ALLERGENI NEL POPUP */
         #di-allergens-section { margin-bottom: 18px; }
         #di-allergens-label {
-            font-size: 0.65em; font-weight: 700; color: #aaa;
+            font-size: 0.72em; font-weight: 700; color: #555;
             text-transform: uppercase; letter-spacing: 0.08em;
             margin-bottom: 7px;
         }
@@ -601,7 +618,11 @@
     <!-- POPUP INFO PIATTO — card centrata -->
     <div id="di-overlay" onclick="if(event.target===this)closeDishOverlay()">
         <div id="di-sheet">
-            <button id="di-close" onclick="closeDishOverlay()"><i class="fas fa-times"></i></button>
+            <div id="di-hero">
+                <i class="fas fa-bowl-rice" id="di-hero-icon"></i>
+                <div id="di-hero-grad"></div>
+                <button id="di-close" onclick="closeDishOverlay()"><i class="fas fa-times"></i></button>
+            </div>
             <div id="di-body">
                 <h2 id="di-name"></h2>
                 <p id="di-desc"></p>
