@@ -330,112 +330,136 @@
         #np-check { width:64px; height:64px; border-radius:50%; background:#111; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.6em; }
         #np-overlay.open #np-check { animation: checkPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
 
-        /* ── POPUP PIATTO — bottom sheet ── */
+        /* ── POPUP PIATTO — Deliveroo × Apple ── */
         #di-overlay {
             display: none; position: fixed; inset: 0; z-index: 1100;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
             align-items: flex-end; justify-content: center;
         }
         #di-overlay.open { display: flex; }
-        #di-overlay.open #di-sheet { animation: diSlideUp 0.34s cubic-bezier(0.22,1,0.36,1); }
-        @keyframes diSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        #di-overlay.open #di-sheet { animation: diSlideUp 0.42s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes diSlideUp { from { transform: translateY(110%); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
 
         #di-sheet {
-            width: 100%; max-width: 600px;
+            width: 100%; max-width: 560px;
             background: #fff;
-            border-radius: 28px 28px 0 0;
-            max-height: 88vh;
+            border-radius: 24px 24px 0 0;
+            max-height: 90vh;
             display: flex; flex-direction: column;
             overflow: hidden;
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+            position: relative;
         }
 
         /* HANDLE */
         #di-handle {
-            flex-shrink: 0; display: flex; justify-content: center; padding: 12px 0 4px;
+            position: absolute; top: 0; left: 0; right: 0;
+            display: flex; justify-content: center; padding: 10px 0; z-index: 3;
         }
         #di-handle-bar {
-            width: 36px; height: 4px; border-radius: 2px; background: #e0e0e0;
+            width: 40px; height: 4px; border-radius: 10px; background: rgba(255,255,255,0.55);
         }
 
-        /* FOTO + X */
+        /* FOTO */
         #di-hero {
-            width: 100%; height: 200px; flex-shrink: 0;
-            background: #f0f0f0; position: relative; overflow: hidden;
+            width: 100%; height: 240px; flex-shrink: 0;
+            background: #1a1a1a; position: relative; overflow: hidden;
             display: flex; align-items: center; justify-content: center;
         }
-        #di-hero-icon { font-size: 3.5em; color: #d0d0d0; }
+        #di-hero-icon { font-size: 4em; color: rgba(255,255,255,0.15); }
         #di-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+        #di-hero-grad {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 110px;
+            background: linear-gradient(to top, rgba(0,0,0,0.52) 0%, transparent 100%);
+            pointer-events: none; z-index: 1;
+        }
 
         #di-close {
-            position: absolute; top: 12px; right: 12px; z-index: 2;
-            width: 32px; height: 32px; border-radius: 50%; border: none;
-            background: rgba(0,0,0,0.32); color: #fff; cursor: pointer;
+            position: absolute; top: 12px; right: 14px; z-index: 4;
+            width: 30px; height: 30px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.38); color: #fff; cursor: pointer;
             display: flex; align-items: center; justify-content: center; padding: 0;
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
         }
-        #di-close i { font-size: 13px; line-height: 1; }
+        #di-close i { font-size: 11px; line-height: 1; }
 
         /* BODY */
         #di-body {
             flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-            padding: 20px 22px 36px;
+            padding: 18px 20px 40px;
             display: flex; flex-direction: column; gap: 0;
         }
 
-        /* HEADER ROW: nome + foto thumbnail se no img */
         #di-name {
-            font-size: 1.5em; font-weight: 800; color: #111;
-            margin: 0 0 5px; padding: 0; border: none !important;
-            letter-spacing: -0.04em; line-height: 1.2;
+            font-size: 1.55em; font-weight: 800; color: #0a0a0a;
+            margin: 0 0 4px; padding: 0; border: none !important;
+            letter-spacing: -0.045em; line-height: 1.15;
         }
-        #di-desc { font-size: 0.84em; color: #999; margin: 0 0 22px; line-height: 1.55; }
+        #di-desc { font-size: 0.83em; color: #888; margin: 0 0 20px; line-height: 1.6; }
 
         /* MAX1 */
         #di-max1-notice {
-            background: #f8f8f8; border-radius: 12px; padding: 10px 14px;
-            font-size: 0.78em; color: #666; line-height: 1.5; margin-bottom: 18px;
+            background: #f5f5f5; border-radius: 12px; padding: 10px 14px;
+            font-size: 0.78em; color: #555; line-height: 1.5; margin-bottom: 16px;
             align-items: flex-start; gap: 8px; border-left: 3px solid #111;
         }
         #di-max1-notice i { color: #111; flex-shrink: 0; margin-top: 1px; }
 
-        /* QUANTITÀ — pill compatto, tutto centrato */
+        /* QUANTITÀ */
         #di-qty-wrap {
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+            margin-bottom: 14px;
         }
+
+        /* CTA button (qty = 0) */
+        #di-cta-btn {
+            width: 100%; padding: 17px;
+            background: #111; color: #fff;
+            border: none; border-radius: 16px;
+            font-family: inherit; font-size: 1em; font-weight: 700;
+            letter-spacing: -0.02em; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: transform 0.12s, background 0.15s;
+            touch-action: manipulation;
+        }
+        #di-cta-btn:active { transform: scale(0.97); background: #222; }
+        #di-cta-btn i { font-size: 0.9em; }
+
+        /* Pill stepper (qty > 0) */
         #di-qty-pill {
-            display: flex; align-items: center;
-            background: #f5f5f5; border-radius: 50px;
-            padding: 6px 6px;
-            gap: 0;
+            display: none;
+            align-items: center; justify-content: space-between;
+            background: #f5f5f5; border-radius: 18px;
+            padding: 7px 7px;
         }
+        #di-qty-pill.visible { display: flex; }
         .di-qty-btn {
-            width: 48px; height: 48px; border-radius: 50%;
-            border: none;
-            font-size: 22px; font-weight: 600; line-height: 1;
+            width: 50px; height: 50px; border-radius: 14px;
+            border: none; font-size: 22px; font-weight: 600; line-height: 1;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: background 0.15s, transform 0.1s;
-            background: transparent; color: #111;
+            cursor: pointer; transition: background 0.13s, transform 0.1s;
+            touch-action: manipulation;
         }
-        .di-qty-btn:not(.hidden-btn):active { transform: scale(0.9); }
-        #di-btn-plus { background: #111; color: #fff; border-radius: 50%; }
+        .di-qty-btn:active { transform: scale(0.88); }
+        #di-btn-minus { background: #fff; color: #111; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+        #di-btn-plus  { background: #111; color: #fff; }
         #di-btn-plus:disabled { background: #ccc; }
-        .di-qty-btn.hidden-btn { visibility: hidden; }
         #di-qty-num {
-            font-size: 1.3em; font-weight: 800; min-width: 40px;
-            text-align: center; color: #111; transition: color 0.2s;
+            font-size: 1.35em; font-weight: 800; min-width: 44px;
+            text-align: center; color: #111; letter-spacing: -0.04em;
         }
-        #di-qty-num.zero { color: #aaa; }
 
         /* RIGA DETTAGLI */
         #di-details-link {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 16px; background: #f8f8f8; border-radius: 14px;
+            padding: 13px 15px; background: #f5f5f5; border-radius: 14px;
             border: none; font-family: inherit; cursor: pointer; width: 100%;
-            text-align: left;
+            text-align: left; transition: background 0.13s;
         }
-        #di-details-link span { font-size: 0.88em; font-weight: 600; color: #444; }
-        #di-details-link i { font-size: 0.8em; color: #bbb; }
+        #di-details-link:active { background: #ebebeb; }
+        #di-details-link span { font-size: 0.86em; font-weight: 600; color: #333; }
+        #di-details-link i { font-size: 0.75em; color: #bbb; }
 
         /* POPUP PREZZO */
         #price-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:1200; justify-content:center; align-items:center; }
@@ -577,13 +601,14 @@
         </div>
     </div>
 
-    <!-- POPUP INFO PIATTO — bottom sheet -->
-    <div id="di-overlay">
+    <!-- POPUP INFO PIATTO — Deliveroo × Apple -->
+    <div id="di-overlay" onclick="if(event.target===this)closeDishOverlay()">
         <div id="di-sheet">
             <div id="di-handle"><div id="di-handle-bar"></div></div>
             <div id="di-hero">
                 <i class="fas fa-bowl-rice" id="di-hero-icon"></i>
-                <button id="di-close"><i class="fas fa-times"></i></button>
+                <div id="di-hero-grad"></div>
+                <button id="di-close" onclick="closeDishOverlay()"><i class="fas fa-times"></i></button>
             </div>
             <div id="di-body">
                 <h2 id="di-name"></h2>
@@ -593,9 +618,12 @@
                     <span>Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
                 </div>
                 <div id="di-qty-wrap">
+                    <button id="di-cta-btn" onclick="diSetQty(1)">
+                        <i class="fas fa-plus"></i> Aggiungi
+                    </button>
                     <div id="di-qty-pill">
-                        <button class="di-qty-btn hidden-btn" id="di-btn-minus" onclick="diSetQty(diQty - 1)">−</button>
-                        <span id="di-qty-num" class="zero">0</span>
+                        <button class="di-qty-btn" id="di-btn-minus" onclick="diSetQty(diQty - 1)">−</button>
+                        <span id="di-qty-num">0</span>
                         <button class="di-qty-btn" id="di-btn-plus" onclick="diSetQty(diQty + 1)">+</button>
                     </div>
                 </div>
@@ -1081,13 +1109,17 @@
 
         function diRefreshQtyUI(item) {
             const numEl = document.getElementById('di-qty-num');
-            const minusBtn = document.getElementById('di-btn-minus');
             const plusBtn = document.getElementById('di-btn-plus');
+            const ctaBtn = document.getElementById('di-cta-btn');
+            const pill   = document.getElementById('di-qty-pill');
             numEl.textContent = diQty;
-            numEl.classList.toggle('zero', diQty === 0);
-            // minus: invisibile (visibility) quando 0 → layout stabile, nessun salto
-            minusBtn.style.visibility = diQty === 0 ? 'hidden' : '';
-            minusBtn.classList.remove('hidden-btn'); // non più gestito via classe
+            if (diQty === 0) {
+                ctaBtn.style.display = '';
+                pill.classList.remove('visible');
+            } else {
+                ctaBtn.style.display = 'none';
+                pill.classList.add('visible');
+            }
             plusBtn.disabled = !!(item && item.max1 && diQty >= 1);
         }
 
