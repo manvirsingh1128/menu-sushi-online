@@ -489,14 +489,15 @@
         /* X — sopra l'hero, frosted */
         #di-close {
             position: absolute; top: 12px; right: 12px; z-index: 10;
-            width: 34px; height: 34px; border-radius: 50%; border: none;
-            background: rgba(0,0,0,0.38); color: #fff; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; padding: 0;
+            height: 36px; border-radius: 50px; border: none;
+            background: rgba(0,0,0,0.62); color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; padding: 0 14px;
+            gap: 6px; font-size: 0.82em; font-weight: 600; letter-spacing: 0.02em;
             touch-action: manipulation;
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
-        #di-close i { font-size: 13px; line-height: 1; }
-        #di-close:active { background: rgba(0,0,0,0.55); }
+        #di-close i { font-size: 12px; line-height: 1; }
+        #di-close:active { background: rgba(0,0,0,0.8); }
 
         /* BODY */
         #di-body {
@@ -765,7 +766,7 @@
             <div id="di-hero">
                 <i class="fas fa-bowl-rice" id="di-hero-icon"></i>
                 <div id="di-hero-grad"></div>
-                <button id="di-close" onclick="closeDishOverlay()"><i class="fas fa-times"></i></button>
+                <button id="di-close" onclick="closeDishOverlay()"><i class="fas fa-times"></i><span id="di-close-label">Chiudi</span></button>
             </div>
             <div id="di-body">
                 <h2 id="di-name"></h2>
@@ -907,6 +908,8 @@
                 peopleSub: 'Quante persone ordinano da questo telefono?',
                 peopleSave: 'Conferma',
                 personLabel: 'persone',
+                addedToast: 'Aggiunto al carrello',
+                closeBtn: 'Chiudi',
                 max1notice: n => `Per questa categoria puoi selezionare <strong>${n === 1 ? 'un solo piatto' : n + ' piatti'}</strong>.`,
                 allergenNames: { gluten:'Glutine', crustaceans:'Crostacei', eggs:'Uova', fish:'Pesce', peanuts:'Arachidi', soy:'Soia', milk:'Latte', nuts:'Frutta a guscio', celery:'Sedano', mustard:'Senape', sesame:'Sesamo', sulphites:'Solfiti', lupin:'Lupini', molluscs:'Molluschi' },
             },
@@ -952,6 +955,8 @@
                 peopleSub: 'How many people are ordering from this phone?',
                 peopleSave: 'Confirm',
                 personLabel: 'people',
+                addedToast: 'Added to cart',
+                closeBtn: 'Close',
                 max1notice: n => `You can select <strong>${n === 1 ? 'only one dish' : n + ' dishes'}</strong> from this category.`,
                 allergenNames: { gluten:'Gluten', crustaceans:'Crustaceans', eggs:'Eggs', fish:'Fish', peanuts:'Peanuts', soy:'Soy', milk:'Milk', nuts:'Tree nuts', celery:'Celery', mustard:'Mustard', sesame:'Sesame', sulphites:'Sulphites', lupin:'Lupin', molluscs:'Molluscs' },
             },
@@ -997,6 +1002,8 @@
                 peopleSub: '有几个人用这台手机点餐？',
                 peopleSave: '确认',
                 personLabel: '人',
+                addedToast: '已加入购物车',
+                closeBtn: '关闭',
                 max1notice: n => `此类别最多可选择<strong>${n === 1 ? '一道菜' : n + '道菜'}</strong>。`,
                 allergenNames: { gluten:'麸质', crustaceans:'甲壳类', eggs:'鸡蛋', fish:'鱼', peanuts:'花生', soy:'大豆', milk:'牛奶', nuts:'坚果', celery:'芹菜', mustard:'芥末', sesame:'芝麻', sulphites:'亚硫酸盐', lupin:'羽扇豆', molluscs:'软体动物' },
             }
@@ -1017,6 +1024,10 @@
             // Placeholder textarea
             const npText = document.getElementById('np-text');
             if (npText) npText.placeholder = t.notePlaceholder;
+
+            // Bottone chiudi popup dettaglio
+            const diCloseLabel = document.getElementById('di-close-label');
+            if (diCloseLabel) diCloseLabel.textContent = t.closeBtn || 'Chiudi';
 
             // Popup persone
             const ppTitle = document.getElementById('pp-title');
@@ -1163,6 +1174,11 @@
             renderMenu();
             restoreCartUI();
         });
+        function openPeoplePicker() {
+            ppTempSize = tableSize;
+            ppUpdateNum();
+            ppOverlay.style.display = 'flex';
+        }
 
         // POPUP LINGUA
         const lpOverlay = document.getElementById('lp-overlay');
@@ -1666,7 +1682,7 @@
                 }
                 const cat = menuData.find(c => c.items.some(i => i.id === Number(id)));
                 const plusBtn = qtyWrap ? qtyWrap.querySelector('.btn-plus') : null;
-                if (plusBtn && cat && cat.max1) plusBtn.disabled = (qty >= tableSize);
+                if (plusBtn && cat && cat.max1) plusBtn.disabled = false;
             });
         }
 
@@ -1752,7 +1768,7 @@
                             <div class="qty-controls" id="qty-${item.id}">
                                 <button class="btn-minus" onclick="changeQty(${item.id}, -1, ${cat.max1})">−</button>
                                 <span class="qty-num" id="num-${item.id}">1</span>
-                                <button class="btn-plus" onclick="changeQty(${item.id}, 1, ${cat.max1})" ${cat.max1 && (cart[item.id]||0) >= tableSize ? 'disabled' : ''}>+</button>
+                                <button class="btn-plus" onclick="changeQty(${item.id}, 1, ${cat.max1})">+</button>
                             </div>
                         </div>`;
                     sec.appendChild(card);
@@ -1762,8 +1778,27 @@
             });
         }
 
+        function showAddedToast(id) {
+            let toast = document.getElementById('add-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'add-toast';
+                toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;padding:10px 20px;border-radius:50px;font-size:0.88em;font-weight:600;z-index:9999;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;';
+                document.body.appendChild(toast);
+            }
+            const t = translations[currentLang] || translations.it;
+            toast.innerHTML = '<i class="fas fa-check" style="margin-right:7px;color:#4ade80;"></i>' + (t.addedToast || 'Aggiunto!');
+            clearTimeout(toast._timer);
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            toast._timer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+            }, 1800);
+        }
+
         function addItem(id, max1) {
-            if (max1 && (cart[id] || 0) >= tableSize) return;
+            if (max1 && (cart[id] || 0) >= tableSize) { openPeoplePicker(); return; }
             cart[id] = 1;
             document.getElementById(`add-${id}`).style.display = 'none';
             document.getElementById(`qty-${id}`).classList.add('show');
@@ -1772,13 +1807,14 @@
             minusBtn.innerHTML = '<i class="fas fa-trash"></i>';
             minusBtn.style.fontSize = '0.75em';
             const plusBtn = document.querySelector(`#qty-${id} .btn-plus`);
-            if (plusBtn && max1) plusBtn.disabled = (cart[id] >= tableSize);
+            if (plusBtn && max1) plusBtn.disabled = false;
             updateCartBadge();
+            showAddedToast(id);
         }
 
         function changeQty(id, delta, max1) {
             const current = cart[id] || 0;
-            if (delta > 0 && max1 && current >= tableSize) return;
+            if (delta > 0 && max1 && current >= tableSize) { openPeoplePicker(); return; }
             cart[id] = (current || 1) + delta;
             if (cart[id] <= 0) {
                 delete cart[id];
@@ -1796,7 +1832,7 @@
                     minusBtn.style.fontSize = '';
                 }
                 const plusBtn = document.querySelector(`#qty-${id} .btn-plus`);
-                if (plusBtn && max1) plusBtn.disabled = (cart[id] >= tableSize);
+                if (plusBtn && max1) plusBtn.disabled = false;
             }
             updateCartBadge();
         }
@@ -2053,6 +2089,7 @@
             const item = menuData.flatMap(c => c.items.map(i => ({...i, max1: c.max1}))).find(i => i.id === diCurrentId);
             if (!item) return;
             newQty = Math.max(0, newQty);
+            if (item.max1 && newQty > tableSize) { openPeoplePicker(); return; }
             if (item.max1) newQty = Math.min(newQty, tableSize);
             diQty = newQty;
 
@@ -2079,6 +2116,7 @@
                 }
             }
             updateCartBadge();
+            if (newQty > 0) showAddedToast(diCurrentId);
             diRefreshQtyUI(item);
         }
 
@@ -2095,7 +2133,7 @@
                 ctaBtn.style.display = 'none';
                 pill.classList.add('visible');
             }
-            plusBtn.disabled = !!(item && item.max1 && diQty >= tableSize);
+            plusBtn.disabled = false;
         }
 
         // apre/chiude popup piatto con scroll lock
