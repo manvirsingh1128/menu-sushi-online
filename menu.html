@@ -2070,7 +2070,7 @@
                     const tagsHtml = tags.length ? `<div class="dish-tags">${tags.join('')}</div>` : '';
                     const iName = getLang(item,'name');
                     const iDesc = getLang(item,'desc');
-                    if (isWkndDish && !wkndOk) card.classList.add('weekend-only');
+                    // weekend-only: solo badge info, sempre ordinabile
 
                     const imgSrc = dishImgs[item.id] || item.img || null;
                     card.innerHTML = `
