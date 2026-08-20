@@ -339,7 +339,8 @@
         }
         #di-overlay.open { display: flex; }
         #di-overlay.open #di-sheet { animation: diSlideUp 0.42s cubic-bezier(0.22,1,0.36,1) both; }
-        @keyframes diSlideUp { from { transform: translateY(110%); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes diSlideUp   { from { transform: translateY(110%); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes diSlideDown { from { transform: translateY(0);    opacity: 1;   } to { transform: translateY(110%); opacity: 0.4; } }
 
         #di-sheet {
             width: 100%; max-width: 560px;
@@ -377,12 +378,13 @@
 
         #di-close {
             position: absolute; top: 12px; right: 14px; z-index: 4;
-            width: 30px; height: 30px; border-radius: 50%; border: none;
-            background: rgba(0,0,0,0.38); color: #fff; cursor: pointer;
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.42); color: #fff; cursor: pointer;
             display: flex; align-items: center; justify-content: center; padding: 0;
-            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            touch-action: manipulation;
         }
-        #di-close i { font-size: 11px; line-height: 1; }
+        #di-close i { font-size: 13px; line-height: 1; }
 
         /* BODY */
         #di-body {
@@ -396,7 +398,7 @@
             margin: 0 0 4px; padding: 0; border: none !important;
             letter-spacing: -0.045em; line-height: 1.15;
         }
-        #di-desc { font-size: 0.83em; color: #888; margin: 0 0 20px; line-height: 1.6; }
+        #di-desc { font-size: 0.88em; color: #666; margin: 0 0 20px; line-height: 1.6; }
 
         /* MAX1 */
         #di-max1-notice {
@@ -458,8 +460,8 @@
             text-align: left; transition: background 0.13s;
         }
         #di-details-link:active { background: #ebebeb; }
-        #di-details-link span { font-size: 0.86em; font-weight: 600; color: #333; }
-        #di-details-link i { font-size: 0.75em; color: #bbb; }
+        #di-details-link span { font-size: 0.92em; font-weight: 600; color: #222; }
+        #di-details-link i { font-size: 0.78em; color: #999; }
 
         /* POPUP PREZZO */
         #price-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:1200; justify-content:center; align-items:center; }
@@ -640,7 +642,7 @@
         <div id="price-box">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
                 <h2 style="font-size:1.4em;font-weight:800;color:#111;margin:0;letter-spacing:-0.04em;">Dettagli</h2>
-                <button id="price-close" onclick="document.getElementById('price-overlay').classList.remove('open')"><i class="fas fa-times"></i></button>
+                <button id="price-close" onclick="document.getElementById('price-overlay').classList.remove('open')" style="width:36px;height:36px;border-radius:50%;border:none;background:#f0f0f0;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;touch-action:manipulation;"><i class="fas fa-times" style="font-size:13px;"></i></button>
             </div>
             <div style="background:#f5f5f5;border-radius:14px;padding:16px 18px;margin-bottom:16px;">
                 <p style="margin:0 0 6px;font-size:0.75em;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.06em;">Prezzo alla carta</p>
@@ -1129,8 +1131,14 @@
             lockScroll();
         }
         function closeDishOverlay() {
-            document.getElementById('di-overlay').classList.remove('open');
-            unlockScroll();
+            const overlay = document.getElementById('di-overlay');
+            const sheet   = document.getElementById('di-sheet');
+            sheet.style.animation = 'diSlideDown 0.28s cubic-bezier(0.4,0,0.8,0.6) forwards';
+            sheet.addEventListener('animationend', () => {
+                sheet.style.animation = '';
+                overlay.classList.remove('open');
+                unlockScroll();
+            }, { once: true });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
