@@ -369,8 +369,9 @@
                 <button class="header-icon notes" id="notes-toggle" title="Note"><i class="fa-solid fa-pen-to-square"></i></button>
             </div>
             <div class="header-icon-wrapper" id="language-wrapper">
-                <button class="header-icon" id="lang-toggle" title="Lingua" style="font-size:0.8em;font-weight:700;letter-spacing:0.04em;">
-                    <span id="lang-label">IT</span>
+                <button class="header-icon" id="lang-toggle" title="Lingua" style="display:flex;align-items:center;gap:4px;">
+                    <i class="fas fa-globe"></i>
+                    <span id="lang-label" style="font-size:0.75em;font-weight:700;letter-spacing:0.04em;">IT</span>
                 </button>
             </div>
         </div>
@@ -431,6 +432,7 @@
             <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
                 <button class="lp-opt sel" data-lang="it" data-label="IT" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#f0f0f0;border:2px solid #111;border-radius:14px;cursor:pointer;font-size:1em;font-weight:600;color:#222;width:100%;">Italiano</button>
                 <button class="lp-opt" data-lang="en" data-label="EN" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#f5f5f5;border:2px solid transparent;border-radius:14px;cursor:pointer;font-size:1em;font-weight:500;color:#222;width:100%;">English</button>
+                <button class="lp-opt" data-lang="zh" data-label="中文" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#f5f5f5;border:2px solid transparent;border-radius:14px;cursor:pointer;font-size:1em;font-weight:500;color:#222;width:100%;">中文</button>
             </div>
             <button id="lp-save" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:14px;font-size:1em;font-weight:600;cursor:pointer;">Salva</button>
         </div>
@@ -513,16 +515,24 @@
     <script>
         // POPUP CAMERIERE
         // Hide/show main header on scroll
-        let lastScrollY = 0;
+        let lastScrollY = window.scrollY;
+        let ticking = false;
         const mainHeader = document.querySelector('.main-header');
         window.addEventListener('scroll', () => {
-            const currentY = window.scrollY;
-            if (currentY > lastScrollY && currentY > 60) {
-                mainHeader.classList.add('hidden');
-            } else {
-                mainHeader.classList.remove('hidden');
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    const currentY = window.scrollY;
+                    const delta = currentY - lastScrollY;
+                    if (delta > 4 && currentY > 80) {
+                        mainHeader.classList.add('hidden');
+                    } else if (delta < -4) {
+                        mainHeader.classList.remove('hidden');
+                    }
+                    lastScrollY = currentY;
+                    ticking = false;
+                });
+                ticking = true;
             }
-            lastScrollY = currentY;
         }, { passive: true });
 
         // POPUP LINGUA
