@@ -98,10 +98,16 @@
         #filter-badge.visible { display: flex; }
 
         /* CATEGORY TABS */
-#category-tabs-wrap { position: relative; }
-        #tabs-more-wrap { display: none; }
+#category-tabs-wrap { display: flex; align-items: center; position: relative; }
+        #tabs-more-wrap { display: flex; align-items: center; flex-shrink: 0; padding-right: 10px; }
+        #tabs-more-btn {
+            position: relative; display: inline-flex; align-items: center; justify-content: center;
+            padding: 7px 14px; font-size: 0.82em; font-weight: 700; color: #666;
+            background: #f0f0f0; border-radius: 999px; cursor: pointer; white-space: nowrap;
+            user-select: none;
+        }
         #category-tabs {
-            display: flex; overflow-x: auto; padding: 12px 16px 12px; gap: 8px;
+            flex: 1; display: flex; overflow-x: auto; padding: 12px 8px 12px 16px; gap: 8px;
             scrollbar-width: none; -ms-overflow-style: none;
         }
         #category-tabs::-webkit-scrollbar { display: none; }
@@ -1865,7 +1871,7 @@
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'add-toast';
-                toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;padding:10px 20px;border-radius:50px;font-size:0.88em;font-weight:600;z-index:9999;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;';
+                toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:#111;color:#fff;padding:10px 20px;border-radius:50px;font-size:0.88em;font-weight:600;z-index:9999;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;';
                 document.body.appendChild(toast);
             }
             const t = translations[currentLang] || translations.it;
@@ -1875,7 +1881,7 @@
             toast.style.transform = 'translateX(-50%) translateY(0)';
             toast._timer = setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                toast.style.transform = 'translateX(-50%) translateY(-20px)';
             }, 1800);
         }
 
