@@ -152,7 +152,7 @@
         .dish-tag.veg { background: #f0fdf4; color: #16a34a; }
         .dish-tag.max1-card { background: #fff7ed; color: #ea580c; border: 1.5px solid #fed7aa; }
         .dish-tag.weekend { background: #fdf4ff; color: #9333ea; border: 1.5px solid #e9d5ff; }
-        .dish-num { color: #aaa; font-weight: 400; font-size: 0.82em; margin-right: 3px; }
+        .dish-num { color: #111; font-weight: 600; font-size: 0.82em; margin-right: 3px; }
         .dish-card.weekend-only { opacity: 0.5; }
         .dish-card.weekend-only .btn-add { pointer-events: none; opacity: 0.4; }
         .srch-hl { color: #2563eb; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
@@ -728,6 +728,15 @@
             body { max-width: 1200px; }
         }
 
+        /* ── TELEFONI MEDI: nascondi label testo nell'header ── */
+        @media (max-width: 480px) {
+            /* Nascondi "IT" e "1" — restano solo le icone */
+            #lang-label { display: none; }
+            #people-label { display: none; }
+            .header-icon { padding: 9px 10px; font-size: 1.15em; }
+            #sticky-header { padding: 0 14px; }
+        }
+
         /* ── PICCOLI TELEFONI 360px- ── */
         @media (max-width: 360px) {
             .dish-name { font-size: 0.95em; }
@@ -735,7 +744,7 @@
             .dish-card { padding: 12px 14px; gap: 10px; }
             .dish-img-placeholder { width: 62px; height: 62px; }
             .cat-tab { padding: 6px 12px; font-size: 0.78em; }
-            .header-icon { padding: 8px 9px; font-size: 1.1em; }
+            .header-icon { padding: 8px 8px; font-size: 1.05em; }
             #footer-waiter, #footer-cart { font-size: 0.82em; padding: 12px 10px; gap: 6px; }
         }
     </style>
