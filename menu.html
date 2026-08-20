@@ -330,78 +330,112 @@
         #np-check { width:64px; height:64px; border-radius:50%; background:#111; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.6em; }
         #np-overlay.open #np-check { animation: checkPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
 
-        /* ── POPUP PIATTO full-screen ── */
+        /* ── POPUP PIATTO — bottom sheet ── */
         #di-overlay {
             display: none; position: fixed; inset: 0; z-index: 1100;
-            background: #fff; flex-direction: column; overflow: hidden;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            align-items: flex-end; justify-content: center;
         }
-        #di-overlay.open { display: flex; animation: diSlideIn 0.3s cubic-bezier(0.22,1,0.36,1); }
-        @keyframes diSlideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        #di-overlay.open { display: flex; }
+        #di-overlay.open #di-sheet { animation: diSlideUp 0.34s cubic-bezier(0.22,1,0.36,1); }
+        @keyframes diSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* FOTO */
+        #di-sheet {
+            width: 100%; max-width: 600px;
+            background: #fff;
+            border-radius: 28px 28px 0 0;
+            max-height: 88vh;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* HANDLE */
+        #di-handle {
+            flex-shrink: 0; display: flex; justify-content: center; padding: 12px 0 4px;
+        }
+        #di-handle-bar {
+            width: 36px; height: 4px; border-radius: 2px; background: #e0e0e0;
+        }
+
+        /* FOTO + X */
         #di-hero {
-            width: 100%; height: 42vh; min-height: 200px; max-height: 320px;
-            background: #ebebeb; position: relative; overflow: hidden; flex-shrink: 0;
+            width: 100%; height: 200px; flex-shrink: 0;
+            background: #f0f0f0; position: relative; overflow: hidden;
             display: flex; align-items: center; justify-content: center;
         }
-        #di-hero-icon { font-size: 4em; color: #ccc; }
+        #di-hero-icon { font-size: 3.5em; color: #d0d0d0; }
         #di-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        /* X — piccolo, tondo, nero semitrasparente, testo fisso */
         #di-close {
-            position: absolute; top: 14px; left: 14px; z-index: 2;
-            width: 30px; height: 30px; border-radius: 50%; border: none;
-            background: rgba(0,0,0,0.38); color: #fff; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            padding: 0; line-height: 1;
+            position: absolute; top: 12px; right: 12px; z-index: 2;
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.32); color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; padding: 0;
         }
-        #di-close i { font-size: 13px; line-height: 1; display: block; }
+        #di-close i { font-size: 13px; line-height: 1; }
 
         /* BODY */
         #di-body {
             flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-            padding: 24px 22px 40px;
-            display: flex; flex-direction: column;
+            padding: 20px 22px 36px;
+            display: flex; flex-direction: column; gap: 0;
         }
+
+        /* HEADER ROW: nome + foto thumbnail se no img */
         #di-name {
-            font-size: 1.65em; font-weight: 800; color: #111; margin: 0 0 6px;
-            padding: 0; border: none !important; letter-spacing: -0.04em; line-height: 1.2;
+            font-size: 1.5em; font-weight: 800; color: #111;
+            margin: 0 0 5px; padding: 0; border: none !important;
+            letter-spacing: -0.04em; line-height: 1.2;
         }
-        #di-desc { font-size: 0.86em; color: #999; margin: 0 0 28px; line-height: 1.55; }
+        #di-desc { font-size: 0.84em; color: #999; margin: 0 0 22px; line-height: 1.55; }
 
-        /* AVVISO MAX1 */
+        /* MAX1 */
         #di-max1-notice {
-            background: #f5f5f5; border-radius: 12px; padding: 11px 14px;
-            font-size: 0.8em; color: #555; line-height: 1.5; margin-bottom: 20px;
-            align-items: flex-start; gap: 9px;
+            background: #f8f8f8; border-radius: 12px; padding: 10px 14px;
+            font-size: 0.78em; color: #666; line-height: 1.5; margin-bottom: 18px;
+            align-items: flex-start; gap: 8px; border-left: 3px solid #111;
         }
-        #di-max1-notice i { color: #111; flex-shrink: 0; margin-top: 1px; font-size: 0.95em; }
+        #di-max1-notice i { color: #111; flex-shrink: 0; margin-top: 1px; }
 
-        /* QUANTITÀ — centrata, grande */
-        #di-qty-row {
+        /* QUANTITÀ — pill compatto, tutto centrato */
+        #di-qty-wrap {
             display: flex; align-items: center; justify-content: center;
-            gap: 28px; padding: 8px 0 24px;
+            margin-bottom: 20px;
+        }
+        #di-qty-pill {
+            display: flex; align-items: center;
+            background: #f5f5f5; border-radius: 50px;
+            padding: 6px 6px;
+            gap: 0;
         }
         .di-qty-btn {
-            width: 52px; height: 52px; border-radius: 50%;
-            border: 2px solid #111; background: #fff; color: #111;
-            font-size: 22px; font-weight: 700; line-height: 1;
+            width: 48px; height: 48px; border-radius: 50%;
+            border: none;
+            font-size: 22px; font-weight: 600; line-height: 1;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: opacity 0.2s;
+            cursor: pointer; transition: background 0.15s, transform 0.1s;
+            background: transparent; color: #111;
         }
+        .di-qty-btn:not(.hidden-btn):active { transform: scale(0.9); }
+        #di-btn-plus { background: #111; color: #fff; border-radius: 50%; }
+        #di-btn-plus:disabled { background: #ccc; }
         .di-qty-btn.hidden-btn { visibility: hidden; }
         #di-qty-num {
-            font-size: 2em; font-weight: 800; min-width: 36px;
+            font-size: 1.3em; font-weight: 800; min-width: 40px;
             text-align: center; color: #111; transition: color 0.2s;
         }
-        #di-qty-num.zero { color: #ccc; }
+        #di-qty-num.zero { color: #aaa; }
 
-        /* DETTAGLI link minimalissimo */
+        /* RIGA DETTAGLI */
         #di-details-link {
-            text-align: center; font-size: 0.72em; color: #bbb; cursor: pointer;
-            background: none; border: none; font-family: inherit; padding: 0; margin-top: 12px;
-            letter-spacing: 0.02em;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; background: #f8f8f8; border-radius: 14px;
+            border: none; font-family: inherit; cursor: pointer; width: 100%;
+            text-align: left;
         }
+        #di-details-link span { font-size: 0.88em; font-weight: 600; color: #444; }
+        #di-details-link i { font-size: 0.8em; color: #bbb; }
 
         /* POPUP PREZZO */
         #price-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:1200; justify-content:center; align-items:center; }
@@ -543,25 +577,33 @@
         </div>
     </div>
 
-    <!-- POPUP INFO PIATTO — full screen -->
+    <!-- POPUP INFO PIATTO — bottom sheet -->
     <div id="di-overlay">
-        <div id="di-hero">
-            <i class="fas fa-bowl-rice" id="di-hero-icon"></i>
-            <button id="di-close"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="di-body">
-            <h2 id="di-name"></h2>
-            <p id="di-desc"></p>
-            <div id="di-max1-notice" style="display:none;">
-                <i class="fas fa-circle-info"></i>
-                <span>Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
+        <div id="di-sheet">
+            <div id="di-handle"><div id="di-handle-bar"></div></div>
+            <div id="di-hero">
+                <i class="fas fa-bowl-rice" id="di-hero-icon"></i>
+                <button id="di-close"><i class="fas fa-times"></i></button>
             </div>
-            <div id="di-qty-row">
-                <button class="di-qty-btn hidden-btn" id="di-btn-minus" onclick="diSetQty(diQty - 1)">−</button>
-                <span id="di-qty-num" class="zero">0</span>
-                <button class="di-qty-btn" id="di-btn-plus" onclick="diSetQty(diQty + 1)">+</button>
+            <div id="di-body">
+                <h2 id="di-name"></h2>
+                <p id="di-desc"></p>
+                <div id="di-max1-notice" style="display:none;">
+                    <i class="fas fa-circle-info"></i>
+                    <span>Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
+                </div>
+                <div id="di-qty-wrap">
+                    <div id="di-qty-pill">
+                        <button class="di-qty-btn hidden-btn" id="di-btn-minus" onclick="diSetQty(diQty - 1)">−</button>
+                        <span id="di-qty-num" class="zero">0</span>
+                        <button class="di-qty-btn" id="di-btn-plus" onclick="diSetQty(diQty + 1)">+</button>
+                    </div>
+                </div>
+                <button id="di-details-link" onclick="document.getElementById('price-overlay').classList.add('open')">
+                    <span>Dettagli &amp; Prezzo</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
-            <button id="di-details-link" onclick="document.getElementById('price-overlay').classList.add('open')">Dettagli &amp; Prezzo</button>
         </div>
     </div>
 
@@ -1043,7 +1085,9 @@
             const plusBtn = document.getElementById('di-btn-plus');
             numEl.textContent = diQty;
             numEl.classList.toggle('zero', diQty === 0);
-            minusBtn.classList.toggle('hidden-btn', diQty === 0);
+            // minus: invisibile (visibility) quando 0 → layout stabile, nessun salto
+            minusBtn.style.visibility = diQty === 0 ? 'hidden' : '';
+            minusBtn.classList.remove('hidden-btn'); // non più gestito via classe
             plusBtn.disabled = !!(item && item.max1 && diQty >= 1);
         }
 
@@ -1060,6 +1104,10 @@
         window.addEventListener('DOMContentLoaded', () => {
             renderMenu();
             initScrollSpy();
+            // chiudi toccando l'overlay fuori dal sheet
+            document.getElementById('di-overlay').addEventListener('click', e => {
+                if (e.target === document.getElementById('di-overlay')) closeDishOverlay();
+            });
             document.getElementById('di-close').addEventListener('click', closeDishOverlay);
         });
     </script>
