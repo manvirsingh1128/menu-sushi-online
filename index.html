@@ -330,75 +330,51 @@
         #np-check { width:64px; height:64px; border-radius:50%; background:#111; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.6em; }
         #np-overlay.open #np-check { animation: checkPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
 
-        /* ── POPUP PIATTO — Deliveroo × Apple ── */
+        /* ── POPUP PIATTO — card centrata ── */
         #di-overlay {
             display: none; position: fixed; inset: 0; z-index: 1100;
-            background: rgba(0,0,0,0.55);
+            background: rgba(0,0,0,0.52);
             backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            align-items: flex-end; justify-content: center;
+            align-items: center; justify-content: center;
+            padding: 24px;
         }
         #di-overlay.open { display: flex; }
-        #di-overlay.open #di-sheet { animation: diSlideUp 0.42s cubic-bezier(0.22,1,0.36,1) both; }
-        @keyframes diSlideUp   { from { transform: translateY(110%); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes diSlideDown { from { transform: translateY(0);    opacity: 1;   } to { transform: translateY(110%); opacity: 0.4; } }
+        #di-overlay.open #di-sheet { animation: diPopIn 0.32s cubic-bezier(0.34,1.3,0.64,1) both; }
+        @keyframes diPopIn    { from { transform: scale(0.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes diPopOut   { from { transform: scale(1);    opacity: 1; } to { transform: scale(0.88); opacity: 0; } }
 
         #di-sheet {
-            width: 100%; max-width: 560px;
+            width: 100%; max-width: 420px;
             background: #fff;
-            border-radius: 24px 24px 0 0;
-            max-height: 90vh;
-            display: flex; flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+            border-radius: 24px;
+            max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.28);
             position: relative;
         }
 
-        /* HANDLE */
-        #di-handle {
-            position: absolute; top: 0; left: 0; right: 0;
-            display: flex; justify-content: center; padding: 10px 0; z-index: 3;
-        }
-        #di-handle-bar {
-            width: 40px; height: 4px; border-radius: 10px; background: rgba(255,255,255,0.55);
-        }
-
-        /* FOTO */
-        #di-hero {
-            width: 100%; height: 240px; flex-shrink: 0;
-            background: #1a1a1a; position: relative; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
-        }
-        #di-hero-icon { font-size: 4em; color: rgba(255,255,255,0.15); }
-        #di-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-        #di-hero-grad {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 110px;
-            background: linear-gradient(to top, rgba(0,0,0,0.52) 0%, transparent 100%);
-            pointer-events: none; z-index: 1;
-        }
-
+        /* X — angolo in alto a destra della card */
         #di-close {
-            position: absolute; top: 12px; right: 14px; z-index: 4;
-            width: 36px; height: 36px; border-radius: 50%; border: none;
-            background: rgba(0,0,0,0.42); color: #fff; cursor: pointer;
+            position: absolute; top: 14px; right: 14px; z-index: 4;
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: #f0f0f0; color: #555; cursor: pointer;
             display: flex; align-items: center; justify-content: center; padding: 0;
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
             touch-action: manipulation;
         }
-        #di-close i { font-size: 13px; line-height: 1; }
+        #di-close i { font-size: 12px; line-height: 1; }
+        #di-close:active { background: #e0e0e0; }
 
         /* BODY */
         #di-body {
-            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-            padding: 18px 20px 40px;
+            padding: 24px 22px 28px;
             display: flex; flex-direction: column; gap: 0;
         }
 
         #di-name {
-            font-size: 1.55em; font-weight: 800; color: #0a0a0a;
-            margin: 0 0 4px; padding: 0; border: none !important;
-            letter-spacing: -0.045em; line-height: 1.15;
+            font-size: 1.45em; font-weight: 800; color: #0a0a0a;
+            margin: 0 0 5px; padding: 0 30px 0 0; border: none !important;
+            letter-spacing: -0.04em; line-height: 1.2;
         }
-        #di-desc { font-size: 0.88em; color: #666; margin: 0 0 20px; line-height: 1.6; }
+        #di-desc { font-size: 0.86em; color: #777; margin: 0 0 16px; line-height: 1.6; }
 
         /* MAX1 */
         #di-max1-notice {
@@ -453,29 +429,34 @@
         }
 
         /* ALLERGENI NEL POPUP */
+        #di-allergens-section { margin-bottom: 18px; }
+        #di-allergens-label {
+            font-size: 0.65em; font-weight: 700; color: #aaa;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            margin-bottom: 7px;
+        }
         #di-allergens-inline {
             display: flex; flex-wrap: wrap; gap: 6px;
-            margin-bottom: 18px;
         }
         .di-allergen-pill {
             display: flex; align-items: center; gap: 5px;
-            background: #f5f5f5; border-radius: 20px;
-            padding: 5px 10px 5px 8px;
-            font-size: 0.72em; font-weight: 600; color: #c62828;
+            background: #fef2f2; border-radius: 20px;
+            padding: 4px 10px 4px 7px;
+            font-size: 0.7em; font-weight: 600; color: #c62828;
         }
-        .di-allergen-pill i { font-size: 1em; }
+        .di-allergen-pill i { font-size: 0.95em; }
 
-        /* LINK DETTAGLI SOTTILE */
+        /* LINK DETTAGLI SOTTILISSIMO */
         #di-details-link {
             display: inline-block;
             border: none; background: none; font-family: inherit;
-            cursor: pointer; padding: 0; margin-top: 4px;
-            font-size: 0.76em; font-weight: 500; color: #bbb;
-            text-decoration: underline; text-underline-offset: 3px;
-            text-decoration-color: #ddd;
+            cursor: pointer; padding: 0; margin-top: 2px;
+            font-size: 0.68em; font-weight: 400; color: #ccc;
+            text-decoration: underline; text-underline-offset: 2px;
+            text-decoration-color: #e0e0e0;
             touch-action: manipulation;
         }
-        #di-details-link:active { color: #888; }
+        #di-details-link:active { color: #999; }
 
         /* POPUP PREZZO */
         #price-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:1200; justify-content:center; align-items:center; }
@@ -617,19 +598,17 @@
         </div>
     </div>
 
-    <!-- POPUP INFO PIATTO — Deliveroo × Apple -->
+    <!-- POPUP INFO PIATTO — card centrata -->
     <div id="di-overlay" onclick="if(event.target===this)closeDishOverlay()">
         <div id="di-sheet">
-            <div id="di-handle"><div id="di-handle-bar"></div></div>
-            <div id="di-hero">
-                <i class="fas fa-bowl-rice" id="di-hero-icon"></i>
-                <div id="di-hero-grad"></div>
-                <button id="di-close" onclick="closeDishOverlay()"><i class="fas fa-times"></i></button>
-            </div>
+            <button id="di-close" onclick="closeDishOverlay()"><i class="fas fa-times"></i></button>
             <div id="di-body">
                 <h2 id="di-name"></h2>
                 <p id="di-desc"></p>
-                <div id="di-allergens-inline"></div>
+                <div id="di-allergens-section" style="display:none;">
+                    <div id="di-allergens-label">Allergie</div>
+                    <div id="di-allergens-inline"></div>
+                </div>
                 <div id="di-max1-notice" style="display:none;">
                     <i class="fas fa-circle-info"></i>
                     <span>Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
@@ -1072,14 +1051,15 @@
             const present = allergenList.filter(a => item.allergens && item.allergens.includes(a.key));
 
             // allergeni inline nel popup principale
+            const allerSection = document.getElementById('di-allergens-section');
             const inlineWrap = document.getElementById('di-allergens-inline');
             if (present.length) {
                 inlineWrap.innerHTML = present.map(a =>
                     `<span class="di-allergen-pill"><i class="fas ${a.icon}"></i>${a.label}</span>`
                 ).join('');
-                inlineWrap.style.display = 'flex';
+                allerSection.style.display = '';
             } else {
-                inlineWrap.style.display = 'none';
+                allerSection.style.display = 'none';
             }
 
             // allergeni anche nel popup dettagli
@@ -1157,7 +1137,7 @@
         function closeDishOverlay() {
             const overlay = document.getElementById('di-overlay');
             const sheet   = document.getElementById('di-sheet');
-            sheet.style.animation = 'diSlideDown 0.28s cubic-bezier(0.4,0,0.8,0.6) forwards';
+            sheet.style.animation = 'diPopOut 0.22s cubic-bezier(0.4,0,0.8,0.6) forwards';
             sheet.addEventListener('animationend', () => {
                 sheet.style.animation = '';
                 overlay.classList.remove('open');
