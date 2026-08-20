@@ -11,37 +11,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; -webkit-user-select: none; }
+        button, a, [onclick] { touch-action: manipulation; } /* blocca double-tap zoom su elementi interattivi */
+        html, body { touch-action: pan-y; } /* blocca zoom e pan laterale a livello compositor — nessun JS coinvolto */
         body {
             background-color: #ffffff;
             color: #1a1a1a;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-            font-weight: 400;
+            margin: 0; padding: 0;
+            line-height: 1.6; font-weight: 400;
             padding-bottom: 100px;
         }
+        body.scroll-locked {
+            /* scroll lock per iOS: non usa overflow:hidden che rompe fixed */
+            position: fixed; width: 100%; overflow-y: scroll;
+        }
+
+        /* ── STICKY HEADER ── */
+        /* Tecnica Instagram/Twitter: trasla l'intero sticky verso l'alto di 70px (altezza header).
+           Le tab rimangono visibili perché partono a Y=70 nel container → appaiono a Y=0.
+           Nessun overflow:hidden necessario → iOS scroll non si rompe. */
         #sticky-top {
             position: sticky; top: 0; z-index: 100;
-            background: rgba(255,255,255,0.82);
+            background: rgba(255,255,255,0.88);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(0,0,0,0.13);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-            overflow: hidden;
-        }
-        .main-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            height: 70px;
-            border-bottom: 1px solid rgba(0,0,0,0.18);
-            transform: translateY(0);
-            transition: transform 0.25s ease;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
             will-change: transform;
         }
-        .main-header.hidden {
-            transform: translateY(-100%);
-            pointer-events: none;
+        #sticky-top.header-hidden { transform: translateY(-70px); }
+        .main-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; height: 70px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
         }
         .header-left, .header-center, .header-right {
             flex: 1;
@@ -596,26 +597,38 @@
         document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
         document.addEventListener('dblclick', e => e.preventDefault());
 
-        // Hide/show main header on scroll
-        let lastScrollY = window.scrollY;
-        let ticking = false;
-        const mainHeader = document.querySelector('.main-header');
+        // ── SCROLL HEADER (tecnica Google/Instagram) ──
+        // Trasla l'intero #sticky-top su di 70px → le tab restano visibili, l'header sparisce.
+        // Usa solo transform sul compositor thread → zero reflow, zero jank.
+        let _lastScrollY = window.scrollY;
+        let _ticking = false;
+        const stickyTop = document.getElementById('sticky-top');
         window.addEventListener('scroll', () => {
-            if (!ticking) {
-                requestAnimationFrame(() => {
-                    const currentY = window.scrollY;
-                    const delta = currentY - lastScrollY;
-                    if (delta > 4 && currentY > 80) {
-                        mainHeader.classList.add('hidden');
-                    } else if (delta < -4) {
-                        mainHeader.classList.remove('hidden');
-                    }
-                    lastScrollY = currentY;
-                    ticking = false;
-                });
-                ticking = true;
-            }
+            if (_ticking) return;
+            _ticking = true;
+            requestAnimationFrame(() => {
+                const y = window.scrollY;
+                const delta = y - _lastScrollY;
+                if (delta > 5 && y > 90) stickyTop.classList.add('header-hidden');
+                else if (delta < -5) stickyTop.classList.remove('header-hidden');
+                _lastScrollY = y;
+                _ticking = false;
+            });
         }, { passive: true });
+
+        // ── BODY SCROLL LOCK (tecnica usata da Deliveroo/Glovo per popup fullscreen su iOS) ──
+        // position:fixed + top:-scrollY è l'unico metodo che non rompe fixed elements su iOS
+        let _savedScrollY = 0;
+        function lockScroll() {
+            _savedScrollY = window.scrollY;
+            document.body.style.top = `-${_savedScrollY}px`;
+            document.body.classList.add('scroll-locked');
+        }
+        function unlockScroll() {
+            document.body.classList.remove('scroll-locked');
+            document.body.style.top = '';
+            window.scrollTo(0, _savedScrollY);
+        }
 
         // POPUP LINGUA
         const lpOverlay = document.getElementById('lp-overlay');
@@ -969,7 +982,7 @@
             diQty = cart[id] || 0;
             diRefreshQtyUI(item);
 
-            document.getElementById('di-overlay').classList.add('open');
+            openDishOverlay();
         }
 
         function diSetQty(newQty) {
@@ -1015,12 +1028,20 @@
             plusBtn.disabled = !!(item && item.max1 && diQty >= 1);
         }
 
+        // apre/chiude popup piatto con scroll lock
+        function openDishOverlay() {
+            document.getElementById('di-overlay').classList.add('open');
+            lockScroll();
+        }
+        function closeDishOverlay() {
+            document.getElementById('di-overlay').classList.remove('open');
+            unlockScroll();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             renderMenu();
             initScrollSpy();
-            document.getElementById('di-close').addEventListener('click', () => {
-                document.getElementById('di-overlay').classList.remove('open');
-            });
+            document.getElementById('di-close').addEventListener('click', closeDishOverlay);
         });
     </script>
 
