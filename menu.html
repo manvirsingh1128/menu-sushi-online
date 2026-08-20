@@ -1231,6 +1231,17 @@
         }
 
         function cartSendOrder() {
+            // svuota carrello e resetta UI
+            Object.keys(cart).forEach(id => {
+                delete cart[id];
+                const addBtn = document.getElementById(`add-${id}`);
+                const qtyEl = document.getElementById(`qty-${id}`);
+                const card = document.getElementById(`dish-${id}`);
+                if (addBtn) addBtn.style.display = '';
+                if (qtyEl) qtyEl.classList.remove('show');
+                if (card) card.classList.remove('in-cart');
+            });
+            updateCartBadge();
             closeCart();
             setTimeout(() => {
                 document.getElementById('order-confirm-overlay').classList.add('open');
