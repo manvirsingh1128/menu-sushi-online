@@ -931,6 +931,8 @@
                 personLabel: 'persone',
                 addedToast: 'Aggiunto al carrello',
                 closeBtn: 'Chiudi',
+                qrTitle: 'Sessione scaduta',
+                qrSub: 'Scansiona il QR al tuo tavolo per continuare a ordinare.',
                 max1explainTitle: 'Piatto già selezionato',
                 max1explainSub: 'Hai già selezionato il massimo per questa categoria. Siete in più persone allo stesso tavolo?',
                 max1explainAdd: 'Aggiungi persone',
@@ -982,6 +984,8 @@
                 personLabel: 'people',
                 addedToast: 'Added to cart',
                 closeBtn: 'Close',
+                qrTitle: 'Session expired',
+                qrSub: 'Scan the QR code at your table to continue ordering.',
                 max1explainTitle: 'Dish already selected',
                 max1explainSub: 'You have already selected the maximum for this category. Are there more people at the table?',
                 max1explainAdd: 'Add people',
@@ -1033,6 +1037,8 @@
                 personLabel: '人',
                 addedToast: '已加入购物车',
                 closeBtn: '关闭',
+                qrTitle: '会话已过期',
+                qrSub: '请扫描桌上的二维码继续点餐。',
                 max1explainTitle: '已选择该菜品',
                 max1explainSub: '您已达到此类别的最大数量。桌上有更多人吗？',
                 max1explainAdd: '添加人数',
@@ -2224,13 +2230,72 @@
         window.addEventListener('DOMContentLoaded', () => {
             renderMenu();
             initScrollSpy();
-            // chiudi toccando l'overlay fuori dal sheet
             document.getElementById('di-overlay').addEventListener('click', e => {
                 if (e.target === document.getElementById('di-overlay')) closeDishOverlay();
             });
             document.getElementById('di-close').addEventListener('click', closeDishOverlay);
         });
+
+        // ── SESSIONE QR ──
+        const SESSION_DURATION = 2.5 * 60 * 60 * 1000; // 2h30m
+        const SESSION_KEY = 'jun_session';
+        const VALID_CODE = 'jun2025';
+
+        function checkSession() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('k');
+            const raw = localStorage.getItem(SESSION_KEY);
+            const session = raw ? JSON.parse(raw) : null;
+            const now = Date.now();
+
+            if (code === VALID_CODE) {
+                // nuova scansione → resetta sessione e carrello
+                localStorage.setItem(SESSION_KEY, JSON.stringify({ start: now }));
+                // rimuovi k dall'URL senza reload
+                const url = new URL(window.location.href);
+                url.searchParams.delete('k');
+                history.replaceState({}, '', url);
+                return true;
+            }
+
+            if (session && (now - session.start) < SESSION_DURATION) {
+                // sessione valida
+                scheduleExpiry(SESSION_DURATION - (now - session.start));
+                return true;
+            }
+
+            // sessione assente o scaduta
+            showQRScreen();
+            return false;
+        }
+
+        function scheduleExpiry(msLeft) {
+            setTimeout(() => showQRScreen(), msLeft);
+        }
+
+        function showQRScreen() {
+            // svuota carrello
+            Object.keys(cart).forEach(k => delete cart[k]);
+            updateCartBadge();
+
+            const t = translations[currentLang] || translations.it;
+            const screen = document.getElementById('qr-screen');
+            document.getElementById('qr-title').textContent = t.qrTitle || 'Sessione scaduta';
+            document.getElementById('qr-sub').textContent = t.qrSub || 'Scansiona il QR al tuo tavolo per ordinare.';
+            screen.style.display = 'flex';
+        }
+
+        checkSession();
     </script>
+
+    <!-- SCHERMATA QR SCADUTO -->
+    <div id="qr-screen" style="display:none;position:fixed;inset:0;background:#fff;z-index:99999;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;">
+        <div style="width:72px;height:72px;background:#f3f4f6;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+            <i class="fas fa-qrcode" style="font-size:2em;color:#111;"></i>
+        </div>
+        <h2 id="qr-title" style="font-size:1.4em;font-weight:800;color:#111;margin:0 0 12px;letter-spacing:-0.03em;">Sessione scaduta</h2>
+        <p id="qr-sub" style="font-size:0.95em;color:#666;line-height:1.6;margin:0;max-width:280px;">Scansiona il QR al tuo tavolo per continuare a ordinare.</p>
+    </div>
 
 </body>
 </html>
