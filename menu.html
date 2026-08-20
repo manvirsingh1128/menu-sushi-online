@@ -154,9 +154,16 @@
         }
         .dish-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 5px; }
         .dish-tag { font-size: 0.68em; font-weight: 700; padding: 3px 8px; border-radius: 20px; display:inline-flex; align-items:center; gap:3px; }
-        .dish-tag.max1 { background: #111; color: #fff; }
         .dish-tag.spicy { background: #fff0f0; color: #dc2626; }
         .dish-tag.veg { background: #f0fdf4; color: #16a34a; }
+        .cat-max1-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #fff7ed; color: #ea580c;
+            font-size: 0.48em; font-weight: 700; padding: 4px 10px;
+            border-radius: 20px; margin-left: 10px;
+            vertical-align: middle; letter-spacing: 0.02em;
+            border: 1.5px solid #fed7aa;
+        }
 
         .info-btn {
             display: inline-flex; align-items: center; gap: 3px; margin-top: 5px;
@@ -926,7 +933,7 @@
                 filterTitle: 'Allergie',
                 filterSub: 'Nascondi i piatti con i tuoi allergeni',
                 filterApply: 'Conferma',
-                max1tag: '1/pers',
+                max1tag: '1 per persona',
                 spicyTag: 'Piccante',
                 vegTag: 'Veg',
                 peopleTitle: 'Persone al tavolo',
@@ -981,7 +988,7 @@
                 filterTitle: 'Allergens',
                 filterSub: 'Hide dishes with your allergens',
                 filterApply: 'Confirm',
-                max1tag: '1/pers',
+                max1tag: '1 per person',
                 spicyTag: 'Spicy',
                 vegTag: 'Veg',
                 peopleTitle: 'People at the table',
@@ -1036,7 +1043,7 @@
                 filterTitle: '过敏原',
                 filterSub: '隐藏含有您过敏原的菜品',
                 filterApply: '确认',
-                max1tag: '1/人',
+                max1tag: '每人1份',
                 spicyTag: '辣',
                 vegTag: '素',
                 peopleTitle: '桌上人数',
@@ -1815,14 +1822,11 @@
                 sec.className = 'menu-category';
                 sec.id = 'cat-sec-' + cat.id;
 
-                if (cat.max1 && idx > 0) {
-                    const div = document.createElement('div');
-                    div.className = 'max1-divider';
-                    div.innerHTML = '<span>Max 1 a persona</span>';
-                    container.appendChild(div);
-                }
-
-                sec.innerHTML = `<h2 class="category-title">${getLang(cat,'name')}</h2>`;
+                const t = translations[currentLang] || translations.it;
+                const max1Badge = cat.max1
+                    ? `<span class="cat-max1-badge"><i class="fas fa-user"></i> ${t.max1tag || '1/pers'}</span>`
+                    : '';
+                sec.innerHTML = `<h2 class="category-title">${getLang(cat,'name')}${max1Badge}</h2>`;
 
                 cat.items.forEach(item => {
                     const card = document.createElement('div');
@@ -1830,14 +1834,12 @@
                     card.id = `dish-${item.id}`;
 
                     const tags = [];
-                    const t = translations[currentLang] || translations.it;
-                    if (cat.max1) tags.push(`<span class="dish-tag max1"><i class="fas fa-user" style="font-size:0.85em;"></i>${t.max1tag || 'Max 1'}</span>`);
                     const nameOnly = (item.name + ' ' + (item.nameEn||'')).toLowerCase();
                     const allText = (nameOnly + ' ' + (item.desc||'')).toLowerCase();
                     const isSpicy = allText.includes('piccante') || allText.includes('spicy');
                     const isVeg = /vegetarian[oa]?|veggie/.test(nameOnly);
-                    if (isSpicy) tags.push(`<span class="dish-tag spicy">🌶️ ${t.spicyTag||'Piccante'}</span>`);
-                    if (isVeg) tags.push(`<span class="dish-tag veg">🌿 ${t.vegTag||'Veg'}</span>`);
+                    if (isSpicy) tags.push(`<span class="dish-tag spicy"><i class="fas fa-fire"></i> ${t.spicyTag||'Piccante'}</span>`);
+                    if (isVeg) tags.push(`<span class="dish-tag veg"><i class="fas fa-leaf"></i> ${t.vegTag||'Veg'}</span>`);
                     const tagsHtml = tags.length ? `<div class="dish-tags">${tags.join('')}</div>` : '';
                     const iName = getLang(item,'name');
                     const iDesc = getLang(item,'desc');
