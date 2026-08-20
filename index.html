@@ -714,16 +714,16 @@
         <div id="wp-box">
             <div id="wp-main">
                 <div id="wp-header">
-                    <h2 id="wp-title">Chiama il Cameriere</h2>
+                    <h2 id="wp-title" data-i18n="waiterTitle">Chiama il Cameriere</h2>
                     <button id="wp-close"><i class="fas fa-times"></i></button>
                 </div>
                 <div id="wp-options">
-                    <button class="wp-opt"><i class="fas fa-circle-info"></i><span>Spiegazione sui piatti</span></button>
-                    <button class="wp-opt"><i class="fas fa-mug-saucer"></i><span>Ordine bevande</span></button>
-                    <button class="wp-opt"><i class="fas fa-credit-card"></i><span>Richiesta conto</span></button>
-                    <button class="wp-opt"><i class="fas fa-comment-dots"></i><span>Altra assistenza</span></button>
+                    <button class="wp-opt"><i class="fas fa-circle-info"></i><span data-i18n="waiterOpt1">Spiegazione sui piatti</span></button>
+                    <button class="wp-opt"><i class="fas fa-mug-saucer"></i><span data-i18n="waiterOpt2">Ordine bevande</span></button>
+                    <button class="wp-opt"><i class="fas fa-credit-card"></i><span data-i18n="waiterOpt3">Richiesta conto</span></button>
+                    <button class="wp-opt"><i class="fas fa-comment-dots"></i><span data-i18n="waiterOpt4">Altra assistenza</span></button>
                 </div>
-                <button id="wp-send">Invia richiesta</button>
+                <button id="wp-send" data-i18n="waiterSend">Invia richiesta</button>
             </div>
             <div id="wp-ok">
                 <div id="wp-check"><i class="fas fa-check"></i></div>
@@ -745,16 +745,16 @@
                 <h2 id="di-name"></h2>
                 <p id="di-desc"></p>
                 <div id="di-allergens-section" style="display:none;">
-                    <div id="di-allergens-label">Allergie</div>
+                    <div id="di-allergens-label" data-i18n="allergens">Allergie</div>
                     <div id="di-allergens-inline"></div>
                 </div>
                 <div id="di-max1-notice" style="display:none;">
                     <i class="fas fa-circle-info"></i>
-                    <span>Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
+                    <span data-i18n="max1notice">Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
                 </div>
                 <div id="di-qty-wrap">
                     <button id="di-cta-btn" onclick="diSetQty(1)">
-                        <i class="fas fa-plus"></i> Aggiungi
+                        <i class="fas fa-plus"></i> <span data-i18n="add">Aggiungi</span>
                     </button>
                     <div id="di-qty-pill">
                         <button class="di-qty-btn" id="di-btn-minus" onclick="diSetQty(diQty - 1)">−</button>
@@ -762,7 +762,7 @@
                         <button class="di-qty-btn" id="di-btn-plus" onclick="diSetQty(diQty + 1)">+</button>
                     </div>
                 </div>
-                <button id="di-details-link" onclick="document.getElementById('price-overlay').classList.add('open')">Dettagli &amp; Prezzo</button>
+                <button id="di-details-link" onclick="document.getElementById('price-overlay').classList.add('open')" data-i18n="detailsPrice">Dettagli &amp; Prezzo</button>
             </div>
         </div>
     </div>
@@ -796,7 +796,7 @@
             <div id="cart-handle"></div>
             <div id="cart-header">
                 <div>
-                    <p id="cart-title">Il tuo ordine</p>
+                    <p id="cart-title" data-i18n="cartTitle">Il tuo ordine</p>
                     <p id="cart-subtitle"></p>
                 </div>
                 <button id="cart-close-btn" onclick="closeCart()"><i class="fas fa-times" style="font-size:12px;"></i></button>
@@ -805,7 +805,7 @@
             <div id="cart-footer">
                 <button id="cart-cta" onclick="cartSendOrder()" disabled>
                     <i class="fas fa-paper-plane"></i>
-                    <span>Invia Ordine</span>
+                    <span data-i18n="sendOrder">Invia Ordine</span>
                     <span id="cart-cta-count"></span>
                 </button>
             </div>
@@ -816,9 +816,9 @@
     <div id="order-confirm-overlay" onclick="if(event.target===this)closeOrderConfirm()">
         <div id="order-confirm-box">
             <div id="order-confirm-icon"><i class="fas fa-check"></i></div>
-            <h3>Ordine inviato!</h3>
-            <p>Il tuo ordine è stato ricevuto.<br>Il cameriere lo porterà al tuo tavolo.</p>
-            <button id="order-confirm-close" onclick="closeOrderConfirm()">Perfetto</button>
+            <h3 data-i18n="orderSentTitle">Ordine inviato!</h3>
+            <p data-i18n="orderSentDesc">Il tuo ordine è stato ricevuto.<br>Il cameriere lo porterà al tuo tavolo.</p>
+            <button id="order-confirm-close" onclick="closeOrderConfirm()" data-i18n="orderSentBtn">Perfetto</button>
         </div>
     </div>
 
@@ -826,16 +826,106 @@
     <div id="footer-bar">
         <button id="footer-waiter">
             <i class="fas fa-concierge-bell"></i>
-            <span>Cameriere</span>
+            <span data-i18n="footerWaiter">Cameriere</span>
         </button>
         <button id="footer-cart">
             <i class="fas fa-basket-shopping"></i>
-            <span>Carrello</span>
+            <span data-i18n="footerCart">Carrello</span>
             <div id="cart-count">0</div>
         </button>
     </div>
 
     <script>
+        // ── TRADUZIONI ──
+        let currentLang = 'it';
+        const translations = {
+            it: {
+                allergens: 'Allergie',
+                add: 'Aggiungi',
+                detailsPrice: 'Dettagli & Prezzo',
+                max1notice: 'Per questa categoria puoi selezionare <strong>un solo piatto</strong>.',
+                cartTitle: 'Il tuo ordine',
+                cartEmpty: 'Nessun piatto selezionato',
+                cartDish: n => n === 1 ? '1 piatto' : `${n} piatti`,
+                sendOrder: 'Invia Ordine',
+                orderSentTitle: 'Ordine inviato!',
+                orderSentDesc: 'Il tuo ordine è stato ricevuto.<br>Il cameriere lo porterà al tuo tavolo.',
+                orderSentBtn: 'Perfetto',
+                waiterTitle: 'Chiama il Cameriere',
+                waiterOpt1: 'Spiegazione sui piatti',
+                waiterOpt2: 'Ordine bevande',
+                waiterOpt3: 'Richiesta conto',
+                waiterOpt4: 'Altra assistenza',
+                waiterSend: 'Invia richiesta',
+                footerWaiter: 'Cameriere',
+                footerCart: 'Carrello',
+                langTitle: 'Lingua',
+                langSave: 'Salva',
+            },
+            en: {
+                allergens: 'Allergens',
+                add: 'Add',
+                detailsPrice: 'Details & Price',
+                max1notice: 'You can select <strong>only one dish</strong> from this category.',
+                cartTitle: 'Your order',
+                cartEmpty: 'No dishes selected',
+                cartDish: n => n === 1 ? '1 dish' : `${n} dishes`,
+                sendOrder: 'Place Order',
+                orderSentTitle: 'Order placed!',
+                orderSentDesc: 'Your order has been received.<br>The waiter will bring it to your table.',
+                orderSentBtn: 'Great',
+                waiterTitle: 'Call the Waiter',
+                waiterOpt1: 'Dish explanation',
+                waiterOpt2: 'Drink order',
+                waiterOpt3: 'Request bill',
+                waiterOpt4: 'Other assistance',
+                waiterSend: 'Send request',
+                footerWaiter: 'Waiter',
+                footerCart: 'Cart',
+                langTitle: 'Language',
+                langSave: 'Save',
+            },
+            zh: {
+                allergens: '过敏原',
+                add: '添加',
+                detailsPrice: '详情 & 价格',
+                max1notice: '此类别只能选择<strong>一道菜</strong>。',
+                cartTitle: '您的订单',
+                cartEmpty: '未选择菜品',
+                cartDish: n => n === 1 ? '1 道菜' : `${n} 道菜`,
+                sendOrder: '提交订单',
+                orderSentTitle: '订单已提交！',
+                orderSentDesc: '您的订单已收到。<br>服务员将为您送到餐桌。',
+                orderSentBtn: '好的',
+                waiterTitle: '呼叫服务员',
+                waiterOpt1: '菜品说明',
+                waiterOpt2: '饮料点单',
+                waiterOpt3: '请求账单',
+                waiterOpt4: '其他帮助',
+                waiterSend: '发送请求',
+                footerWaiter: '服务员',
+                footerCart: '购物车',
+                langTitle: '语言',
+                langSave: '保存',
+            }
+        };
+
+        function applyLang(lang) {
+            currentLang = lang;
+            const t = translations[lang] || translations.it;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (key && t[key] !== undefined && typeof t[key] === 'string') {
+                    el.innerHTML = t[key];
+                }
+            });
+            // Titolo popup lingua e salva
+            const lpTitle = document.querySelector('#lp-overlay h2');
+            if (lpTitle) lpTitle.textContent = t.langTitle;
+            const lpSave = document.getElementById('lp-save');
+            if (lpSave) lpSave.textContent = t.langSave;
+        }
+
         // POPUP CAMERIERE
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('gesturestart', e => e.preventDefault());
@@ -898,7 +988,10 @@
         });
         document.getElementById('lp-save').addEventListener('click', () => {
             const sel = document.querySelector('.lp-opt[style*="solid #111"]');
-            if (sel) document.getElementById('lang-label').textContent = sel.dataset.label;
+            if (sel) {
+                document.getElementById('lang-label').textContent = sel.dataset.label;
+                applyLang(sel.dataset.lang);
+            }
             lpOverlay.style.display = 'none';
         });
 
@@ -1158,14 +1251,15 @@
             const entries = Object.entries(cart).filter(([, q]) => q > 0);
             const total = entries.reduce((a, [, q]) => a + q, 0);
 
+            const t = translations[currentLang] || translations.it;
             list.innerHTML = '';
             if (entries.length === 0) {
-                list.innerHTML = `<div id="cart-empty"><i class="fas fa-basket-shopping"></i><p>Nessun piatto selezionato</p></div>`;
+                list.innerHTML = `<div id="cart-empty"><i class="fas fa-basket-shopping"></i><p>${t.cartEmpty}</p></div>`;
                 subtitle.textContent = '';
                 ctaCount.textContent = '';
                 cta.disabled = true;
             } else {
-                subtitle.textContent = total === 1 ? '1 piatto' : `${total} piatti`;
+                subtitle.textContent = t.cartDish(total);
                 ctaCount.textContent = total;
                 cta.disabled = false;
                 entries.forEach(([id, qty]) => {
@@ -1226,7 +1320,8 @@
             if (ciqNum) ciqNum.textContent = newQty;
             updateCartBadge();
             const total = Object.values(cart).reduce((a, b) => a + b, 0);
-            document.getElementById('cart-subtitle').textContent = total === 1 ? '1 piatto' : `${total} piatti`;
+            const t = translations[currentLang] || translations.it;
+            document.getElementById('cart-subtitle').textContent = t.cartDish(total);
             document.getElementById('cart-cta-count').textContent = total;
         }
 
