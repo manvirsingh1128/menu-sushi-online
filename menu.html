@@ -227,6 +227,94 @@
             display: flex; align-items: center; justify-content: center; margin-left: 2px;
         }
 
+        /* ── CART DRAWER ── */
+        #cart-overlay {
+            display: none; position: fixed; inset: 0; z-index: 1050;
+            background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            align-items: flex-end; justify-content: center;
+        }
+        #cart-overlay.open { display: flex; }
+        #cart-overlay.open #cart-sheet { animation: cartSlideUp 0.35s cubic-bezier(0.34,1.2,0.64,1) both; }
+        @keyframes cartSlideUp { from { transform: translateY(100%); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes cartSlideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+        #cart-sheet {
+            width: 100%; max-width: 500px;
+            background: #fff; border-radius: 28px 28px 0 0;
+            max-height: 80vh; display: flex; flex-direction: column;
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+        }
+        #cart-handle {
+            width: 38px; height: 4px; border-radius: 2px;
+            background: #ddd; margin: 12px auto 0;
+        }
+        #cart-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px 12px;
+        }
+        #cart-title { font-size: 1.15em; font-weight: 800; color: #0a0a0a; letter-spacing: -0.03em; margin: 0; }
+        #cart-subtitle { font-size: 0.75em; color: #888; margin: 0; font-weight: 500; }
+        #cart-close-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: #f0f0f0; color: #555; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            touch-action: manipulation; flex-shrink: 0;
+        }
+        #cart-list {
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            flex: 1; padding: 4px 0 8px;
+        }
+        .cart-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 13px 20px; border-bottom: 1px solid #f0f0f0;
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-name {
+            flex: 1; font-size: 0.9em; font-weight: 600; color: #111;
+            line-height: 1.3;
+        }
+        .cart-item-cat {
+            font-size: 0.65em; font-weight: 500; color: #aaa;
+            display: block; margin-top: 2px;
+        }
+        .cart-item-qty {
+            display: flex; align-items: center; gap: 0;
+            background: #f5f5f5; border-radius: 20px; overflow: hidden;
+        }
+        .ciq-btn {
+            width: 34px; height: 34px; border: none; background: none;
+            font-size: 1.2em; font-weight: 400; color: #111; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            touch-action: manipulation;
+        }
+        .ciq-btn:active { background: #e8e8e8; }
+        .ciq-num {
+            min-width: 26px; text-align: center;
+            font-size: 0.9em; font-weight: 700; color: #111;
+        }
+        #cart-empty {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 48px 20px;
+            gap: 12px; color: #bbb;
+        }
+        #cart-empty i { font-size: 2.5em; }
+        #cart-empty p { font-size: 0.9em; margin: 0; }
+        #cart-footer {
+            padding: 14px 20px calc(env(safe-area-inset-bottom, 0px) + 14px);
+            border-top: 1px solid #f0f0f0;
+        }
+        #cart-cta {
+            width: 100%; padding: 16px; border: none; border-radius: 16px;
+            background: #111; color: #fff; font-size: 1em; font-weight: 700;
+            cursor: pointer; font-family: inherit; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+            touch-action: manipulation;
+        }
+        #cart-cta:active { background: #333; }
+        #cart-cta-count {
+            background: rgba(255,255,255,0.2); border-radius: 20px;
+            padding: 2px 9px; font-size: 0.82em; font-weight: 800;
+        }
+
         /* FILTRO */
         #filter-overlay {
             display: none; position: fixed; inset: 0;
@@ -672,6 +760,28 @@
         </div>
     </div>
 
+    <!-- CART DRAWER -->
+    <div id="cart-overlay" onclick="if(event.target===this)closeCart()">
+        <div id="cart-sheet">
+            <div id="cart-handle"></div>
+            <div id="cart-header">
+                <div>
+                    <p id="cart-title">Il tuo ordine</p>
+                    <p id="cart-subtitle"></p>
+                </div>
+                <button id="cart-close-btn" onclick="closeCart()"><i class="fas fa-times" style="font-size:12px;"></i></button>
+            </div>
+            <div id="cart-list"></div>
+            <div id="cart-footer">
+                <button id="cart-cta" onclick="cartCallWaiter()">
+                    <i class="fas fa-concierge-bell"></i>
+                    <span>Chiama il Cameriere</span>
+                    <span id="cart-cta-count"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER BAR -->
     <div id="footer-bar">
         <button id="footer-waiter">
@@ -817,6 +927,7 @@
             });
 
             document.getElementById('footer-waiter').addEventListener('click', openPopup);
+            document.getElementById('footer-cart').addEventListener('click', openCart);
             document.getElementById('wp-close').addEventListener('click', closePopup);
             overlay.addEventListener('click', e => { if (e.target === overlay) closePopup(); });
             document.querySelectorAll('.wp-opt').forEach(btn => {
@@ -984,6 +1095,100 @@
         function updateCartBadge() {
             const total = Object.values(cart).reduce((a, b) => a + b, 0);
             document.getElementById('cart-count').textContent = total;
+        }
+
+        // ── CART DRAWER ──
+        function buildDishMap() {
+            const map = {};
+            menuData.forEach(cat => {
+                cat.items.forEach(item => {
+                    map[item.id] = { name: item.name, cat: cat.name };
+                });
+            });
+            return map;
+        }
+
+        function openCart() {
+            const overlay = document.getElementById('cart-overlay');
+            const list = document.getElementById('cart-list');
+            const subtitle = document.getElementById('cart-subtitle');
+            const ctaCount = document.getElementById('cart-cta-count');
+            const map = buildDishMap();
+            const entries = Object.entries(cart).filter(([, q]) => q > 0);
+            const total = entries.reduce((a, [, q]) => a + q, 0);
+
+            list.innerHTML = '';
+            if (entries.length === 0) {
+                list.innerHTML = `<div id="cart-empty"><i class="fas fa-basket-shopping"></i><p>Nessun piatto selezionato</p></div>`;
+                subtitle.textContent = '';
+                ctaCount.textContent = '';
+            } else {
+                subtitle.textContent = total === 1 ? '1 piatto' : `${total} piatti`;
+                ctaCount.textContent = total;
+                entries.forEach(([id, qty]) => {
+                    const d = map[id] || { name: 'Piatto', cat: '' };
+                    const row = document.createElement('div');
+                    row.className = 'cart-item';
+                    row.innerHTML = `
+                        <div class="cart-item-name">
+                            ${d.name}
+                            <span class="cart-item-cat">${d.cat}</span>
+                        </div>
+                        <div class="cart-item-qty">
+                            <button class="ciq-btn" onclick="cartChangeQty(${id}, -1)">−</button>
+                            <span class="ciq-num" id="ciq-${id}">${qty}</span>
+                            <button class="ciq-btn" onclick="cartChangeQty(${id}, 1)">+</button>
+                        </div>`;
+                    list.appendChild(row);
+                });
+            }
+
+            lockScroll();
+            overlay.classList.add('open');
+        }
+
+        function closeCart() {
+            const overlay = document.getElementById('cart-overlay');
+            const sheet = document.getElementById('cart-sheet');
+            sheet.style.animation = 'cartSlideDown 0.22s ease forwards';
+            sheet.addEventListener('animationend', () => {
+                sheet.style.animation = '';
+                overlay.classList.remove('open');
+                unlockScroll();
+            }, { once: true });
+        }
+
+        function cartChangeQty(id, delta) {
+            const newQty = (cart[id] || 0) + delta;
+            if (newQty <= 0) {
+                delete cart[id];
+                const addBtn = document.getElementById(`add-${id}`);
+                const qtyEl = document.getElementById(`qty-${id}`);
+                const card = document.getElementById(`dish-${id}`);
+                if (addBtn) addBtn.style.display = '';
+                if (qtyEl) qtyEl.classList.remove('show');
+                if (card) card.classList.remove('in-cart');
+                updateCartBadge();
+                openCart(); // refresh
+                return;
+            }
+            cart[id] = newQty;
+            // sync menu card qty display
+            const numEl = document.getElementById(`num-${id}`);
+            if (numEl) numEl.textContent = newQty;
+            // update drawer
+            const ciqNum = document.getElementById(`ciq-${id}`);
+            if (ciqNum) ciqNum.textContent = newQty;
+            // update subtitle + badge
+            updateCartBadge();
+            const total = Object.values(cart).reduce((a, b) => a + b, 0);
+            document.getElementById('cart-subtitle').textContent = total === 1 ? '1 piatto' : `${total} piatti`;
+            document.getElementById('cart-cta-count').textContent = total;
+        }
+
+        function cartCallWaiter() {
+            closeCart();
+            setTimeout(() => { document.getElementById('footer-waiter').click(); }, 300);
         }
 
         function initScrollSpy() {
