@@ -1871,7 +1871,7 @@
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'add-toast';
-                toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:#111;color:#fff;padding:10px 20px;border-radius:50px;font-size:0.88em;font-weight:600;z-index:9999;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;';
+                toast.style.cssText = 'position:fixed;top:135px;left:50%;transform:translateX(-50%) translateY(-12px);background:#111;color:#fff;padding:10px 20px;border-radius:50px;font-size:0.88em;font-weight:600;z-index:9999;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;';
                 document.body.appendChild(toast);
             }
             const t = translations[currentLang] || translations.it;
@@ -1881,7 +1881,7 @@
             toast.style.transform = 'translateX(-50%) translateY(0)';
             toast._timer = setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateX(-50%) translateY(-20px)';
+                toast.style.transform = 'translateX(-50%) translateY(-12px)';
             }, 1800);
         }
 
