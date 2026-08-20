@@ -1032,6 +1032,10 @@
                     }
                 });
             }
+
+            // Re-render menu in new language + ripristina stato carrello
+            renderMenu();
+            restoreCartUI();
         }
 
         // POPUP CAMERIERE
@@ -1188,29 +1192,401 @@
         // MENU DATA
         const menuData = [
             {
-                id: 'tataki', name: 'Tataki', max1: false,
+                id: 'jun-selection', name: 'JUN Selection', nameEn: 'JUN Selection', nameZh: 'JUN精选', max1: true,
                 items: [
-                    { id: 1, name: 'Tataki di Tonno', desc: 'Tonno scottato, sesamo, salsa ponzu', allergens: ['fish','sesame','soy'] },
-                    { id: 2, name: 'Tataki di Salmone', desc: 'Salmone scottato, erba cipollina, lime', allergens: ['fish'] },
-                    { id: 3, name: 'Tataki di Manzo', desc: 'Wagyu scottato, tartufo, salsa teriyaki', allergens: ['soy','mustard'] },
+                    { id: 888, name: 'Gamberi Special', nameEn: 'Fried Shrimp Special', nameZh: '特制炸虾', desc: 'Gambero fritto avvolto negli spaghetti di patate, salsa spicy e spaghetti kataifi', price: '€10.00', allergens: ['crustaceans','gluten','eggs'] },
+                    { id: 801, name: 'Ebi Flower', nameEn: 'Shrimp Flower', nameZh: '虾花', desc: 'Gambero fritto, salmone scottato, salsa teriyaki, e spaghetti kataifi', price: '€9.00', allergens: ['crustaceans','fish','gluten','soy'] },
+                    { id: 805, name: 'Sprint Vegetariano', nameEn: 'Vegetarian Spring Roll', nameZh: '素食春卷', desc: 'Sfoglia di riso con cetriolo, frutta di stagione, insalata e salsa mango passion', price: '€8.00', allergens: [] },
+                    { id: 806, name: 'Sprint Gambero', nameEn: 'Shrimp Spring Roll', nameZh: '虾春卷', desc: 'Sfoglia di riso con gambero fritto, maionese, insalata, salsa speciale al sesamo e salsa teriyaki', price: '€9.00', allergens: ['crustaceans','eggs','sesame','soy'] },
                 ]
             },
             {
-                id: 'sashimi', name: 'Sashimi', max1: false,
+                id: 'jun-uramaki', name: 'JUN Uramaki', nameEn: 'JUN Uramaki', nameZh: 'JUN里卷', max1: true,
                 items: [
-                    { id: 4, name: 'Sashimi Misto', desc: 'Selezione del giorno, 12 pezzi', allergens: ['fish','soy'] },
-                    { id: 5, name: 'Sashimi di Tonno', desc: 'Tonno rosso, 6 pezzi', allergens: ['fish'] },
-                    { id: 6, name: 'Sashimi Vegetariano', desc: 'Avocado, mango, cetriolo', allergens: [] },
+                    { id: 808, name: 'Uramaki Flower Selection', nameEn: 'Flower Selection Uramaki', nameZh: '花式精选里卷', desc: 'Salmone, avocado, fiore di zucca fritto, semi di sesamo, maionese, salmone scottato e scaglie di pistacchio (8 pz)', price: '€14.00', allergens: ['fish','sesame','eggs','nuts'] },
+                    { id: 809, name: 'Uramaki Black Flower', nameEn: 'Black Flower Uramaki', nameZh: '黑花里卷', desc: 'Gambero cotto, avocado, fiore di zucca fritto, semi di sesamo, maionese, salmone tritato spicy, salsa pesto e scaglie di mandorle (8 pz)', price: '€14.00', allergens: ['crustaceans','fish','sesame','eggs','nuts'] },
                 ]
             },
             {
-                id: 'fiori', name: 'Fiori', max1: true,
+                id: 'antipasti', name: 'Antipasti', nameEn: 'Starters', nameZh: '前菜', max1: false,
                 items: [
-                    { id: 7, name: 'Fiore di Benvenuto', desc: 'Antipasto della casa, una porzione a persona', allergens: ['eggs','milk'] },
-                    { id: 8, name: 'Fiore Speciale', desc: 'Selezione stagionale dello chef', allergens: ['gluten','eggs'] },
+                    { id: 1, name: 'Involtino Primavera', nameEn: 'Spring Roll', nameZh: '春卷', desc: 'Croccante pasta sfoglia con verdure', price: '€3.00', allergens: ['gluten'] },
+                    { id: 2, name: 'Involtino Giapponese', nameEn: 'Japanese Roll', nameZh: '日式春卷', desc: 'Croccante pasta sfoglia con carne e verdure', price: '€4.00', allergens: ['gluten'] },
+                    { id: 3, name: 'Involtino di Gamberi', nameEn: 'Shrimp Roll', nameZh: '虾春卷', desc: 'Croccante pasta sfoglia con gambero e purè di patate', price: '€5.00', allergens: ['gluten','crustaceans'] },
+                    { id: 4, name: 'Nuvole di Gamberi', nameEn: 'Shrimp Crackers', nameZh: '虾片', desc: 'Chips a gusto di gambero', price: '€2.50', allergens: ['crustaceans','gluten'] },
+                    { id: 5, name: 'Edamame', nameEn: 'Edamame', nameZh: '毛豆', desc: 'Fagioli di soia', price: '€4.00', allergens: ['soy'] },
+                    { id: 6, name: 'Dim Sun Mix', nameEn: 'Dim Sum Mix', nameZh: '点心拼盘', desc: 'Ravioli misti di grano saraceno (max 1 volta)', price: '€9.00', allergens: ['gluten'] },
                 ]
-            }
+            },
+            {
+                id: 'dim-sum', name: 'Dim Sum', nameEn: 'Dim Sum', nameZh: '点心', max1: false,
+                items: [
+                    { id: 10, name: 'Pane Cinese al Vapore', nameEn: 'Steamed Chinese Buns', nameZh: '中式馒头', desc: 'Sofficissime nuvole di pane senza ripieno', price: '€3.00', allergens: ['gluten'] },
+                    { id: 11, name: 'Coniglietto al Vapore', nameEn: 'Steamed Custard Bun', nameZh: '兔子奶黄包', desc: 'Sofficissime nuvole di pane con il ripieno di tuorlo (max 1 volta)', price: '€4.00', allergens: ['gluten','eggs','milk'] },
+                    { id: 12, name: 'Ravioli di Verdure', nameEn: 'Vegetable Dumplings', nameZh: '蔬菜饺', desc: 'Ravioli con ripieno di verdure', price: '€4.00', allergens: ['gluten'] },
+                    { id: 13, name: 'Ravioli di Carne al Vapore', nameEn: 'Steamed Meat Dumplings', nameZh: '蒸肉饺', desc: 'Ravioli con ripieno di carne e verdure', price: '€5.00', allergens: ['gluten'] },
+                    { id: 14, name: 'Shaomai al Vapore', nameEn: 'Steamed Shaomai', nameZh: '蒸烧卖', desc: 'Ravioli con ripieno di gamberi, carne e verdure', price: '€6.00', allergens: ['gluten','crustaceans'] },
+                    { id: 16, name: 'Insalata di Pollo', nameEn: 'Chicken Salad', nameZh: '鸡肉沙拉', desc: 'Insalata mista, verdure, pollo, semi di sesamo e salsa insalata Jun', price: '€6.00', allergens: ['sesame','soy'] },
+                ]
+            },
+            {
+                id: 'insalata', name: 'Insalata', nameEn: 'Salads', nameZh: '沙拉', max1: false,
+                items: [
+                    { id: 17, name: 'Insalata con Avocado', nameEn: 'Avocado Salad', nameZh: '牛油果沙拉', desc: 'Insalata mista, verdure, avocado, semi di sesamo e salsa insalata Jun', price: '€6.00', allergens: ['sesame','soy'] },
+                    { id: 18, name: 'Insalata con Gamberi', nameEn: 'Prawn Salad', nameZh: '虾仁沙拉', desc: 'Insalata mista, verdure, gamberi, semi di sesamo e salsa insalata Jun', price: '€7.00', allergens: ['crustaceans','sesame','soy'] },
+                    { id: 19, name: 'Insalata Sesamo', nameEn: 'Sesame Salad', nameZh: '芝麻沙拉', desc: 'Insalata mista, verdure, gamberi, salsa sesamo Jun e semi di sesamo', price: '€8.00', allergens: ['crustaceans','sesame','soy'] },
+                    { id: 25, name: 'Gamberi Cocktail', nameEn: 'Prawn Cocktail', nameZh: '虾仁鸡尾酒', desc: 'Gamberi con salsa cocktail e semi di sesamo', price: '€7.00', allergens: ['crustaceans','sesame','eggs'] },
+                    { id: 27, name: 'Wakame', nameEn: 'Wakame Seaweed', nameZh: '裙带菜', desc: 'Alghe fresche', price: '€4.00', allergens: [] },
+                    { id: 28, name: 'Goma e Wakame', nameEn: 'Spicy Seaweed', nameZh: '辣海藻', desc: 'Insalata di alghe piccanti', price: '€4.00', allergens: ['sesame'] },
+                ]
+            },
+            {
+                id: 'zuppe', name: 'Zuppe', nameEn: 'Soups', nameZh: '汤', max1: false,
+                items: [
+                    { id: 29, name: 'Zuppa Misoshiru', nameEn: 'Miso Soup', nameZh: '味噌汤', desc: 'Zuppa di soia con alghe e tofu', price: '€4.00', allergens: ['soy'] },
+                    { id: 30, name: 'Zuppa Agropiccante', nameEn: 'Hot & Sour Soup', nameZh: '酸辣汤', desc: 'Zuppa di verdure con tofu e uovo', price: '€4.00', allergens: ['soy','eggs'] },
+                    { id: 31, name: 'Zuppa di Asparagi', nameEn: 'Asparagus Soup', nameZh: '芦笋汤', desc: 'Zuppa di verdure e uovo', price: '€4.00', allergens: ['eggs'] },
+                ]
+            },
+            {
+                id: 'fritti', name: 'Fritti', nameEn: 'Fried Dishes', nameZh: '炸物', max1: false,
+                items: [
+                    { id: 32, name: 'Patatine Fritte', nameEn: 'French Fries', nameZh: '薯条', desc: 'Patate fritte', price: '€3.50', allergens: [] },
+                    { id: 33, name: 'Patatine Mediterranea', nameEn: 'Mediterranean Potatoes', nameZh: '地中海土豆', desc: 'Patate fritte a spicchi con erbe aromatiche', price: '€4.50', allergens: [] },
+                    { id: 35, name: 'Pollo Fritto', nameEn: 'Fried Chicken', nameZh: '炸鸡', desc: 'Cotoletta di pollo fritto', price: '€6.00', allergens: ['gluten','eggs'] },
+                    { id: 37, name: 'Calamari Fritti', nameEn: 'Fried Squid', nameZh: '炸鱿鱼', desc: 'Calamari fritti in pastella', price: '€8.00', allergens: ['molluscs','gluten','eggs'] },
+                    { id: 38, name: 'Chele di Granchio', nameEn: 'Crab Claws', nameZh: '蟹钳', desc: 'Chele di granchio fritte', price: '€7.00', allergens: ['crustaceans','gluten','eggs'] },
+                    { id: 39, name: 'Polpette di Gamberi', nameEn: 'Shrimp Balls', nameZh: '虾丸', desc: 'Bocconcini fritti con ripieno di gamberi e carne', price: '€6.00', allergens: ['crustaceans','gluten','eggs'] },
+                    { id: 40, name: 'Polpette di Polipo', nameEn: 'Octopus Balls', nameZh: '章鱼丸', desc: 'Bocconcini fritti con ripieno di polipo, maionese e salsa teriyaki (max 1 volta)', price: '€9.00', allergens: ['molluscs','gluten','eggs','soy'] },
+                    { id: 42, name: 'Tempura Verdure', nameEn: 'Vegetable Tempura', nameZh: '蔬菜天妇罗', desc: 'Verdure fritte in pastella tempura', price: '€8.00', allergens: ['gluten','eggs'] },
+                    { id: 43, name: 'Tempura Mista', nameEn: 'Mixed Tempura', nameZh: '什锦天妇罗', desc: 'Verdure e gamberoni fritti in pastella tempura', price: '€10.00', allergens: ['crustaceans','gluten','eggs'] },
+                ]
+            },
+            {
+                id: 'riso', name: 'Riso', nameEn: 'Rice', nameZh: '米饭', max1: false,
+                items: [
+                    { id: 44, name: 'Riso Bianco al Vapore', nameEn: 'Steamed White Rice', nameZh: '白米饭', desc: 'Riso bianco cotto al vapore', price: '€3.00', allergens: [] },
+                    { id: 45, name: 'Riso Cantonese', nameEn: 'Cantonese Fried Rice', nameZh: '广式炒饭', desc: 'Riso saltato con verdure, uovo e prosciutto', price: '€6.00', allergens: ['eggs'] },
+                    { id: 46, name: 'Riso con Gamberi', nameEn: 'Shrimp Fried Rice', nameZh: '虾仁炒饭', desc: 'Riso saltato con verdure, gamberi e uovo', price: '€6.00', allergens: ['crustaceans','eggs'] },
+                    { id: 47, name: 'Riso con Salmone', nameEn: 'Salmon Fried Rice', nameZh: '三文鱼炒饭', desc: 'Riso saltato con verdure, uovo e salmone', price: '€7.00', allergens: ['fish','eggs'] },
+                    { id: 48, name: 'Riso con Verdure', nameEn: 'Vegetable Fried Rice', nameZh: '蔬菜炒饭', desc: 'Riso saltato con verdure e uovo', price: '€5.00', allergens: ['eggs'] },
+                    { id: 49, name: 'Riso con Pollo Teriyaki', nameEn: 'Chicken Teriyaki Rice', nameZh: '照烧鸡炒饭', desc: 'Riso saltato con sesamo, uovo e pollo in salsa teriyaki', price: '€7.00', allergens: ['eggs','sesame','soy','gluten'] },
+                    { id: 51, name: 'Riso al Curry', nameEn: 'Curry Fried Rice', nameZh: '咖喱炒饭', desc: 'Riso saltato con verdure, uovo e salsa curry', price: '€5.00', allergens: ['eggs','mustard'] },
+                    { id: 52, name: 'Gnocchi di Riso', nameEn: 'Stir-fried Rice Cake', nameZh: '炒年糕', desc: 'Gnocchi di riso saltati con verdure e gamberi', price: '€7.00', allergens: ['crustaceans'] },
+                ]
+            },
+            {
+                id: 'pasta', name: 'Pasta', nameEn: 'Noodles', nameZh: '面条', max1: false,
+                items: [
+                    { id: 53, name: 'Spaghetti di Soia Piccante', nameEn: 'Spicy Glass Noodles', nameZh: '香辣粉丝', desc: 'Spaghetti di soia saltati con verdure e salsa piccante', price: '€6.00', allergens: ['soy'] },
+                    { id: 54, name: 'Spaghetti di Soia con Verdure', nameEn: 'Glass Noodles with Vegetables', nameZh: '蔬菜粉丝', desc: 'Spaghetti di soia saltati con verdure', price: '€6.00', allergens: ['soy'] },
+                    { id: 55, name: 'Spaghetti di Soia con Gamberi', nameEn: 'Glass Noodles with Shrimp', nameZh: '虾仁粉丝', desc: 'Spaghetti di soia saltati con verdure e gamberi', price: '€7.00', allergens: ['crustaceans','soy'] },
+                    { id: 57, name: 'Spaghetti di Riso con Verdure', nameEn: 'Rice Noodles with Vegetables', nameZh: '蔬菜米粉', desc: 'Spaghetti di riso saltati con verdure e uovo', price: '€6.00', allergens: ['eggs'] },
+                    { id: 58, name: 'Spaghetti di Riso con Gamberi', nameEn: 'Rice Noodles with Shrimp', nameZh: '虾仁米粉', desc: 'Spaghetti di riso saltati con verdure, uovo e gamberi', price: '€7.00', allergens: ['crustaceans','eggs'] },
+                    { id: 59, name: 'Spaghetti di Riso con Pollo', nameEn: 'Rice Noodles with Chicken', nameZh: '鸡肉米粉', desc: 'Spaghetti di riso saltati con verdure, pollo e uovo', price: '€7.00', allergens: ['eggs'] },
+                    { id: 60, name: 'Tagliatelle alla Piastra', nameEn: 'Pan-fried Noodles', nameZh: '铁板炒面', desc: 'Tagliatelle di uovo saltati con verdure, uovo e frutti di mare, serviti sulla piastra calda', price: '€10.00', allergens: ['gluten','eggs','fish','molluscs'] },
+                    { id: 61, name: 'Tagliatelle col Pomodoro', nameEn: 'Noodles with Tomato', nameZh: '番茄面条', desc: 'Tagliatelle di uovo con sugo di pomodoro', price: '€6.00', allergens: ['gluten','eggs'] },
+                    { id: 62, name: 'Yaki Udon con Gamberi', nameEn: 'Yaki Udon with Shrimp', nameZh: '虾仁炒乌冬', desc: 'Pasta saltata con verdure, uovo e gamberi', price: '€6.00', allergens: ['gluten','crustaceans','eggs'] },
+                    { id: 63, name: 'Yaki Udon con Verdure', nameEn: 'Yaki Udon with Vegetables', nameZh: '蔬菜炒乌冬', desc: 'Pasta saltata con verdure e uovo', price: '€6.00', allergens: ['gluten','eggs'] },
+                    { id: 66, name: 'Ramen ai Frutti di Mare', nameEn: 'Seafood Ramen', nameZh: '海鲜拉面', desc: 'Pasta in brodo con verdure, uovo e frutti di mare', price: '€11.00', allergens: ['gluten','eggs','fish','molluscs','soy'] },
+                ]
+            },
+            {
+                id: 'tartare', name: 'Tartare & Speciali', nameEn: 'Tartare & Specials', nameZh: '鱼生&特选', max1: false,
+                items: [
+                    { id: 67, name: 'Sake Tartare', nameEn: 'Salmon Tartare', nameZh: '三文鱼他他', desc: 'Salmone a cubetti con salsa Bonzé e semi di sesamo (max 2 volte)', price: '€6.00', allergens: ['fish','sesame','soy'] },
+                    { id: 72, name: 'Tartare Black Sake', nameEn: 'Black Salmon Tartare', nameZh: '黑色三文鱼他他', desc: 'Salmone, riso venere, scaglie di mandorle, semi di sesamo e salsa Bonzé (max 1 a scelta tra 72 e 74)', price: '€7.00', allergens: ['fish','sesame','soy','nuts'] },
+                    { id: 74, name: 'Tartare Black Veggie', nameEn: 'Black Veggie Tartare', nameZh: '黑色素食他他', desc: 'Mango, riso venere, scaglie di mandorle, semi di sesamo, salsa Bonzé e salsa mango passion (max 1 a scelta tra 72 e 74)', price: '€6.00', allergens: ['sesame','soy','nuts'] },
+                    { id: 77, name: 'Mille Foglie Sake', nameEn: 'Salmon Millefeuille', nameZh: '三文鱼千层', desc: 'Croccante pasta sfoglia con salmone tritato spicy e Philadelphia (solo weekend e festivi, max 1 volta)', price: '€6.00', allergens: ['fish','gluten','milk'] },
+                    { id: 78, name: 'Mille Foglie Tuna', nameEn: 'Tuna Millefeuille', nameZh: '金枪鱼千层', desc: 'Croccante pasta sfoglia con tonno tritato spicy e Philadelphia (solo weekend e festivi, max 1 volta)', price: '€7.00', allergens: ['fish','gluten','milk'] },
+                    { id: 82, name: 'Tramezzino Fritto', nameEn: 'Fried Tramezzino', nameZh: '炸三明治', desc: 'Avocado, cheddar, salmone e salsa teriyaki', price: '€10.00', allergens: ['fish','gluten','milk','soy'] },
+                    { id: 83, name: 'Hamburger Fritto', nameEn: 'Fried Burger', nameZh: '炸汉堡', desc: 'Insalata, salmone tritato spicy, salsa speciale e salsa teriyaki', price: '€8.00', allergens: ['fish','gluten','soy','eggs'] },
+                    { id: 84, name: 'Hamburger Vegge Fritto', nameEn: 'Fried Veggie Burger', nameZh: '素炸汉堡', desc: 'Insalata, cetrioli, avocado, salsa speciale e salsa teriyaki', price: '€7.00', allergens: ['gluten','soy','eggs'] },
+                ]
+            },
+            {
+                id: 'tacos', name: 'Tacos', nameEn: 'Tacos', nameZh: '墨西哥卷', max1: true,
+                items: [
+                    { id: 85, name: 'Tacos Sake', nameEn: 'Salmon Tacos', nameZh: '三文鱼墨西哥卷', desc: 'Croccante pasta sfoglia con salmone tritato spicy, insalata, mango, salsa teriyaki, salsa mango passion e scaglie di mandorle (1 pz)', price: '€7.00', allergens: ['fish','gluten','soy','nuts'] },
+                    { id: 86, name: 'Tacos Veggie', nameEn: 'Veggie Tacos', nameZh: '素食墨西哥卷', desc: 'Croccante pasta sfoglia con avocado, cetrioli, scaglie di mandorle, salsa spicy e salsa teriyaki (1 pz)', price: '€7.00', allergens: ['gluten','soy','nuts'] },
+                    { id: 87, name: 'Alga Tacos', nameEn: 'Seaweed Tuna Tacos', nameZh: '海藻金枪鱼卷', desc: 'Croccante alga fritta in tempura con tonno tritato spicy e salsa teriyaki (1 pz)', price: '€7.00', allergens: ['fish','gluten','eggs','soy'] },
+                    { id: 88, name: 'Alga Tacos Speciale', nameEn: 'Special Seaweed Tacos', nameZh: '特制海藻卷', desc: 'Croccante alga fritta in tempura con salmone tritato spicy, avocado, salsa sesamo e salsa teriyaki (1 pz)', price: '€7.00', allergens: ['fish','gluten','eggs','sesame','soy'] },
+                ]
+            },
+            {
+                id: 'sashimi', name: 'Sashimi & Chirashi', nameEn: 'Sashimi & Chirashi', nameZh: '刺身&散寿司', max1: false,
+                items: [
+                    { id: 89, name: 'Sashimi Sake', nameEn: 'Salmon Sashimi', nameZh: '三文鱼刺身', desc: 'Salmone fresco (max 2 volte)', price: '€11.00', allergens: ['fish'] },
+                    { id: 92, name: 'Sashimi Burrata', nameEn: 'Burrata Sashimi', nameZh: '布拉塔刺身', desc: 'Mix di cereali, salmone, arancia con salsa di burrata fresca, yogurt light e salsa mango passion (solo weekend e festivi, max 1 volta)', price: '€15.00', allergens: ['fish','milk','gluten'] },
+                    { id: 94, name: 'Carpaccio Salmone', nameEn: 'Salmon Carpaccio', nameZh: '三文鱼薄切', desc: 'Salmone, salsa Bonzé e semi di sesamo (max 1 volta)', price: '€10.00', allergens: ['fish','sesame','soy'] },
+                    { id: 100, name: 'Cirashi Don', nameEn: 'Chirashi Don', nameZh: '散寿司饭', desc: 'Riso bianco sushi e semi di sesamo', price: '€4.00', allergens: ['sesame'] },
+                    { id: 101, name: 'Cirashi Sake Don', nameEn: 'Salmon Chirashi Don', nameZh: '三文鱼散寿司', desc: 'Salmone e semi di sesamo', price: '€6.00', allergens: ['fish','sesame'] },
+                    { id: 104, name: 'Cirashi Avocado Don', nameEn: 'Avocado Chirashi Don', nameZh: '牛油果散寿司', desc: 'Avocado e semi di sesamo', price: '€5.00', allergens: ['sesame'] },
+                    { id: 105, name: 'Cirashi Anguilla Don', nameEn: 'Eel Chirashi Don', nameZh: '鳗鱼散寿司', desc: 'Anguilla cotta, salsa teriyaki e semi di sesamo (solo weekend e festivi, max 1 volta)', price: '€8.00', allergens: ['fish','sesame','soy','gluten'] },
+                ]
+            },
+            {
+                id: 'poke', name: 'Poké', nameEn: 'Poké', nameZh: '波奇碗', max1: false,
+                items: [
+                    { id: 106, name: 'Poké Classic', nameEn: 'Classic Poké Bowl', nameZh: '经典波奇碗', desc: 'Salmone, avocado, edamame, goma wakame, scaglie di mandorle al miele, cipolle fritte al miele, salsa teriyaki, semi di sesamo e alghe', price: '€9.00', allergens: ['fish','soy','sesame','nuts','gluten'] },
+                    { id: 108, name: 'Poké Veggie', nameEn: 'Veggie Poké Bowl', nameZh: '素食波奇碗', desc: 'Avocado, edamame, goma wakame, scaglie di mandorle al miele, mango, salsa mango passion, salsa teriyaki, semi di sesamo e alghe', price: '€8.00', allergens: ['soy','sesame','nuts','gluten'] },
+                ]
+            },
+            {
+                id: 'uramaki', name: 'Uramaki', nameEn: 'Uramaki', nameZh: '里卷', max1: false,
+                items: [
+                    { id: 109, name: 'Uramaki Sake', nameEn: 'Salmon Uramaki', nameZh: '三文鱼里卷', desc: 'Salmone, avocado e semi di sesamo (4 pz, senza tobiko)', price: '€9.00', allergens: ['fish','sesame'] },
+                    { id: 110, name: 'Uramaki Kaory', nameEn: 'Kaory Uramaki', nameZh: '奶油三文鱼里卷', desc: 'Salmone, avocado, Philadelphia e semi di sesamo (4 pz, senza tobiko)', price: '€9.00', allergens: ['fish','sesame','milk'] },
+                    { id: 111, name: 'Uramaki Maguro', nameEn: 'Tuna Uramaki', nameZh: '金枪鱼里卷', desc: 'Tonno, avocado e semi di sesamo (4 pz, senza tobiko)', price: '€10.00', allergens: ['fish','sesame'] },
+                    { id: 112, name: 'Uramaki Ebi', nameEn: 'Shrimp Uramaki', nameZh: '虾里卷', desc: 'Gambero cotto, avocado, semi di sesamo e mandorle (4 pz)', price: '€9.00', allergens: ['crustaceans','sesame','nuts'] },
+                    { id: 113, name: 'Uramaki California', nameEn: 'California Roll', nameZh: '加州卷', desc: 'Surimi, avocado, semi di sesamo, maionese e cipolle fritte (4 pz)', price: '€8.50', allergens: ['fish','sesame','eggs'] },
+                    { id: 114, name: 'Uramaki Spicy Sake', nameEn: 'Spicy Salmon Uramaki', nameZh: '辣三文鱼里卷', desc: 'Salmone, semi di sesamo, salsa spicy e avocado (4 pz, senza tobiko)', price: '€9.50', allergens: ['fish','sesame','soy'] },
+                    { id: 115, name: 'Uramaki Spicy Tuna', nameEn: 'Spicy Tuna Uramaki', nameZh: '辣金枪鱼里卷', desc: 'Tonno, semi di sesamo, salsa spicy e avocado (4 pz, senza tobiko)', price: '€10.50', allergens: ['fish','sesame','soy'] },
+                    { id: 116, name: 'Uramaki Ebiten', nameEn: 'Ebiten Uramaki', nameZh: '天妇罗虾里卷', desc: 'Gambero fritto, maionese, salsa teriyaki, semi di sesamo, con gli spaghetti kataifi sopra (4 pz)', price: '€10.00', allergens: ['crustaceans','gluten','eggs','sesame','soy'] },
+                    { id: 117, name: 'Uramaki Miura', nameEn: 'Miura Uramaki', nameZh: '三浦里卷', desc: 'Salmone cotto, Philadelphia, salsa teriyaki e semi di sesamo (4 pz, senza tobiko)', price: '€9.50', allergens: ['fish','milk','sesame','soy','gluten'] },
+                    { id: 118, name: 'Uramaki JUN Selection', nameEn: 'JUN Selection Uramaki', nameZh: 'JUN精选里卷', desc: 'Tonno fritto, maionese e semi di sesamo, con pistacchio esterno (4 pz)', price: '€10.50', allergens: ['fish','gluten','eggs','sesame','nuts'] },
+                    { id: 119, name: 'Uramaki Vegetariano', nameEn: 'Vegetarian Uramaki', nameZh: '素食里卷', desc: 'Insalata, avocado, cetriolo, semi di sesamo e maionese (4 pz)', price: '€7.00', allergens: ['sesame','eggs'] },
+                    { id: 120, name: 'Uramaki Fritto', nameEn: 'Fried Uramaki', nameZh: '炸里卷', desc: 'Salmone cotto, semi di sesamo e Philadelphia (4 pz)', price: '€10.00', allergens: ['fish','gluten','sesame','milk'] },
+                    { id: 121, name: 'Uramaki Cheddar', nameEn: 'Cheddar Uramaki', nameZh: '芝士里卷', desc: 'Gambero fritto, semi di sesamo, maionese e salsa teriyaki, con cheddar esterno (4 pz)', price: '€11.00', allergens: ['crustaceans','gluten','eggs','sesame','soy','milk'] },
+                    { id: 131, name: 'Uramaki Kaory Tayoma', nameEn: 'Kaory Tayoma Uramaki', nameZh: '豆腐皮奶油里卷', desc: 'Sfoglia di soia con salmone, avocado, semi di sesamo e Philadelphia (4 pz)', price: '€10.00', allergens: ['fish','sesame','milk','soy'] },
+                    { id: 132, name: 'Uramaki Tempura', nameEn: 'Tempura Uramaki', nameZh: '天妇罗里卷', desc: 'Salmone, Philadelphia, granelli di tempura, semi di sesamo e salmone sopra (4 pz)', price: '€13.00', allergens: ['fish','gluten','eggs','sesame','milk'] },
+                    { id: 133, name: 'Uramaki Genovese', nameEn: 'Genovese Uramaki', nameZh: '热那亚里卷', desc: 'Avocado, tonno scottato sopra, salsa al pesto e scaglie di pistacchio (4 pz)', price: '€12.00', allergens: ['fish','nuts','gluten'] },
+                    { id: 136, name: 'Uramaki Astice', nameEn: 'Lobster Uramaki', nameZh: '龙虾里卷', desc: 'Astice, surimi, maionese con avocado sopra (4 pz, solo weekend e festivi, max 1 volta)', price: '€15.00', allergens: ['crustaceans','fish','eggs'] },
+                    { id: 138, name: 'Uramaki Black Kaory', nameEn: 'Black Kaory Uramaki', nameZh: '黑色奶油里卷', desc: 'Salmone, avocado, Philadelphia, semi di sesamo e tobiko (4 pz)', price: '€10.00', allergens: ['fish','sesame','milk'] },
+                    { id: 139, name: 'Uramaki Black Ebiten', nameEn: 'Black Ebiten Uramaki', nameZh: '黑色天妇罗虾里卷', desc: 'Gambero fritto, maionese, salsa teriyaki, semi di sesamo, con spaghetti kataifi sopra (4 pz)', price: '€10.00', allergens: ['crustaceans','gluten','eggs','sesame','soy'] },
+                    { id: 140, name: 'Uramaki Black Spicy', nameEn: 'Black Spicy Uramaki', nameZh: '黑色辣味里卷', desc: 'Gambero fritto, maionese, salsa teriyaki, semi di sesamo, con salmone tritato spicy e spaghetti kataifi sopra (4 pz)', price: '€13.00', allergens: ['crustaceans','fish','gluten','eggs','sesame','soy'] },
+                    { id: 141, name: 'Uramaki Black Veggie', nameEn: 'Black Veggie Uramaki', nameZh: '黑色素食里卷', desc: 'Cetriolo, maionese, avocado, insalata, semi di sesamo e mandorle al miele sopra (4 pz)', price: '€8.00', allergens: ['sesame','eggs','nuts'] },
+                    { id: 142, name: 'Uramaki Tempura Veggie', nameEn: 'Veggie Tempura Uramaki', nameZh: '素食天妇罗里卷', desc: 'Avocado, Philadelphia, granelli di tempura e semi di sesamo (4 pz)', price: '€10.00', allergens: ['gluten','eggs','sesame','milk'] },
+                    { id: 143, name: 'Uramaki Black Fantasia', nameEn: 'Black Fantasia Uramaki', nameZh: '黑色幻想里卷', desc: 'Salmone, Philadelphia, semi di sesamo, frutta mix e salsa mango passion (4 pz)', price: '€13.00', allergens: ['fish','sesame','milk'] },
+                ]
+            },
+            {
+                id: 'tataki', name: 'Tataki', nameEn: 'Tataki', nameZh: '炙烤', max1: false,
+                items: [
+                    { id: 145, name: 'Sake Tataki', nameEn: 'Salmon Tataki', nameZh: '三文鱼炙烤', desc: 'Salmone scottato, semi di sesamo e salsa teriyaki (max 1 volta)', price: '€10.00', allergens: ['fish','sesame','soy','gluten'] },
+                ]
+            },
+            {
+                id: 'gunkan', name: 'Gunkan', nameEn: 'Gunkan', nameZh: '军舰', max1: false,
+                items: [
+                    { id: 147, name: 'Gunkan Sake', nameEn: 'Salmon Gunkan', nameZh: '三文鱼军舰', desc: 'Salmone tritato e salsa spicy (2 pz)', price: '€5.00', allergens: ['fish','soy'] },
+                    { id: 151, name: 'Gunkan White', nameEn: 'White Gunkan', nameZh: '白色军舰', desc: 'Philadelphia e spaghetti kataifi (2 pz)', price: '€4.00', allergens: ['gluten','milk'] },
+                    { id: 152, name: 'Gunkan Sake Speciale', nameEn: 'Special Salmon Gunkan', nameZh: '特制三文鱼军舰', desc: 'Philadelphia e salmone (2 pz, solo weekend e festivi)', price: '€5.00', allergens: ['fish','milk'] },
+                    { id: 159, name: 'Gunkan Soy Tuna', nameEn: 'Soy Tuna Gunkan', nameZh: '豆腐皮金枪鱼军舰', desc: 'Sfoglia di soia con tonno tritato spicy (2 pz, solo weekend e festivi)', price: '€5.50', allergens: ['fish','soy'] },
+                    { id: 160, name: 'Gunkan Soy Sake', nameEn: 'Soy Salmon Gunkan', nameZh: '豆腐皮三文鱼军舰', desc: 'Sfoglia di soia con salmone tritato spicy (2 pz)', price: '€5.00', allergens: ['fish','soy'] },
+                    { id: 161, name: 'Gunkan Avocado', nameEn: 'Avocado Gunkan', nameZh: '牛油果军舰', desc: 'Avocado (2 pz)', price: '€5.00', allergens: [] },
+                    { id: 162, name: 'Bowl Mix', nameEn: 'Mix Bowl', nameZh: '什锦碗', desc: '4 polpette di riso con salmone tritato spicy, tonno tritato, Philadelphia, kataifi, maionese, surimi e gambero (max 1 volta)', price: '€7.00', allergens: ['fish','crustaceans','gluten','milk','eggs'] },
+                ]
+            },
+            {
+                id: 'hosomaki', name: 'Hosomaki & Futomaki', nameEn: 'Hosomaki & Futomaki', nameZh: '细卷&粗卷', max1: false,
+                items: [
+                    { id: 163, name: 'Ebi', nameEn: 'Shrimp Hosomaki', nameZh: '虾细卷', desc: 'Gambero cotto (6 pz)', price: '€5.00', allergens: ['crustaceans'] },
+                    { id: 164, name: 'Kani', nameEn: 'Surimi Hosomaki', nameZh: '蟹棒细卷', desc: 'Surimi (6 pz)', price: '€5.00', allergens: ['fish','gluten'] },
+                    { id: 165, name: 'Wurstel', nameEn: 'Sausage Hosomaki', nameZh: '香肠细卷', desc: 'Wurstel (6 pz)', price: '€4.00', allergens: ['gluten'] },
+                    { id: 166, name: 'Sake', nameEn: 'Salmon Hosomaki', nameZh: '三文鱼细卷', desc: 'Salmone (6 pz)', price: '€5.00', allergens: ['fish'] },
+                    { id: 167, name: 'Maguro', nameEn: 'Tuna Hosomaki', nameZh: '金枪鱼细卷', desc: 'Tonno (6 pz)', price: '€6.00', allergens: ['fish'] },
+                    { id: 168, name: 'Avocado', nameEn: 'Avocado Hosomaki', nameZh: '牛油果细卷', desc: 'Avocado (6 pz)', price: '€4.00', allergens: [] },
+                    { id: 169, name: 'Kappa', nameEn: 'Cucumber Hosomaki', nameZh: '黄瓜细卷', desc: 'Cetriolo (6 pz)', price: '€4.00', allergens: [] },
+                    { id: 170, name: 'Futomaki', nameEn: 'Futomaki', nameZh: '粗卷', desc: 'Avocado, surimi e pesce misto (5 pz)', price: '€7.00', allergens: ['fish','gluten'] },
+                    { id: 171, name: 'Futomaki Ebiten', nameEn: 'Ebiten Futomaki', nameZh: '天妇罗虾粗卷', desc: 'Gambero fritto, maionese, salsa teriyaki e spaghetti kataifi (5 pz)', price: '€5.00', allergens: ['crustaceans','gluten','eggs','soy'] },
+                    { id: 172, name: 'Futomaki Vegetariano', nameEn: 'Vegetarian Futomaki', nameZh: '素食粗卷', desc: 'Avocado, cetriolo, insalata e salsa mango passion (5 pz)', price: '€6.50', allergens: [] },
+                    { id: 173, name: 'Tayoma', nameEn: 'Tayoma', nameZh: '豆腐皮卷', desc: 'Salmone avvolto nella sfoglia di soia (5 pz)', price: '€6.00', allergens: ['fish','soy'] },
+                    { id: 174, name: 'Hosomaki Sake Fritto', nameEn: 'Fried Salmon Hosomaki', nameZh: '炸三文鱼细卷', desc: 'Salmone e salsa teriyaki (8 pz)', price: '€6.00', allergens: ['fish','gluten','soy'] },
+                    { id: 176, name: 'Hosomaki Avocado Fritto', nameEn: 'Fried Avocado Hosomaki', nameZh: '炸牛油果细卷', desc: 'Avocado e salsa teriyaki (8 pz)', price: '€5.00', allergens: ['gluten','soy'] },
+                    { id: 177, name: 'Hosomaki Philadelphia', nameEn: 'Philadelphia Hosomaki', nameZh: '奶油细卷', desc: 'Salmone, Philadelphia e salsa teriyaki (8 pz)', price: '€7.00', allergens: ['fish','gluten','milk','soy'] },
+                    { id: 179, name: 'Futomaki Fritto', nameEn: 'Fried Futomaki', nameZh: '炸粗卷', desc: 'Pesce misto, surimi, avocado e salsa teriyaki (5 pz, solo weekend e festivi)', price: '€8.00', allergens: ['fish','gluten','soy'] },
+                ]
+            },
+            {
+                id: 'temaki', name: 'Temaki', nameEn: 'Temaki', nameZh: '手卷', max1: false,
+                items: [
+                    { id: 180, name: 'Temaki Miura', nameEn: 'Miura Temaki', nameZh: '三浦手卷', desc: 'Salmone cotto, Philadelphia, insalata, semi di sesamo e salsa teriyaki', price: '€5.00', allergens: ['fish','sesame','milk','soy','gluten'] },
+                    { id: 181, name: 'Temaki California', nameEn: 'California Temaki', nameZh: '加州手卷', desc: 'Surimi, avocado, maionese e semi di sesamo', price: '€5.00', allergens: ['fish','gluten','eggs','sesame'] },
+                    { id: 182, name: 'Temaki Veggie', nameEn: 'Veggie Temaki', nameZh: '素食手卷', desc: 'Insalata, avocado, cetriolo, maionese e semi di sesamo', price: '€4.50', allergens: ['eggs','sesame'] },
+                    { id: 184, name: 'Temaki Ebi Tempura', nameEn: 'Shrimp Tempura Temaki', nameZh: '天妇罗虾手卷', desc: 'Gambero fritto, insalata, maionese e salsa teriyaki, con gli spaghetti kataifi', price: '€5.00', allergens: ['crustaceans','gluten','eggs','soy'] },
+                    { id: 185, name: 'Temaki Sake', nameEn: 'Salmon Temaki', nameZh: '三文鱼手卷', desc: 'Salmone, avocado e semi di sesamo', price: '€5.00', allergens: ['fish','sesame'] },
+                    { id: 187, name: 'Temaki Sake Spicy', nameEn: 'Spicy Salmon Temaki', nameZh: '辣三文鱼手卷', desc: 'Salmone, insalata, semi di sesamo, salsa spicy', price: '€5.00', allergens: ['fish','sesame','soy'] },
+                    { id: 190, name: 'Temaki Black Sake', nameEn: 'Black Salmon Temaki', nameZh: '黑色三文鱼手卷', desc: 'Salmone, sesamo e avocado', price: '€5.50', allergens: ['fish','sesame'] },
+                    { id: 191, name: 'Temaki Black Veggie', nameEn: 'Black Veggie Temaki', nameZh: '黑色素食手卷', desc: 'Insalata, avocado, cetriolo, maionese e semi di sesamo', price: '€5.00', allergens: ['eggs','sesame'] },
+                    { id: 192, name: 'Temaki Black Ebi Tempura', nameEn: 'Black Shrimp Tempura Temaki', nameZh: '黑色天妇罗虾手卷', desc: 'Gambero fritto, insalata, maionese e salsa teriyaki, con gli spaghetti kataifi sopra', price: '€5.50', allergens: ['crustaceans','gluten','eggs','soy'] },
+                    { id: 193, name: 'Temaki Black Philadelphia', nameEn: 'Black Philadelphia Temaki', nameZh: '黑色奶油手卷', desc: 'Surimi, insalata, Philadelphia, spaghetti kataifi e semi di sesamo', price: '€5.50', allergens: ['fish','gluten','milk','sesame'] },
+                ]
+            },
+            {
+                id: 'nigiri', name: 'Nigiri & Box', nameEn: 'Nigiri & Box', nameZh: '握寿司', max1: false,
+                items: [
+                    { id: 196, name: 'Nigiri Sake', nameEn: 'Salmon Nigiri', nameZh: '三文鱼握寿司', desc: 'Salmone (2 pz)', price: '€4.00', allergens: ['fish'] },
+                    { id: 197, name: 'Nigiri Sake Special', nameEn: 'Special Salmon Nigiri', nameZh: '特制三文鱼握寿司', desc: 'Salmone, Philadelphia e spaghetti kataifi (2 pz, solo weekend e festivi)', price: '€5.00', allergens: ['fish','gluten','milk'] },
+                    { id: 200, name: 'Nigiri Zafferano', nameEn: 'Saffron Nigiri', nameZh: '藏红花握寿司', desc: 'Salmone scottato, salsa teriyaki e salsa zafferano (2 pz)', price: '€6.00', allergens: ['fish','soy','gluten'] },
+                    { id: 202, name: 'Nigiri Maguro', nameEn: 'Tuna Nigiri', nameZh: '金枪鱼握寿司', desc: 'Tonno (2 pz)', price: '€4.00', allergens: ['fish'] },
+                    { id: 205, name: 'Nigiri Suzuki', nameEn: 'Sea Bass Nigiri', nameZh: '鲈鱼握寿司', desc: 'Branzino (2 pz)', price: '€4.00', allergens: ['fish'] },
+                    { id: 207, name: 'Nigiri Kani', nameEn: 'Surimi Nigiri', nameZh: '蟹棒握寿司', desc: 'Surimi (2 pz)', price: '€4.00', allergens: ['fish','gluten'] },
+                    { id: 208, name: 'Nigiri Ebi', nameEn: 'Shrimp Nigiri', nameZh: '虾握寿司', desc: 'Gambero cotto (2 pz)', price: '€4.00', allergens: ['crustaceans'] },
+                    { id: 209, name: 'Nigiri Avocado', nameEn: 'Avocado Nigiri', nameZh: '牛油果握寿司', desc: 'Avocado (2 pz)', price: '€4.00', allergens: [] },
+                    { id: 212, name: 'Black Sake', nameEn: 'Black Salmon Nigiri', nameZh: '黑色三文鱼握寿司', desc: 'Salmone su riso nero (2 pz)', price: '€4.00', allergens: ['fish'] },
+                    { id: 213, name: 'Black Maguro', nameEn: 'Black Tuna Nigiri', nameZh: '黑色金枪鱼握寿司', desc: 'Tonno su riso nero (2 pz)', price: '€4.00', allergens: ['fish'] },
+                    { id: 214, name: 'Black Suzuki', nameEn: 'Black Sea Bass Nigiri', nameZh: '黑色鲈鱼握寿司', desc: 'Branzino su riso nero (2 pz)', price: '€4.00', allergens: ['fish'] },
+                    { id: 215, name: 'Black Ebi', nameEn: 'Black Shrimp Nigiri', nameZh: '黑色虾握寿司', desc: 'Gambero cotto su riso nero (2 pz)', price: '€4.00', allergens: ['crustaceans'] },
+                    { id: 216, name: 'Black Avocado', nameEn: 'Black Avocado Nigiri', nameZh: '黑色牛油果握寿司', desc: 'Avocado su riso nero (2 pz)', price: '€5.00', allergens: [] },
+                    { id: 217, name: 'Nigiri Mix', nameEn: 'Mixed Nigiri', nameZh: '什锦握寿司', desc: '5 nigiri misti a fantasia dello chef', price: '€8.00', allergens: ['fish'] },
+                    { id: 218, name: 'Nigiri Fantasia', nameEn: 'Fantasy Nigiri', nameZh: '幻想握寿司', desc: '4 nigiri misti con frutta fresca e Philadelphia (solo weekend e festivi)', price: '€8.00', allergens: ['fish','milk'] },
+                    { id: 219, name: 'Nigiri Misto', nameEn: 'Assorted Nigiri', nameZh: '综合握寿司', desc: '7 nigiri misti a fantasia dello chef', price: '€10.00', allergens: ['fish'] },
+                    { id: 220, name: 'Maxi Sake', nameEn: 'Maxi Salmon Nigiri', nameZh: '大份三文鱼握寿司', desc: '6 nigiri sake a fantasia dello chef', price: '€8.00', allergens: ['fish'] },
+                    { id: 221, name: 'Box Medio', nameEn: 'Medium Sushi Box', nameZh: '中份寿司拼盘', desc: '6 nigiri, 4 hosomaki, 2 uramaki a fantasia dello chef', price: '€14.00', allergens: ['fish'] },
+                    { id: 222, name: 'Maki Misto', nameEn: 'Mixed Maki', nameZh: '什锦卷', desc: '4 hosomaki, 4 uramaki a fantasia dello chef', price: '€6.00', allergens: ['fish'] },
+                ]
+            },
+            {
+                id: 'onigiri', name: 'Onigiri & Oshi', nameEn: 'Onigiri & Oshi', nameZh: '饭团&押寿司', max1: false,
+                items: [
+                    { id: 224, name: 'Onigiri Miura', nameEn: 'Miura Onigiri', nameZh: '三浦饭团', desc: 'Salmone cotto, alga, Philadelphia e semi di sesamo (1 pz)', price: '€5.00', allergens: ['fish','milk','sesame'] },
+                    { id: 225, name: 'Onigiri Horo', nameEn: 'Horo Onigiri', nameZh: '海苔饭团', desc: 'Alga e semi di sesamo (1 pz)', price: '€4.00', allergens: ['sesame'] },
+                    { id: 228, name: 'Oshi Sake Spicy', nameEn: 'Spicy Salmon Oshi', nameZh: '辣三文鱼押寿司', desc: 'Salmone tritato spicy', price: '€10.00', allergens: ['fish','soy'] },
+                    { id: 229, name: 'Oshi Kaory', nameEn: 'Kaory Oshi', nameZh: '奶油三文鱼押寿司', desc: 'Salmone e Philadelphia', price: '€8.00', allergens: ['fish','milk'] },
+                ]
+            },
+            {
+                id: 'secondi-pollo', name: 'Secondi Pollo', nameEn: 'Chicken Dishes', nameZh: '鸡肉主菜', max1: false,
+                items: [
+                    { id: 231, name: 'Pollo con Mandorle', nameEn: 'Chicken with Almonds', nameZh: '杏仁鸡丁', desc: 'Pollo saltato con verdure e mandorle', price: '€6.00', allergens: ['nuts'] },
+                    { id: 232, name: 'Pollo con Funghi e Bambù', nameEn: 'Chicken with Mushrooms & Bamboo', nameZh: '冬菇竹笋鸡', desc: 'Pollo saltato con funghi e bambù', price: '€6.00', allergens: [] },
+                    { id: 233, name: 'Pollo al Limone', nameEn: 'Lemon Chicken', nameZh: '柠檬鸡', desc: 'Pollo saltato con limone', price: '€6.00', allergens: [] },
+                    { id: 234, name: 'Pollo con Verdure', nameEn: 'Chicken with Vegetables', nameZh: '蔬菜鸡', desc: 'Pollo saltato con verdure', price: '€6.00', allergens: [] },
+                    { id: 236, name: 'Pollo al Curry', nameEn: 'Chicken Curry', nameZh: '咖喱鸡', desc: 'Pollo saltato con verdure e salsa curry', price: '€6.00', allergens: ['mustard'] },
+                    { id: 238, name: 'Pollo in Salsa Piccante', nameEn: 'Spicy Chicken', nameZh: '香辣鸡', desc: 'Pollo saltato con verdure e salsa piccante', price: '€6.00', allergens: ['soy'] },
+                ]
+            },
+            {
+                id: 'secondi-vitello', name: 'Secondi Vitello', nameEn: 'Veal Dishes', nameZh: '牛肉主菜', max1: false,
+                items: [
+                    { id: 240, name: 'Vitello con Funghi e Bambù', nameEn: 'Veal with Mushrooms & Bamboo', nameZh: '冬菇竹笋牛肉', desc: 'Vitello saltato con funghi e bambù', price: '€6.50', allergens: [] },
+                    { id: 242, name: 'Vitello con Verdure', nameEn: 'Veal with Vegetables', nameZh: '蔬菜牛肉', desc: 'Vitello saltato con verdure', price: '€6.50', allergens: [] },
+                    { id: 244, name: 'Vitello in Salsa Piccante', nameEn: 'Spicy Veal', nameZh: '香辣牛肉', desc: 'Vitello saltato con verdure e salsa piccante', price: '€6.50', allergens: ['soy'] },
+                ]
+            },
+            {
+                id: 'secondi-gamberi', name: 'Secondi Gamberi', nameEn: 'Prawn Dishes', nameZh: '大虾主菜', max1: false,
+                items: [
+                    { id: 246, name: 'Gamberi in Salsa Piccante', nameEn: 'Spicy Prawns', nameZh: '香辣大虾', desc: 'Gamberi saltati con verdure e salsa piccante', price: '€7.00', allergens: ['crustaceans','soy'] },
+                    { id: 247, name: 'Gamberi con Verdure', nameEn: 'Prawns with Vegetables', nameZh: '蔬菜大虾', desc: 'Gamberi saltati con verdure', price: '€7.00', allergens: ['crustaceans'] },
+                    { id: 249, name: 'Gamberi con Funghi e Bambù', nameEn: 'Prawns with Mushrooms & Bamboo', nameZh: '冬菇竹笋大虾', desc: 'Gamberi saltati con funghi e bambù', price: '€7.00', allergens: ['crustaceans'] },
+                    { id: 250, name: 'Gamberi al Limone', nameEn: 'Lemon Prawns', nameZh: '柠檬大虾', desc: 'Gamberi saltati con limone', price: '€7.00', allergens: ['crustaceans'] },
+                    { id: 252, name: 'Gamberi Sale e Pepe', nameEn: 'Salt & Pepper Prawns', nameZh: '椒盐大虾', desc: 'Gamberi saltati con sale e pepe', price: '€8.00', allergens: ['crustaceans'] },
+                ]
+            },
+            {
+                id: 'secondi-calamari', name: 'Secondi Calamari & Tofu', nameEn: 'Squid & Tofu', nameZh: '鱿鱼&豆腐', max1: false,
+                items: [
+                    { id: 256, name: 'Calamari in Salsa Piccante', nameEn: 'Spicy Squid', nameZh: '香辣鱿鱼', desc: 'Calamari saltati con salsa piccante', price: '€7.00', allergens: ['molluscs','soy'] },
+                    { id: 257, name: 'Calamari con Verdure', nameEn: 'Squid with Vegetables', nameZh: '蔬菜鱿鱼', desc: 'Calamari saltati con verdure', price: '€7.00', allergens: ['molluscs'] },
+                    { id: 263, name: 'Tofu in Salsa Piccante', nameEn: 'Spicy Tofu', nameZh: '香辣豆腐', desc: 'Tofu saltato in salsa piccante e verdure', price: '€5.00', allergens: ['soy'] },
+                    { id: 264, name: 'Tofu Stufato', nameEn: 'Braised Tofu', nameZh: '红烧豆腐', desc: 'Tofu saltato con verdure', price: '€5.00', allergens: ['soy'] },
+                ]
+            },
+            {
+                id: 'grigliata', name: 'Grigliata', nameEn: 'Grilled', nameZh: '烤物', max1: false,
+                items: [
+                    { id: 265, name: 'Funghi e Bambù', nameEn: 'Mushrooms & Bamboo', nameZh: '冬菇竹笋', desc: 'Funghi e bambù saltati', price: '€10.00', allergens: [] },
+                    { id: 266, name: 'Verdure Miste Saltate', nameEn: 'Stir-fried Mixed Vegetables', nameZh: '什锦炒蔬菜', desc: 'Verdure miste saltate in padella', price: '€5.00', allergens: [] },
+                    { id: 267, name: 'Spiedini di Calamari', nameEn: 'Squid Skewers', nameZh: '鱿鱼串', desc: 'Calamari alla griglia', price: '€8.00', allergens: ['molluscs'] },
+                    { id: 268, name: 'Spiedini di Pollo', nameEn: 'Chicken Skewers', nameZh: '鸡肉串', desc: 'Pollo alla griglia', price: '€7.00', allergens: [] },
+                    { id: 269, name: 'Spiedini di Gamberi', nameEn: 'Prawn Skewers', nameZh: '虾串', desc: 'Gamberi alla griglia', price: '€9.00', allergens: ['crustaceans'] },
+                    { id: 271, name: 'Zucchine alla Griglia', nameEn: 'Grilled Zucchini', nameZh: '烤西葫芦', desc: 'Zucchine grigliate', price: '€4.00', allergens: [] },
+                    { id: 272, name: 'Cipolle alla Griglia', nameEn: 'Grilled Onions', nameZh: '烤洋葱', desc: 'Cipolle grigliate', price: '€4.00', allergens: [] },
+                    { id: 273, name: 'Melanzane alla Griglia', nameEn: 'Grilled Eggplant', nameZh: '烤茄子', desc: 'Melanzane grigliate', price: '€4.00', allergens: [] },
+                    { id: 274, name: 'Misto Verdure alla Griglia', nameEn: 'Grilled Mixed Vegetables', nameZh: '烤什锦蔬菜', desc: 'Verdure miste grigliate', price: '€5.00', allergens: [] },
+                    { id: 275, name: 'Yaki Tori', nameEn: 'Yakitori', nameZh: '烤鸡肉串', desc: 'Pollo con salsa teriyaki', price: '€7.00', allergens: ['soy','gluten'] },
+                    { id: 277, name: 'Salmone alla Griglia', nameEn: 'Grilled Salmon', nameZh: '烤三文鱼', desc: 'Salmone alla griglia', price: '€8.00', allergens: ['fish'] },
+                    { id: 280, name: 'Gamberoni alla Griglia', nameEn: 'Grilled Prawns', nameZh: '烤大虾', desc: 'Gamberoni alla griglia (solo weekend e festivi, max 2 volte)', price: '€9.00', allergens: ['crustaceans'] },
+                    { id: 281, name: 'Wurstel alla Griglia', nameEn: 'Grilled Sausage', nameZh: '烤香肠', desc: 'Wurstel alla griglia', price: '€5.00', allergens: ['gluten'] },
+                ]
+            },
         ];
+
+        // Mappa dish ID → path immagine
+        const dishImgs = {
+  1: "img/d_1.jpg", 2: "img/d_2.jpg", 3: "img/d_3.jpg", 4: "img/d_4.jpg",
+  5: "img/d_5.jpg", 6: "img/d_6.jpg", 10: "img/d_10.jpg", 11: "img/d_11.jpg",
+  12: "img/d_12.jpg", 13: "img/d_13.jpg", 14: "img/d_14.jpg", 16: "img/d_16.jpg",
+  17: "img/d_17.jpg", 18: "img/d_18.jpg", 19: "img/d_19.jpg", 25: "img/d_25.jpg",
+  27: "img/d_27.jpg", 28: "img/d_28.jpg", 29: "img/d_29.jpg", 30: "img/d_30.jpg",
+  31: "img/d_31.jpg", 32: "img/d_32.jpg", 33: "img/d_33.jpg", 35: "img/d_35.jpg",
+  37: "img/d_37.jpg", 38: "img/d_38.jpg", 39: "img/d_39.jpg", 40: "img/d_40.jpg",
+  42: "img/d_42.jpg", 43: "img/d_43.jpg", 45: "img/d_45.jpg", 46: "img/d_46.jpg",
+  47: "img/d_47.jpg", 48: "img/d_48.jpg", 49: "img/d_49.jpg", 51: "img/d_51.jpg",
+  53: "img/d_53.jpg", 54: "img/d_54.jpg", 55: "img/d_55.jpg", 57: "img/d_57.jpg",
+  58: "img/d_58.jpg", 67: "img/d_67.jpg", 72: "img/d_72.jpg", 74: "img/d_74.jpg",
+  77: "img/d_77.jpg", 78: "img/d_78.jpg", 82: "img/d_82.jpg", 83: "img/d_83.jpg",
+  84: "img/d_84.jpg", 85: "img/d_85.jpg", 86: "img/d_86.jpg", 87: "img/d_87.jpg",
+  88: "img/d_88.jpg", 89: "img/d_89.jpg", 92: "img/d_92.jpg", 94: "img/d_94.jpg",
+  100: "img/d_100.jpg", 101: "img/d_101.jpg", 104: "img/d_104.jpg",
+  106: "img/d_106.jpg", 108: "img/d_108.jpg", 109: "img/d_109.jpg",
+  110: "img/d_110.jpg", 111: "img/d_111.jpg", 113: "img/d_113.jpg",
+  114: "img/d_114.jpg", 115: "img/d_115.jpg", 116: "img/d_116.jpg",
+  117: "img/d_117.jpg", 118: "img/d_118.jpg", 119: "img/d_119.jpg",
+  120: "img/d_120.jpg", 121: "img/d_121.jpg", 131: "img/d_131.jpg",
+  132: "img/d_132.jpg", 133: "img/d_133.jpg", 136: "img/d_136.jpg",
+  138: "img/d_138.jpg", 139: "img/d_139.jpg", 140: "img/d_140.jpg",
+  141: "img/d_141.jpg", 142: "img/d_142.jpg", 143: "img/d_143.jpg",
+  145: "img/d_145.jpg", 147: "img/d_147.jpg", 151: "img/d_151.jpg",
+  152: "img/d_152.jpg", 159: "img/d_159.jpg", 160: "img/d_160.jpg",
+  161: "img/d_161.jpg", 162: "img/d_162.jpg", 163: "img/d_163.jpg",
+  164: "img/d_164.jpg", 165: "img/d_165.jpg", 166: "img/d_166.jpg",
+  167: "img/d_167.jpg", 168: "img/d_168.jpg", 169: "img/d_169.jpg",
+  170: "img/d_170.jpg", 171: "img/d_171.jpg", 172: "img/d_172.jpg",
+  173: "img/d_173.jpg", 174: "img/d_174.jpg", 176: "img/d_176.jpg",
+  177: "img/d_177.jpg", 179: "img/d_179.jpg", 180: "img/d_180.jpg",
+  181: "img/d_181.jpg", 182: "img/d_182.jpg", 184: "img/d_184.jpg",
+  185: "img/d_185.jpg", 187: "img/d_187.jpg", 190: "img/d_190.jpg",
+  191: "img/d_191.jpg", 192: "img/d_192.jpg", 193: "img/d_193.jpg",
+  196: "img/d_196.jpg", 197: "img/d_197.jpg", 200: "img/d_200.jpg",
+  202: "img/d_202.jpg", 205: "img/d_205.jpg", 207: "img/d_207.jpg",
+  208: "img/d_208.jpg", 209: "img/d_209.jpg", 212: "img/d_212.jpg",
+  213: "img/d_213.jpg", 214: "img/d_214.jpg", 216: "img/d_216.jpg",
+  217: "img/d_217.jpg", 218: "img/d_218.jpg", 219: "img/d_219.jpg",
+  220: "img/d_220.jpg", 221: "img/d_221.jpg", 224: "img/d_224.jpg",
+  225: "img/d_225.jpg", 228: "img/d_228.jpg", 229: "img/d_229.jpg",
+  231: "img/d_231.jpg", 232: "img/d_232.jpg", 233: "img/d_233.jpg",
+  234: "img/d_234.jpg", 236: "img/d_236.jpg", 238: "img/d_238.jpg",
+  240: "img/d_240.jpg", 242: "img/d_242.jpg", 244: "img/d_244.jpg",
+  246: "img/d_246.jpg", 247: "img/d_247.jpg", 249: "img/d_249.jpg",
+  250: "img/d_250.jpg", 252: "img/d_252.jpg", 256: "img/d_256.jpg",
+  257: "img/d_257.jpg", 263: "img/d_263.jpg", 264: "img/d_264.jpg",
+  265: "img/d_265.jpg", 266: "img/d_266.jpg", 267: "img/d_267.jpg",
+  268: "img/d_268.jpg", 269: "img/d_269.jpg", 271: "img/d_271.jpg",
+  272: "img/d_272.jpg", 273: "img/d_273.jpg", 274: "img/d_274.jpg",
+  275: "img/d_275.jpg", 277: "img/d_277.jpg", 280: "img/d_280.jpg",
+  801: "img/d_801.jpg", 805: "img/d_805.jpg", 806: "img/d_806.jpg",
+  808: "img/d_808.jpg", 809: "img/d_809.jpg", 888: "img/d_888.jpg"
+        };
+
+        // Helper multilingua
+        function getLang(obj, field) {
+            if (currentLang === 'en' && obj[field + 'En']) return obj[field + 'En'];
+            if (currentLang === 'zh' && obj[field + 'Zh']) return obj[field + 'Zh'];
+            return obj[field] || '';
+        }
+
+        function restoreCartUI() {
+            Object.keys(cart).forEach(id => {
+                const qty = cart[id];
+                if (!qty || qty <= 0) return;
+                const addBtn = document.getElementById(`add-${id}`);
+                const qtyWrap = document.getElementById(`qty-${id}`);
+                const numEl = document.getElementById(`num-${id}`);
+                const dishEl = document.getElementById(`dish-${id}`);
+                if (addBtn) addBtn.style.display = 'none';
+                if (qtyWrap) qtyWrap.classList.add('show');
+                if (numEl) numEl.textContent = qty;
+                if (dishEl) dishEl.classList.add('in-cart');
+                const minusBtn = qtyWrap ? qtyWrap.querySelector('.btn-minus') : null;
+                if (minusBtn) {
+                    minusBtn.innerHTML = qty === 1 ? '<i class="fas fa-trash"></i>' : '−';
+                    minusBtn.style.fontSize = qty === 1 ? '0.75em' : '';
+                }
+            });
+        }
 
         const cart = {};
 
@@ -1229,7 +1605,7 @@
             allCats.forEach((cat, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'cat-tab' + (idx === 0 ? ' active' : '');
-                btn.textContent = cat.name;
+                btn.textContent = getLang(cat,'name');
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
                     btn.classList.add('active');
@@ -1239,7 +1615,7 @@
                 tabsEl.appendChild(btn);
                 const opt = document.createElement('option');
                 opt.value = cat.id;
-                opt.textContent = cat.name;
+                opt.textContent = getLang(cat,'name');
                 catsSelect.appendChild(opt);
             });
             catsSelect.addEventListener('change', () => {
@@ -1264,7 +1640,7 @@
                     container.appendChild(div);
                 }
 
-                sec.innerHTML = `<h2 class="category-title">${cat.name}</h2>`;
+                sec.innerHTML = `<h2 class="category-title">${getLang(cat,'name')}</h2>`;
 
                 cat.items.forEach(item => {
                     const card = document.createElement('div');
@@ -1274,17 +1650,20 @@
                     const tags = [];
                     if (cat.max1) tags.push('<span class="dish-tag max1">Max 1</span>');
                     const tagsHtml = tags.length ? `<div class="dish-tags">${tags.join('')}</div>` : '';
+                    const iName = getLang(item,'name');
+                    const iDesc = getLang(item,'desc');
 
+                    const imgSrc = dishImgs[item.id] || item.img || null;
                     card.innerHTML = `
                         <div class="dish-info" onclick="openDishInfo(${item.id})">
                             ${tagsHtml}
-                            <p class="dish-name">${item.name}</p>
-                            <p class="dish-desc">${item.desc}</p>
+                            <p class="dish-name">${iName}</p>
+                            <p class="dish-desc">${iDesc}</p>
                             <button class="info-btn" onclick="event.stopPropagation();openDishInfo(${item.id})"><i class="fas fa-circle-info"></i> ${(translations[currentLang]||translations.it).infoAllergens}</button>
                         </div>
                         <div class="dish-right">
                             <div class="dish-img-wrap">
-                                ${item.img ? `<img src="${item.img}" class="dish-img-placeholder" style="object-fit:cover;" onclick="openDishInfo(${item.id})">` : `<div class="dish-img-placeholder" onclick="openDishInfo(${item.id})"><i class="fas fa-bowl-rice"></i></div>`}
+                                ${imgSrc ? `<img src="${imgSrc}" class="dish-img-placeholder" style="object-fit:cover;border-radius:12px;" onclick="openDishInfo(${item.id})">` : `<div class="dish-img-placeholder" onclick="openDishInfo(${item.id})"><i class="fas fa-bowl-rice"></i></div>`}
                                 <button class="btn-add" id="add-${item.id}" onclick="addItem(${item.id}, ${cat.max1})">+</button>
                             </div>
                             <div class="qty-controls" id="qty-${item.id}">
@@ -1342,7 +1721,7 @@
             const map = {};
             menuData.forEach(cat => {
                 cat.items.forEach(item => {
-                    map[item.id] = { name: item.name, cat: cat.name, img: item.img || null };
+                    map[item.id] = { name: getLang(item,'name'), cat: getLang(cat,'name'), img: dishImgs[item.id] || item.img || null };
                 });
             });
             return map;
@@ -1521,16 +1900,18 @@
             if (!item) return;
             diCurrentId = id;
 
-            document.getElementById('di-name').textContent = item.name;
-            document.getElementById('di-desc').textContent = item.desc;
+            document.getElementById('di-name').textContent = getLang(item,'name');
+            document.getElementById('di-desc').textContent = getLang(item,'desc');
 
             const hero = document.getElementById('di-hero');
             const icon = document.getElementById('di-hero-icon');
             hero.querySelectorAll('img').forEach(el => el.remove());
-            if (item.img) {
+            const heroImgSrc = dishImgs[item.id] || item.img || null;
+            if (heroImgSrc) {
                 icon.style.display = 'none';
                 const img = document.createElement('img');
-                img.src = item.img;
+                img.src = heroImgSrc;
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:24px 24px 0 0;';
                 hero.insertBefore(img, hero.querySelector('button'));
             } else {
                 icon.style.display = '';
