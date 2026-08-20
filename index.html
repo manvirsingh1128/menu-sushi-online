@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Zen Sushi Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+        body {
+            background-color: #ffffff;
+            color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            font-weight: 400;
+            padding-bottom: 100px;
+        }
+        #sticky-top {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.82);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.13);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+        }
+        .main-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 70px;
+            border-bottom: 1px solid rgba(0,0,0,0.18);
+        }
+        .header-left, .header-center, .header-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .header-left { justify-content: flex-start; gap: 4px; }
+        .header-right { justify-content: flex-end; gap: 4px; }
+        .logo { height: 36px; object-fit: contain; filter: brightness(0); }
+        .header-icon-wrapper { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
+        .header-icon {
+            background: none; border: none; color: #000; font-size: 1.25em;
+            cursor: pointer; padding: 10px 12px; border-radius: 50%;
+            transition: background-color 0.3s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .header-icon-wrapper:hover .header-icon { background-color: rgba(0,0,0,0.08); }
+
+        :root {
+            --accent: #1a1a1a;
+            --accent-soft: #333333;
+            --bg: #ffffff;
+            --bg-card: #f7f7f5;
+            --bg-card-hover: #eeeeed;
+            --bg-card-incart: #edf4ee;
+            --border: rgba(0,0,0,0.08);
+            --border-accent: rgba(0,0,0,0.30);
+            --text: #252525;
+            --text-dim: #666666;
+            --text-muted: #999999;
+            --green: #2d6a4f;
+        }
+
+        /* BADGE filtro */
+        .header-icon-wrapper { position: relative; }
+        #filter-badge {
+            display: none; position: absolute; top: -4px; right: -4px;
+            width: 16px; height: 16px; background: #111; color: #fff;
+            font-size: 0.6em; font-weight: 700; border-radius: 50%;
+            align-items: center; justify-content: center; line-height: 1;
+        }
+        #filter-badge.visible { display: flex; }
+
+        /* CATEGORY TABS */
+#category-tabs-wrap { position: relative; }
+        #tabs-more-wrap {
+            position: absolute; right: 0; top: 0; bottom: 0;
+            display: flex; align-items: center;
+            padding-right: 8px; padding-left: 32px;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.95) 40%);
+            pointer-events: none;
+        }
+        #tabs-more-btn {
+            pointer-events: all; background: #fff; border: 2px solid #111;
+            border-radius: 50%; width: 36px; height: 36px;
+            font-size: 1em; font-weight: 800; color: #111; line-height: 1;
+            letter-spacing: 1px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 0; position: relative;
+        }
+        #category-tabs {
+            display: flex; overflow-x: auto; padding: 12px 16px 12px; gap: 8px;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        #category-tabs::-webkit-scrollbar { display: none; }
+        .cat-tab {
+            display: inline-flex; align-items: center; white-space: nowrap;
+            padding: 7px 16px; font-family: inherit; font-size: 0.82em; font-weight: 600;
+            color: #666; cursor: pointer; border: none;
+            background: #f0f0f0; border-radius: 999px;
+            transition: all 0.18s; flex-shrink: 0;
+        }
+        .cat-tab.active { background: #111; color: #fff; }
+
+        /* MENU CONTENT */
+        #menu-content { padding: 0; }
+        .menu-category { scroll-margin-top: 135px; }
+        .menu-category { margin-bottom: 8px; padding: 0; }
+        .category-title {
+            font-size: 1.05em; font-weight: 700; color: #fff;
+            letter-spacing: 0.01em; margin: 0; padding: 5px 20px 4px;
+            background: #111;
+            border: none; border-top: 1px solid #c8c8c8; border-bottom: 1px solid #c8c8c8;
+        }
+
+        .dish-card {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px 14px 17px; border-bottom: 1px solid #c8c8c8;
+            border-left: 3px solid transparent;
+        }
+        .dish-card:last-child { border-bottom: none; }
+        .dish-card.in-cart { border-left: 3px solid #111; }
+
+        .dish-info { flex: 1; min-width: 0; cursor: pointer; }
+        .dish-name { font-size: 1em; font-weight: 700; color: #111; margin: 0 0 4px; line-height: 1.3; }
+        .dish-desc {
+            font-size: 0.82em; color: #999; margin: 0 0 6px; line-height: 1.4;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .dish-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 5px; }
+        .dish-tag { font-size: 0.65em; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+        .dish-tag.max1 { background: #fff3e0; color: #e65100; }
+
+        .info-btn {
+            display: inline-flex; align-items: center; gap: 3px; margin-top: 5px;
+            background: none; border: none; color: #111;
+            font-family: inherit; font-size: 0.65em; font-weight: 500;
+            padding: 0; cursor: pointer; white-space: nowrap;
+            text-decoration: underline; text-underline-offset: 2px;
+        }
+        .dish-right { position: relative; flex-shrink: 0; }
+        .dish-img-wrap { position: relative; width: 88px; height: 88px; }
+        .dish-img-placeholder {
+            width: 88px; height: 88px; border-radius: 12px; background: #f0f0f0;
+            display: flex; align-items: center; justify-content: center;
+            color: #ccc; font-size: 1.8em; cursor: pointer;
+        }
+        .btn-add {
+            position: absolute; bottom: -4px; right: -4px;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #fff; color: #111; border: none; font-size: 1.5em;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.18); line-height: 1;
+        }
+        @keyframes expandQty {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+        .qty-controls {
+            display: none; position: absolute; bottom: -4px; left: -3px; right: -3px;
+            align-items: center; justify-content: space-between; padding: 0 8px;
+            background: #fff; border-radius: 20px; height: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+            transform-origin: right center;
+        }
+        .qty-controls.show { display: flex; animation: expandQty 0.2s ease-out forwards; }
+        .btn-minus, .btn-plus {
+            width: 22px; height: 22px; border-radius: 50%; border: none;
+            font-size: 1em; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; background: none; color: #111; font-weight: 700; line-height: 1;
+        }
+        .qty-num { font-size: 0.9em; font-weight: 700; min-width: 14px; text-align: center; }
+        .btn-plus:disabled { color: #ccc; cursor: default; }
+
+        .max1-divider {
+            display: flex; align-items: center; gap: 10px; margin: 8px 0 24px;
+        }
+        .max1-divider span {
+            font-size: 0.7em; font-weight: 700; color: #e65100; white-space: nowrap;
+            background: #fff3e0; padding: 3px 10px; border-radius: 20px;
+        }
+        .max1-divider::before, .max1-divider::after { content: ''; flex: 1; height: 1px; background: #f0f0f0; }
+
+        /* FOOTER BAR */
+        #footer-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            display: flex; gap: 10px; padding: 10px 14px 24px;
+            background: rgba(255,255,255,0.75); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.13);
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.07); z-index: 800;
+        }
+        #footer-waiter, #footer-cart {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 13px 12px; border: none; border-radius: 14px;
+            font-size: 0.9em; font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        #footer-waiter { background: #fff; color: #111; border: 2px solid #111 !important; }
+        #footer-cart { background: #111; color: #fff; position: relative; }
+        #footer-waiter i, #footer-cart i { font-size: 1.1em; }
+        #cart-count {
+            background: #fff; color: #111; font-size: 0.75em; font-weight: 800;
+            width: 20px; height: 20px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin-left: 2px;
+        }
+
+        /* FILTRO */
+        #filter-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px); z-index: 900; justify-content: center; align-items: center;
+        }
+        #filter-overlay.open { display: flex; }
+        #filter-sheet {
+            background: #fff; border-radius: 24px; width: 92%; max-width: 400px;
+            padding: 28px 24px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; max-height: 85vh;
+            animation: wpIn 0.22s cubic-bezier(0.34,1.3,0.64,1) forwards;
+        }
+        #filter-handle { display: none; }
+        #filter-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px; flex-shrink: 0;
+        }
+        #filter-title { font-size: 1.7em; font-weight: 800; color: #111; margin: 0; padding: 0; letter-spacing: -0.04em; line-height: 1.2; }
+        #filter-close-btn {
+            background: #e8e8e8; border: none; width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #111; font-size: 0.85em; flex-shrink: 0; margin-left: 12px;
+        }
+        #filter-allergies {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            overflow-y: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px;
+        }
+        .fcheck {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px; background: #f5f5f5;
+            border: 2px solid transparent; border-radius: 14px; cursor: pointer;
+            font-size: 0.88em; font-weight: 500; color: #444;
+            user-select: none; transition: all 0.15s; text-align: left; line-height: 1.2;
+        }
+        .fcheck i { font-size: 1em; color: #999; transition: color 0.15s; flex-shrink: 0; width: 16px; text-align: center; }
+        .fcheck input[type="checkbox"] { display: none; }
+        .fcheck:has(input:checked) { background: #111; border-color: #111; color: #fff; font-weight: 600; }
+        .fcheck:has(input:checked) i { color: #fff; }
+        #filter-footer { flex-shrink: 0; }
+        #filter-apply {
+            width: 100%; padding: 16px; background: #111; color: #fff;
+            border: none; border-radius: 14px; font-size: 1em; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+        }
+
+        /* POPUP CAMERIERE */
+        #wp-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px); z-index: 1000; justify-content: center; align-items: center;
+        }
+        #wp-overlay.open { display: flex; }
+        #wp-box {
+            background: #fff; border-radius: 24px; width: 92%; max-width: 400px;
+            padding: 28px 24px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        #wp-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+        #wp-title {
+            font-size: 1.7em; font-weight: 800; color: #111;
+            margin: 0 !important; padding: 0 !important; border: none !important;
+            letter-spacing: -0.04em; line-height: 1.2; text-transform: none !important;
+        }
+        #wp-close {
+            background: #e8e8e8; border: none; width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #111; font-size: 0.85em; flex-shrink: 0; margin-left: 12px;
+        }
+        #wp-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .wp-opt {
+            display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+            background: #f5f5f5; border: 2px solid transparent !important; border-radius: 14px;
+            cursor: pointer; font-size: 0.95em; font-weight: 500; color: #222; text-align: left; width: 100%;
+        }
+        .wp-opt i { width: 20px; text-align: center; color: #666; flex-shrink: 0; }
+        .wp-opt.sel { background: #f0f0f0; border: 2px solid #111 !important; font-weight: 600; }
+        .wp-opt.sel i { color: #111; }
+        #wp-send {
+            width: 100%; padding: 16px; background: #111; color: #fff;
+            border: none; border-radius: 14px; font-size: 1em; font-weight: 600; cursor: pointer;
+        }
+        #wp-ok { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; padding: 20px 0; }
+        #wp-check { width: 64px; height: 64px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.6em; }
+        #wp-ok-title { font-size: 1.4em; font-weight: 800; color: #111; margin: 0; letter-spacing: -0.03em; }
+        #wp-ok-sub { font-size: 0.9em; color: #888; margin: 0; }
+        @keyframes wpIn { from { opacity:0; transform:scale(0.93); } to { opacity:1; transform:scale(1); } }
+        @keyframes checkPop { 0% { transform:scale(0.3); opacity:0; } 65% { transform:scale(1.2); opacity:1; } 100% { transform:scale(1); opacity:1; } }
+        #wp-overlay.open #wp-box { animation: wpIn 0.22s cubic-bezier(0.34,1.3,0.64,1) forwards; }
+        #wp-overlay.open #wp-check { animation: checkPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+        /* POPUP LINGUA */
+        #lp-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:1000; justify-content:center; align-items:center; }
+        #lp-overlay.open { display:flex; }
+        #lp-box { background:#fff; border-radius:24px; width:92%; max-width:400px; padding:28px 24px 24px; box-shadow:0 20px 60px rgba(0,0,0,0.2); animation: wpIn 0.22s cubic-bezier(0.34,1.3,0.64,1) forwards; }
+        #lp-close { background:#e8e8e8; border:none; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#111; }
+        #lp-options { display:flex; flex-direction:column; gap:12px; margin-bottom:16px; }
+        .lp-opt { display:flex; align-items:center; gap:14px; padding:14px 16px; background:#f5f5f5; border:2px solid transparent !important; border-radius:14px; cursor:pointer; font-size:0.95em; font-weight:500; color:#222; width:100%; }
+        .lp-opt.sel { background:#f0f0f0; border:2px solid #111 !important; font-weight:600; }
+        .lp-flag { font-size:1.2em; line-height:1; }
+        #lp-save { width:100%; padding:16px; background:#111; color:#fff; border:none; border-radius:14px; font-size:1em; font-weight:600; cursor:pointer; margin-top:4px; }
+
+        /* POPUP NOTE */
+        #np-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:1000; justify-content:center; align-items:center; }
+        #np-overlay.open { display:flex; }
+        #np-box { background:#fff; border-radius:24px; width:92%; max-width:400px; padding:28px 24px 24px; box-shadow:0 20px 60px rgba(0,0,0,0.2); animation: wpIn 0.22s cubic-bezier(0.34,1.3,0.64,1) forwards; }
+        #np-close { background:#e8e8e8; border:none; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#111; }
+        #np-text { width:100%; min-height:120px; border:2px solid #f0f0f0; border-radius:14px; padding:14px; font-size:0.95em; font-family:inherit; resize:none; outline:none; color:#222; margin-bottom:14px; }
+        #np-text:focus { border-color:#111; }
+        #np-send { width:100%; padding:16px; background:#111; color:#fff; border:none; border-radius:14px; font-size:1em; font-weight:600; cursor:pointer; }
+        #np-ok { display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; padding:20px 0; }
+        #np-check { width:64px; height:64px; border-radius:50%; background:#111; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.6em; }
+        #np-overlay.open #np-check { animation: checkPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+        /* POPUP INFO PIATTO */
+        #di-overlay {
+            display: none; position: fixed; inset: 0; z-index: 1100;
+            background: #000; overflow-y: auto; -webkit-overflow-scrolling: touch;
+        }
+        #di-overlay.open { display: block; animation: slideUp 0.28s cubic-bezier(0.25,0.9,0.4,1); }
+        #di-sheet { width: 100%; min-height: 100%; background: #f5f5f5; }
+        #di-hero {
+            width: 100%; height: 300px; background: #222;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 5em; color: #444; position: relative;
+        }
+        #di-close {
+            position: absolute; top: 16px; left: 16px;
+            background: rgba(255,255,255,0.9); border: none; width: 36px; height: 36px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: #111; cursor: pointer; font-size: 0.9em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        #di-body { background: #fff; margin: 0; padding: 22px 20px 16px; }
+        #di-body h2 {
+            font-size: 1.4em; font-weight: 800; color: #111; margin: 0 0 6px;
+            padding: 0; border: none !important; letter-spacing: -0.03em;
+        }
+        #di-body > p { font-size: 0.85em; color: #888; margin: 0 0 20px; line-height: 1.5; }
+        #di-allergen-section { background: #f5f5f5; border-radius: 14px; padding: 16px; }
+        .di-section-label { font-size: 0.75em; font-weight: 700; color: #999; margin: 0 0 12px; padding: 0; border: none !important; }
+        .di-allergen-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .di-allergen-chip {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            padding: 10px 4px; border-radius: 12px; font-size: 0.65em; font-weight: 600;
+            text-align: center; line-height: 1.2; background: #fff;
+        }
+        .di-allergen-chip.present { color: #c62828; }
+        .di-allergen-chip.present i { color: #c62828; font-size: 1.3em; }
+    </style>
+</head>
+<body>
+
+    <div id="sticky-top">
+    <header class="main-header">
+        <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant Logo" class="logo">
+        <div class="header-right" style="margin-left:auto;display:flex;align-items:center;gap:4px;">
+            <div class="header-icon-wrapper" id="filter-toggle-wrapper">
+                <button class="header-icon" id="filter-toggle" title="Filtro"><i class="fas fa-filter"></i></button>
+                <div id="filter-badge"></div>
+            </div>
+            <div class="header-icon-wrapper" id="notes-toggle-wrapper">
+                <button class="header-icon notes" id="notes-toggle" title="Note"><i class="fa-solid fa-pen-to-square"></i></button>
+            </div>
+            <div class="header-icon-wrapper" id="language-wrapper">
+                <button class="header-icon" id="lang-toggle" title="Lingua" style="display:flex;align-items:center;gap:4px;">
+                    <i class="fas fa-globe"></i>
+                    <span id="lang-flag" style="font-size:1.1em;line-height:1;">🇮🇹</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <div id="category-tabs-wrap" style="position:relative;">
+        <div id="category-tabs"></div>
+        <div id="tabs-more-wrap">
+            <div id="tabs-more-btn">···
+                <select id="cats-select" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;"></select>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <main id="menu-content"></main>
+
+    <!-- FILTRO -->
+    <div id="filter-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+        <div id="filter-sheet">
+            <div id="filter-handle"></div>
+            <div id="filter-header">
+                <div>
+                    <span id="filter-title">Allergie</span>
+                    <p style="margin:4px 0 0;font-size:0.82em;color:#888;font-weight:400;">Nascondi i piatti con i tuoi allergeni</p>
+                </div>
+                <button id="filter-close-btn" style="flex-shrink:0;margin-left:12px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="filter-allergies">
+                <label class="fcheck"><input type="checkbox" data-filter="gluten"><i class="fas fa-wheat-awn"></i>Glutine</label>
+                <label class="fcheck"><input type="checkbox" data-filter="crustaceans"><i class="fas fa-shrimp"></i>Crostacei</label>
+                <label class="fcheck"><input type="checkbox" data-filter="eggs"><i class="fas fa-egg"></i>Uova</label>
+                <label class="fcheck"><input type="checkbox" data-filter="fish"><i class="fas fa-fish"></i>Pesce</label>
+                <label class="fcheck"><input type="checkbox" data-filter="peanuts"><i class="fas fa-circle-dot"></i>Arachidi</label>
+                <label class="fcheck"><input type="checkbox" data-filter="soy"><i class="fas fa-leaf"></i>Soia</label>
+                <label class="fcheck"><input type="checkbox" data-filter="milk"><i class="fas fa-droplet"></i>Latte</label>
+                <label class="fcheck"><input type="checkbox" data-filter="nuts"><i class="fas fa-apple-whole"></i>Frutta a guscio</label>
+                <label class="fcheck"><input type="checkbox" data-filter="celery"><i class="fas fa-spa"></i>Sedano</label>
+                <label class="fcheck"><input type="checkbox" data-filter="mustard"><i class="fas fa-sun"></i>Senape</label>
+                <label class="fcheck"><input type="checkbox" data-filter="sesame"><i class="fas fa-circle-half-stroke"></i>Sesamo</label>
+                <label class="fcheck"><input type="checkbox" data-filter="sulphites"><i class="fas fa-wine-bottle"></i>Solfiti</label>
+                <label class="fcheck"><input type="checkbox" data-filter="lupin"><i class="fas fa-clover"></i>Lupini</label>
+                <label class="fcheck"><input type="checkbox" data-filter="molluscs"><i class="fas fa-water"></i>Molluschi</label>
+            </div>
+            <div id="filter-footer">
+                <button id="filter-apply" style="display:none;">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP LINGUA -->
+    <div id="lp-overlay">
+        <div id="lp-box">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <h2 style="font-size:1.7em;font-weight:800;color:#111;margin:0;padding:0;border:none !important;letter-spacing:-0.04em;">Lingua</h2>
+                <button id="lp-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="lp-options">
+                <button class="lp-opt sel" data-lang="it"><span class="lp-flag">🇮🇹</span><span>Italiano</span></button>
+                <button class="lp-opt" data-lang="en"><span class="lp-flag">🇬🇧</span><span>English</span></button>
+                <button class="lp-opt" data-lang="zh"><span class="lp-flag">🇨🇳</span><span>中文</span></button>
+            </div>
+            <button id="lp-save">Salva</button>
+        </div>
+    </div>
+
+    <!-- POPUP NOTE -->
+    <div id="np-overlay">
+        <div id="np-box">
+            <div id="np-main">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                    <h2 style="font-size:1.7em;font-weight:800;color:#111;margin:0;padding:0;border:none;letter-spacing:-0.04em;text-transform:none;">Note</h2>
+                    <button id="np-close"><i class="fas fa-times"></i></button>
+                </div>
+                <textarea id="np-text" placeholder="Scrivi una nota per il cameriere..."></textarea>
+                <p style="font-size:0.82em;color:#666;background:#f5f5f5;border-radius:10px;padding:10px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px;font-weight:500;"><i class="fas fa-circle-info" style="color:#111;font-size:1em;flex-shrink:0;"></i> La nota verrà inviata con il prossimo ordine</p>
+                <button id="np-send">Salva nota</button>
+            </div>
+            <div id="np-ok">
+                <div id="np-check"><i class="fas fa-check"></i></div>
+                <p style="font-size:1.1em;font-weight:700;color:#111;margin:0;">Nota salvata</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP CAMERIERE -->
+    <div id="wp-overlay">
+        <div id="wp-box">
+            <div id="wp-main">
+                <div id="wp-header">
+                    <h2 id="wp-title">Chiama il Cameriere</h2>
+                    <button id="wp-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="wp-options">
+                    <button class="wp-opt"><i class="fas fa-circle-info"></i><span>Spiegazione sui piatti</span></button>
+                    <button class="wp-opt"><i class="fas fa-mug-saucer"></i><span>Ordine bevande</span></button>
+                    <button class="wp-opt"><i class="fas fa-credit-card"></i><span>Richiesta conto</span></button>
+                    <button class="wp-opt"><i class="fas fa-comment-dots"></i><span>Altra assistenza</span></button>
+                </div>
+                <button id="wp-send">Invia richiesta</button>
+            </div>
+            <div id="wp-ok">
+                <div id="wp-check"><i class="fas fa-check"></i></div>
+                <p id="wp-ok-title">Richiesta inviata</p>
+                <p id="wp-ok-sub"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP INFO PIATTO -->
+    <div id="di-overlay">
+        <div id="di-sheet">
+            <div id="di-hero">
+                <i class="fas fa-bowl-rice"></i>
+                <button id="di-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="di-body">
+                <h2 id="di-name"></h2>
+                <p id="di-desc-text"></p>
+                <div id="di-allergen-section">
+                    <p class="di-section-label">Allergeni</p>
+                    <div id="di-allergens"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER BAR -->
+    <div id="footer-bar">
+        <button id="footer-waiter">
+            <i class="fas fa-concierge-bell"></i>
+            <span>Cameriere</span>
+        </button>
+        <button id="footer-cart">
+            <i class="fas fa-basket-shopping"></i>
+            <span>Carrello</span>
+            <div id="cart-count">0</div>
+        </button>
+    </div>
+
+    <script>
+        // POPUP CAMERIERE
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.getElementById('wp-overlay');
+            const wpMain = document.getElementById('wp-main');
+            const wpOk = document.getElementById('wp-ok');
+
+            function openPopup() { overlay.classList.add('open'); }
+            function closePopup() {
+                overlay.classList.remove('open');
+                setTimeout(() => {
+                    wpMain.style.display = '';
+                    wpOk.style.display = 'none';
+                    document.querySelectorAll('.wp-opt').forEach(b => b.classList.remove('sel'));
+                }, 200);
+            }
+
+            // FILTRO
+            let confirmedFilters = 0;
+            function updateFilterUI() {
+                const total = document.querySelectorAll('.fcheck input:checked').length;
+                const badge = document.getElementById('filter-badge');
+                const closeBtn = document.getElementById('filter-close-btn');
+                const applyBtn = document.getElementById('filter-apply');
+                if (total > 0) { badge.textContent = total; badge.classList.add('visible'); }
+                else { badge.classList.remove('visible'); }
+                const showConfirm = total > 0 || confirmedFilters > 0;
+                closeBtn.style.display = showConfirm ? 'none' : 'flex';
+                applyBtn.style.display = showConfirm ? 'block' : 'none';
+            }
+            function closeFilter() { document.getElementById('filter-overlay').classList.remove('open'); }
+            document.getElementById('filter-toggle').addEventListener('click', () => {
+                document.getElementById('filter-overlay').classList.add('open');
+                updateFilterUI();
+            });
+            document.getElementById('filter-close-btn').addEventListener('click', closeFilter);
+            document.getElementById('filter-apply').addEventListener('click', () => {
+                confirmedFilters = document.querySelectorAll('.fcheck input:checked').length;
+                const badge = document.getElementById('filter-badge');
+                if (confirmedFilters > 0) { badge.textContent = confirmedFilters; badge.classList.add('visible'); }
+                else { badge.classList.remove('visible'); }
+                closeFilter();
+            });
+            document.querySelectorAll('.fcheck input').forEach(cb => {
+                cb.addEventListener('change', updateFilterUI);
+            });
+
+            // POPUP LINGUA
+            const lpOverlay = document.getElementById('lp-overlay');
+            const flags = { it: '🇮🇹', en: '🇬🇧', zh: '🇨🇳' };
+            document.getElementById('lang-toggle').addEventListener('click', () => lpOverlay.classList.add('open'));
+            document.getElementById('lp-close').addEventListener('click', () => lpOverlay.classList.remove('open'));
+            lpOverlay.addEventListener('click', e => { if (e.target === lpOverlay) lpOverlay.classList.remove('open'); });
+            document.querySelectorAll('.lp-opt').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.lp-opt').forEach(b => b.classList.remove('sel'));
+                    btn.classList.add('sel');
+                });
+            });
+            document.getElementById('lp-save').addEventListener('click', () => {
+                const sel = document.querySelector('.lp-opt.sel');
+                if (sel) document.getElementById('lang-flag').textContent = flags[sel.dataset.lang];
+                lpOverlay.classList.remove('open');
+            });
+
+            // POPUP NOTE
+            const npOverlay = document.getElementById('np-overlay');
+            const npMain = document.getElementById('np-main');
+            const npOk = document.getElementById('np-ok');
+            function openNote() { npOverlay.classList.add('open'); }
+            function closeNote() {
+                npOverlay.classList.remove('open');
+                setTimeout(() => { npMain.style.display = ''; npOk.style.display = 'none'; }, 200);
+            }
+            document.getElementById('notes-toggle').addEventListener('click', openNote);
+            document.getElementById('np-close').addEventListener('click', closeNote);
+            npOverlay.addEventListener('click', e => { if (e.target === npOverlay) closeNote(); });
+            document.getElementById('np-send').addEventListener('click', () => {
+                npMain.style.display = 'none';
+                npOk.style.display = 'flex';
+                setTimeout(closeNote, 1500);
+            });
+
+            document.getElementById('footer-waiter').addEventListener('click', openPopup);
+            document.getElementById('wp-close').addEventListener('click', closePopup);
+            overlay.addEventListener('click', e => { if (e.target === overlay) closePopup(); });
+            document.querySelectorAll('.wp-opt').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.wp-opt').forEach(b => b.classList.remove('sel'));
+                    btn.classList.add('sel');
+                });
+            });
+            document.getElementById('wp-send').addEventListener('click', () => {
+                const sel = document.querySelector('.wp-opt.sel span');
+                document.getElementById('wp-ok-sub').textContent = sel ? sel.textContent : '';
+                wpMain.style.display = 'none';
+                wpOk.style.display = 'flex';
+                setTimeout(closePopup, 1500);
+            });
+        });
+
+        // MENU DATA
+        const menuData = [
+            {
+                id: 'tataki', name: 'Tataki', max1: false,
+                items: [
+                    { id: 1, name: 'Tataki di Tonno', desc: 'Tonno scottato, sesamo, salsa ponzu', allergens: ['fish','sesame','soy'] },
+                    { id: 2, name: 'Tataki di Salmone', desc: 'Salmone scottato, erba cipollina, lime', allergens: ['fish'] },
+                    { id: 3, name: 'Tataki di Manzo', desc: 'Wagyu scottato, tartufo, salsa teriyaki', allergens: ['soy','mustard'] },
+                ]
+            },
+            {
+                id: 'sashimi', name: 'Sashimi', max1: false,
+                items: [
+                    { id: 4, name: 'Sashimi Misto', desc: 'Selezione del giorno, 12 pezzi', allergens: ['fish','soy'] },
+                    { id: 5, name: 'Sashimi di Tonno', desc: 'Tonno rosso, 6 pezzi', allergens: ['fish'] },
+                    { id: 6, name: 'Sashimi Vegetariano', desc: 'Avocado, mango, cetriolo', allergens: [] },
+                ]
+            },
+            {
+                id: 'fiori', name: 'Fiori', max1: true,
+                items: [
+                    { id: 7, name: 'Fiore di Benvenuto', desc: 'Antipasto della casa, una porzione a persona', allergens: ['eggs','milk'] },
+                    { id: 8, name: 'Fiore Speciale', desc: 'Selezione stagionale dello chef', allergens: ['gluten','eggs'] },
+                ]
+            }
+        ];
+
+        const cart = {};
+
+        function renderMenu() {
+            const container = document.getElementById('menu-content');
+            container.innerHTML = '';
+            const normal = menuData.filter(c => !c.max1);
+            const limited = menuData.filter(c => c.max1);
+            const allCats = [...normal, ...limited];
+
+            // Categoria tabs
+            const tabsEl = document.getElementById('category-tabs');
+            const catsSelect = document.getElementById('cats-select');
+            tabsEl.innerHTML = '';
+            catsSelect.innerHTML = '<option value="">Tutte le categorie</option>';
+            allCats.forEach((cat, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'cat-tab' + (idx === 0 ? ' active' : '');
+                btn.textContent = cat.name;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    const sec = document.getElementById('cat-sec-' + cat.id);
+                    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                tabsEl.appendChild(btn);
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.textContent = cat.name;
+                catsSelect.appendChild(opt);
+            });
+            catsSelect.addEventListener('change', () => {
+                const id = catsSelect.value;
+                if (!id) return;
+                const sec = document.getElementById('cat-sec-' + id);
+                if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const idx = allCats.findIndex(c => String(c.id) === id);
+                document.querySelectorAll('.cat-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+                catsSelect.value = '';
+            });
+
+            allCats.forEach((cat, idx) => {
+                const sec = document.createElement('div');
+                sec.className = 'menu-category';
+                sec.id = 'cat-sec-' + cat.id;
+
+                if (cat.max1 && idx > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'max1-divider';
+                    div.innerHTML = '<span>Max 1 a persona</span>';
+                    container.appendChild(div);
+                }
+
+                sec.innerHTML = `<h2 class="category-title">${cat.name}</h2>`;
+
+                cat.items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'dish-card';
+                    card.id = `dish-${item.id}`;
+
+                    const tags = [];
+                    if (cat.max1) tags.push('<span class="dish-tag max1">Max 1</span>');
+                    const tagsHtml = tags.length ? `<div class="dish-tags">${tags.join('')}</div>` : '';
+
+                    card.innerHTML = `
+                        <div class="dish-info" onclick="openDishInfo(${item.id})">
+                            ${tagsHtml}
+                            <p class="dish-name">${item.name}</p>
+                            <p class="dish-desc">${item.desc}</p>
+                            <button class="info-btn" onclick="event.stopPropagation();openDishInfo(${item.id})"><i class="fas fa-circle-info"></i> Info & Allergeni</button>
+                        </div>
+                        <div class="dish-right">
+                            <div class="dish-img-wrap">
+                                ${item.img ? `<img src="${item.img}" class="dish-img-placeholder" style="object-fit:cover;" onclick="openDishInfo(${item.id})">` : `<div class="dish-img-placeholder" onclick="openDishInfo(${item.id})"><i class="fas fa-bowl-rice"></i></div>`}
+                                <button class="btn-add" id="add-${item.id}" onclick="addItem(${item.id}, ${cat.max1})">+</button>
+                            </div>
+                            <div class="qty-controls" id="qty-${item.id}">
+                                <button class="btn-minus" onclick="changeQty(${item.id}, -1, ${cat.max1})">−</button>
+                                <span class="qty-num" id="num-${item.id}">1</span>
+                                <button class="btn-plus" onclick="changeQty(${item.id}, 1, ${cat.max1})" ${cat.max1 ? 'disabled' : ''}>+</button>
+                            </div>
+                        </div>`;
+                    sec.appendChild(card);
+                });
+
+                container.appendChild(sec);
+            });
+        }
+
+        function addItem(id, max1) {
+            cart[id] = 1;
+            document.getElementById(`add-${id}`).style.display = 'none';
+            document.getElementById(`qty-${id}`).classList.add('show');
+            document.getElementById(`dish-${id}`).classList.add('in-cart');
+            const minusBtn = document.querySelector(`#qty-${id} .btn-minus`);
+            minusBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            minusBtn.style.fontSize = '0.75em';
+            updateCartBadge();
+        }
+
+        function changeQty(id, delta, max1) {
+            cart[id] = (cart[id] || 1) + delta;
+            if (cart[id] <= 0) {
+                delete cart[id];
+                document.getElementById(`add-${id}`).style.display = '';
+                document.getElementById(`qty-${id}`).classList.remove('show');
+                document.getElementById(`dish-${id}`).classList.remove('in-cart');
+            } else {
+                document.getElementById(`num-${id}`).textContent = cart[id];
+                const minusBtn = document.querySelector(`#qty-${id} .btn-minus`);
+                if (cart[id] === 1) {
+                    minusBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    minusBtn.style.fontSize = '0.75em';
+                } else {
+                    minusBtn.innerHTML = '−';
+                    minusBtn.style.fontSize = '';
+                }
+            }
+            updateCartBadge();
+        }
+
+        function updateCartBadge() {
+            const total = Object.values(cart).reduce((a, b) => a + b, 0);
+            document.getElementById('cart-count').textContent = total;
+        }
+
+        function initScrollSpy() {
+            const stickyH = document.getElementById('sticky-top').offsetHeight;
+            const sections = document.querySelectorAll('.menu-category');
+            const tabs = document.querySelectorAll('.cat-tab');
+            let isClicking = false;
+
+            const observer = new IntersectionObserver(entries => {
+                if (isClicking) return;
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        const idx = [...sections].findIndex(s => s.id === id);
+                        if (idx === -1) return;
+                        tabs.forEach((t, i) => t.classList.toggle('active', i === idx));
+                        const activeTab = tabs[idx];
+                        if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                });
+            }, { rootMargin: `-${stickyH}px 0px -60% 0px`, threshold: 0 });
+
+            sections.forEach(s => observer.observe(s));
+
+            // ultima categoria quando si arriva in fondo
+            window.addEventListener('scroll', () => {
+                if (isClicking) return;
+                if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 40) {
+                    tabs.forEach((t, i) => t.classList.toggle('active', i === tabs.length - 1));
+                    tabs[tabs.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+
+            // blocca lo spy durante lo scroll animato da click
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    isClicking = true;
+                    setTimeout(() => { isClicking = false; }, 800);
+                });
+            });
+        }
+
+        const allergenList = [
+            { key: 'gluten', label: 'Glutine', icon: 'fa-wheat-awn' },
+            { key: 'crustaceans', label: 'Crostacei', icon: 'fa-shrimp' },
+            { key: 'eggs', label: 'Uova', icon: 'fa-egg' },
+            { key: 'fish', label: 'Pesce', icon: 'fa-fish' },
+            { key: 'peanuts', label: 'Arachidi', icon: 'fa-circle-dot' },
+            { key: 'soy', label: 'Soia', icon: 'fa-leaf' },
+            { key: 'milk', label: 'Latte', icon: 'fa-droplet' },
+            { key: 'nuts', label: 'Frutta guscio', icon: 'fa-apple-whole' },
+            { key: 'celery', label: 'Sedano', icon: 'fa-spa' },
+            { key: 'mustard', label: 'Senape', icon: 'fa-sun' },
+            { key: 'sesame', label: 'Sesamo', icon: 'fa-circle-half-stroke' },
+            { key: 'sulphites', label: 'Solfiti', icon: 'fa-wine-bottle' },
+            { key: 'lupin', label: 'Lupini', icon: 'fa-clover' },
+            { key: 'molluscs', label: 'Molluschi', icon: 'fa-water' },
+        ];
+
+        function openDishInfo(id) {
+            const item = menuData.flatMap(c => c.items.map(i => ({...i, max1: c.max1}))).find(i => i.id === id);
+            if (!item) return;
+            document.getElementById('di-name').textContent = item.name;
+            document.getElementById('di-desc-text').textContent = item.desc;
+            const present = allergenList.filter(a => item.allergens && item.allergens.includes(a.key));
+            const renderChips = (list, cls) => list.map(a =>
+                `<div class="di-allergen-chip ${cls}"><i class="fas ${a.icon}"></i>${a.label}</div>`
+            ).join('');
+            document.getElementById('di-allergen-section').style.display = present.length ? '' : 'none';
+            document.getElementById('di-allergens').innerHTML = `<div class="di-allergen-grid">${renderChips(present, 'present')}</div>`;
+            document.getElementById('di-overlay').classList.add('open');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderMenu();
+            initScrollSpy();
+            document.getElementById('di-close').addEventListener('click', () => {
+                document.getElementById('di-overlay').classList.remove('open');
+            });
+        });
+    </script>
+
+</body>
+</html>
