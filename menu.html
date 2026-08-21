@@ -2847,8 +2847,8 @@
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('onboarding').style.display = 'none';
 
-            // ── QR SESSION ── decommentare per produzione:
-            // if (!checkSession()) return;
+            // ── QR SESSION ──
+            if (!checkSession()) return;
 
             let saved = null;
             try {
