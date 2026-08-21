@@ -41,6 +41,16 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .tab-btn{padding:12px 18px;border:none;background:none;color:var(--text3);font-size:0.88em;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:inherit;transition:color .2s,border-color .2s;}
 .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
 
+/* TREND BADGE */
+.trend-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72em;font-weight:700;padding:3px 8px;border-radius:20px;margin-left:6px;}
+.trend-up  {background:rgba(46,139,87,.15);color:#4ade80;}
+.trend-down{background:rgba(192,57,43,.15);color:#f87171;}
+.trend-flat{background:rgba(100,100,100,.12);color:#888;}
+
+/* SLOW MOVERS */
+.slow-tag{background:rgba(231,76,60,.1);color:#e74c3c;font-size:0.7em;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
+.ok-tag  {background:rgba(39,174,96,.1);color:#4ade80;font-size:0.7em;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
+
 /* DATE RANGE */
 #range-bar{padding:16px 20px 0;display:flex;gap:8px;flex-wrap:wrap;}
 .range-btn{padding:6px 14px;border:1px solid var(--border);background:none;color:var(--text2);font-size:0.8em;font-weight:600;border-radius:20px;cursor:pointer;font-family:inherit;transition:all .2s;}
@@ -124,6 +134,7 @@ main{padding:20px;}
 <div id="tab-bar">
   <button class="tab-btn active" data-tab="oggi"><i class="fas fa-chart-line" style="margin-right:6px;"></i>Oggi</button>
   <button class="tab-btn" data-tab="piatti"><i class="fas fa-utensils" style="margin-right:6px;"></i>Piatti</button>
+  <button class="tab-btn" data-tab="tavoli"><i class="fas fa-chair" style="margin-right:6px;"></i>Tavoli</button>
   <button class="tab-btn" data-tab="analisi"><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Analisi</button>
 </div>
 
@@ -142,14 +153,14 @@ main{padding:20px;}
   <div class="section active" id="sec-oggi">
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-users kpi-icon"></i>Coperti</div>
-        <div class="kpi-value" id="k-coperti">—</div>
-        <div class="kpi-sub">persone nel periodo</div>
-      </div>
-      <div class="kpi-card">
         <div class="kpi-label"><i class="fas fa-paper-plane kpi-icon"></i>Ordini</div>
         <div class="kpi-value" id="k-ordini">—</div>
-        <div class="kpi-sub">ordini inviati</div>
+        <div class="kpi-sub" id="k-ordini-trend"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-layer-group kpi-icon"></i>Piatti/Ordine</div>
+        <div class="kpi-value" id="k-avg">—</div>
+        <div class="kpi-sub">portate medie per ordine</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label"><i class="fas fa-trophy kpi-icon"></i>Piatto top</div>
@@ -189,10 +200,81 @@ main{padding:20px;}
         </table>
       </div>
     </div>
+    <div class="chart-card" id="slow-card">
+      <div class="chart-title" style="color:#e74c3c;">⚠ Piatti poco ordinati — candidati da rivalutare</div>
+      <p style="font-size:0.8em;color:var(--text3);margin-bottom:16px;">Piatti ordinati poche volte nel periodo selezionato. Considera se promuoverli o rimuoverli dal menu.</p>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr><th>Piatto</th><th>Categoria</th><th>Ordinato</th><th>Stato</th></tr></thead>
+          <tbody id="slow-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAVOLI ── -->
+  <div class="section" id="sec-tavoli">
+    <div class="kpi-grid" style="margin-bottom:20px;">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-chair kpi-icon"></i>Tavolo top</div>
+        <div class="kpi-value" id="kt-top">—</div>
+        <div class="kpi-sub" id="kt-top-sub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-calculator kpi-icon"></i>Media ordini/tavolo</div>
+        <div class="kpi-value" id="kt-avg">—</div>
+        <div class="kpi-sub">nel periodo</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-fire kpi-icon"></i>Portate/tavolo</div>
+        <div class="kpi-value" id="kt-portate">—</div>
+        <div class="kpi-sub">media portate per tavolo</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-hashtag kpi-icon"></i>Tavoli attivi</div>
+        <div class="kpi-value" id="kt-count">—</div>
+        <div class="kpi-sub">tavoli che hanno ordinato</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Ordini per numero tavolo</div>
+      <div class="chart-wrap" style="height:260px;">
+        <canvas id="chart-tables"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Classifica tavoli</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Tavolo</th><th>Ordini</th><th>Portate totali</th><th>Portate/ordine</th></tr></thead>
+          <tbody id="table-tbody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- ── ANALISI ── -->
   <div class="section" id="sec-analisi">
+    <!-- Confronto settimana -->
+    <div class="chart-card" style="margin-bottom:16px;">
+      <div class="chart-title">Confronto — questa settimana vs settimana scorsa</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;">
+        <div style="text-align:center;">
+          <div style="font-size:0.75em;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Questa settimana</div>
+          <div style="font-size:2.4em;font-weight:800;color:#fff;" id="cmp-this">—</div>
+          <div style="font-size:0.78em;color:var(--text3);">ordini</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.75em;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Settimana scorsa</div>
+          <div style="font-size:2.4em;font-weight:800;color:#555;" id="cmp-last">—</div>
+          <div style="font-size:0.78em;color:var(--text3);">ordini</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <span id="cmp-badge" style="font-size:0.9em;font-weight:700;color:var(--text3);">—</span>
+      </div>
+    </div>
+
     <div class="chart-card">
       <div class="chart-title">Ordini per giorno (ultimi 30 gg)</div>
       <div class="chart-wrap" style="height:220px;">
@@ -250,7 +332,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('sec-' + btn.dataset.tab).classList.add('active');
+    const sec = document.getElementById('sec-' + btn.dataset.tab);
+    if (sec) sec.classList.add('active');
   });
 });
 
@@ -318,37 +401,106 @@ function aggregateDishes(orders) {
   return Object.values(map).sort((a, b) => b.qty - a.qty);
 }
 
+// ── WEEK COMPARE ─────────────────────────────────────────────────────────
+function weekCompare() {
+  const now = new Date();
+  const thisStart = new Date(now); thisStart.setDate(now.getDate() - 7); thisStart.setHours(0,0,0,0);
+  const lastStart = new Date(now); lastStart.setDate(now.getDate() - 14); lastStart.setHours(0,0,0,0);
+  const thisW = allOrders.filter(o => !o.waiter_request && new Date(o.created_at) >= thisStart).length;
+  const lastW = allOrders.filter(o => { const t = new Date(o.created_at); return !o.waiter_request && t >= lastStart && t < thisStart; }).length;
+  const delta = lastW ? ((thisW - lastW) / lastW * 100) : null;
+  return { thisW, lastW, delta };
+}
+
+// ── AGGREGATE TABLES ──────────────────────────────────────────────────────
+function aggregateTables(orders) {
+  const map = {};
+  orders.forEach(o => {
+    const t = o.table_number || '?';
+    if (!map[t]) map[t] = { table: t, orders: 0, items: 0 };
+    map[t].orders++;
+    map[t].items += (o.items || []).reduce((s, i) => s + (i.qty || 1), 0);
+  });
+  return Object.values(map).sort((a, b) => b.orders - a.orders);
+}
+
 // ── KPI ───────────────────────────────────────────────────────────────────
 function computeKPIs(orders) {
   const totalOrders = orders.length;
   const dishes = aggregateDishes(orders);
   const totalItems = dishes.reduce((s, d) => s + d.qty, 0);
+  const avgPerOrder = totalOrders ? (totalItems / totalOrders).toFixed(1) : '—';
 
   // orario di punta
   const byHour = Array(24).fill(0);
   orders.forEach(o => { byHour[new Date(o.created_at).getHours()]++; });
   const peakHour = byHour.indexOf(Math.max(...byHour));
 
-  return { totalOrders, dishes, totalItems, byHour, peakHour };
+  return { totalOrders, dishes, totalItems, avgPerOrder, byHour, peakHour };
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render() {
   const orders = filteredOrders();
-  const { totalOrders, dishes, totalItems, byHour, peakHour } = computeKPIs(orders);
+  const { totalOrders, dishes, totalItems, avgPerOrder, byHour, peakHour } = computeKPIs(orders);
+  const tables = aggregateTables(orders);
+  const { thisW, lastW, delta } = weekCompare();
 
-  // KPI cards
-  document.getElementById('k-coperti').textContent   = '—';   // senza people_count non possiamo
-  document.getElementById('k-ordini').textContent    = totalOrders;
-  document.getElementById('k-top').textContent       = dishes[0] ? dishes[0].name : '—';
-  document.getElementById('k-top-qty').textContent   = dishes[0] ? `${dishes[0].qty} porzioni` : '';
-  document.getElementById('k-ora').textContent       = totalOrders ? `${peakHour}:00` : '—';
-  document.getElementById('k-ora-sub').textContent   = totalOrders ? `${byHour[peakHour]} ordini` : '';
+  // KPI — oggi
+  document.getElementById('k-ordini').textContent  = totalOrders;
+  document.getElementById('k-avg').textContent     = avgPerOrder;
+  document.getElementById('k-top').textContent     = dishes[0] ? dishes[0].name : '—';
+  document.getElementById('k-top-qty').textContent = dishes[0] ? `${dishes[0].qty} porzioni` : '';
+  document.getElementById('k-ora').textContent     = totalOrders ? `${peakHour}:00` : '—';
+  document.getElementById('k-ora-sub').textContent = totalOrders ? `${byHour[peakHour]} ordini` : '';
+
+  // trend sotto "Ordini"
+  if (delta !== null) {
+    const sign = delta >= 0 ? '+' : '';
+    const cls  = delta >= 0 ? 'trend-up' : 'trend-down';
+    const icon = delta >= 0 ? '▲' : '▼';
+    document.getElementById('k-ordini-trend').innerHTML =
+      `<span class="trend-badge ${cls}">${icon} ${sign}${Math.round(delta)}% vs 7gg fa</span>`;
+  } else {
+    document.getElementById('k-ordini-trend').textContent = 'ordini nel periodo';
+  }
+
+  // KPI — tavoli
+  if (tables.length) {
+    const top = tables[0];
+    document.getElementById('kt-top').textContent     = `T.${top.table}`;
+    document.getElementById('kt-top-sub').textContent = `${top.orders} ordini, ${top.items} portate`;
+    const avgOrd = (orders.length / tables.length).toFixed(1);
+    const avgPor = tables.reduce((s,t)=>s+(t.items/t.orders),0) / tables.length;
+    document.getElementById('kt-avg').textContent     = avgOrd;
+    document.getElementById('kt-portate').textContent = avgPor.toFixed(1);
+    document.getElementById('kt-count').textContent   = tables.length;
+  } else {
+    ['kt-top','kt-avg','kt-portate','kt-count'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+  }
+
+  // Confronto settimane
+  document.getElementById('cmp-this').textContent = thisW;
+  document.getElementById('cmp-last').textContent = lastW;
+  const cmpBadge = document.getElementById('cmp-badge');
+  if (delta !== null) {
+    const sign = delta >= 0 ? '+' : '';
+    const cls  = delta >= 0 ? 'trend-up' : (delta < -5 ? 'trend-down' : 'trend-flat');
+    const icon = delta >= 0 ? '▲' : '▼';
+    cmpBadge.innerHTML = `<span class="trend-badge ${cls}" style="font-size:1em;padding:6px 14px;">${icon} ${sign}${Math.round(delta)}% rispetto alla settimana scorsa</span>`;
+  } else {
+    cmpBadge.textContent = 'Dati insufficienti per il confronto';
+  }
 
   // Charts
   renderHourly(byHour);
   renderTop10(dishes);
   renderDishTable(dishes, totalItems);
+  renderSlowMovers(dishes);
+  renderTableChart(tables);
+  renderTableRanking(tables);
   renderDaily(orders);
   renderWeekday(orders);
   renderCat(dishes);
@@ -458,6 +610,56 @@ function renderCat(dishes) {
     data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 0 }] },
     options: { ...darkOpts(), plugins: { legend: { display: false } }, cutout: '60%' }
   });
+}
+
+// ── TABLE: SLOW MOVERS ───────────────────────────────────────────────────
+function renderSlowMovers(dishes) {
+  const tbody = document.getElementById('slow-tbody');
+  if (!dishes.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#444;padding:16px;">Nessun dato</td></tr>'; return; }
+  const threshold = Math.max(2, Math.round(dishes[0].qty * 0.05)); // < 5% del piatto top
+  const slow = dishes.filter(d => d.qty <= threshold);
+  if (!slow.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#555;padding:16px;">Nessun piatto con poche ordinazioni nel periodo — ottimo!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = slow.map(d => `<tr>
+    <td>${d.name}</td>
+    <td style="color:var(--text3);font-size:0.85em;">${d.cat || '—'}</td>
+    <td>${d.qty} volta${d.qty !== 1 ? 'e' : ''}</td>
+    <td>${d.qty <= 1 ? '<span class="slow-tag">Critico</span>' : '<span class="slow-tag">Scarso</span>'}</td>
+  </tr>`).join('');
+}
+
+// ── CHART: TAVOLI ─────────────────────────────────────────────────────────
+function renderTableChart(tables) {
+  const sorted = [...tables].sort((a, b) => Number(a.table) - Number(b.table));
+  const ctx = document.getElementById('chart-tables').getContext('2d');
+  if (charts.tables) charts.tables.destroy();
+  charts.tables = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(t => `T.${t.table}`),
+      datasets: [{ data: sorted.map(t => t.orders), backgroundColor: 'rgba(37,99,235,0.5)', borderColor: '#2563eb', borderWidth: 1, borderRadius: 4 }]
+    },
+    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis() }, y: { ...darkAxis(), beginAtZero: true } } }
+  });
+}
+
+// ── TABLE: RANKING TAVOLI ─────────────────────────────────────────────────
+function renderTableRanking(tables) {
+  const tbody = document.getElementById('table-tbody');
+  if (!tables.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:16px;">Nessun dato</td></tr>'; return; }
+  tbody.innerHTML = tables.map((t, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const avgPi = (t.items / t.orders).toFixed(1);
+    return `<tr>
+      <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+      <td><strong>Tavolo ${t.table}</strong></td>
+      <td>${t.orders}</td>
+      <td>${t.items}</td>
+      <td style="color:var(--text3);">${avgPi} portate</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── CHART DEFAULTS (dark theme) ───────────────────────────────────────────
