@@ -153,8 +153,13 @@
         .dish-tag.max1-card { background: #fff7ed; color: #ea580c; border: 1.5px solid #fed7aa; }
         .dish-tag.weekend { background: #fdf4ff; color: #9333ea; border: 1.5px solid #e9d5ff; }
         .dish-num { color: #111; font-weight: 600; font-size: 0.82em; margin-right: 3px; }
-        .dish-card.weekend-only { opacity: 0.5; }
-        .dish-card.weekend-only .btn-add { pointer-events: none; opacity: 0.4; }
+        .dish-card.weekend-only { opacity: 0.45; }
+        .dish-card.weekend-only .btn-add { pointer-events: none; opacity: 0.3; }
+        .dish-card.weekend-only .dish-info { cursor: default; }
+        .dish-card.allergen-blocked { opacity: 0.38; filter: grayscale(0.25); }
+        .dish-card.allergen-blocked .btn-add,
+        .dish-card.allergen-blocked .qty-controls { pointer-events: none; opacity: 0.3; }
+        .dish-card.allergen-blocked .dish-info { cursor: default; }
         .srch-hl { color: #2563eb; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
         #search-overlay { display:none; position:fixed; inset:0; background:#fff; z-index:200; flex-direction:column; }
         #search-bar { padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #eee; background:#fff; position:sticky; top:0; }
@@ -742,6 +747,7 @@
             .dish-name { font-size: 0.95em; }
             .dish-desc { font-size: 0.78em; }
             .dish-card { padding: 12px 14px; gap: 10px; }
+            .dish-img-wrap { width: 62px; height: 62px; }
             .dish-img-placeholder { width: 62px; height: 62px; }
             .cat-tab { padding: 6px 12px; font-size: 0.78em; }
             .header-icon { padding: 8px 8px; font-size: 1.05em; }
@@ -952,6 +958,10 @@
                 <div id="di-max1-notice" style="display:none;">
                     <i class="fas fa-circle-info"></i>
                     <span data-i18n="max1notice">Per questa categoria puoi selezionare <strong>un solo piatto</strong>.</span>
+                </div>
+                <div id="di-weekend-notice" style="display:none;background:#fdf4ff;border-radius:12px;padding:10px 14px;font-size:0.78em;color:#6b21a8;line-height:1.5;margin-bottom:16px;align-items:flex-start;gap:8px;border-left:3px solid #9333ea;">
+                    <i class="fas fa-calendar-week" style="color:#9333ea;flex-shrink:0;margin-top:1px;"></i>
+                    <span id="di-weekend-msg">Disponibile solo sabato, domenica e festivi</span>
                 </div>
                 <div id="di-qty-wrap">
                     <button id="di-cta-btn" onclick="diSetQty(1)">
@@ -1476,22 +1486,33 @@
                 const applyBtn = document.getElementById('filter-apply');
                 if (total > 0) { badge.textContent = total; badge.classList.add('visible'); }
                 else { badge.classList.remove('visible'); }
-                const showConfirm = total > 0 || confirmedFilters > 0;
-                closeBtn.style.display = showConfirm ? 'none' : 'flex';
-                applyBtn.style.display = showConfirm ? 'block' : 'none';
+                closeBtn.style.display = 'flex'; // sempre visibile
+                applyBtn.style.display = (total > 0 || confirmedFilters > 0) ? 'block' : 'none';
             }
             function closeFilter() { document.getElementById('filter-overlay').classList.remove('open'); }
             document.getElementById('filter-toggle').addEventListener('click', () => {
                 document.getElementById('filter-overlay').classList.add('open');
                 updateFilterUI();
             });
-            document.getElementById('filter-close-btn').addEventListener('click', closeFilter);
+            document.getElementById('filter-close-btn').addEventListener('click', () => {
+                // annulla le modifiche non confermate
+                document.querySelectorAll('.fcheck input').forEach(cb => {
+                    cb.checked = activeFilters.has(cb.dataset.filter);
+                });
+                closeFilter();
+            });
             document.getElementById('filter-apply').addEventListener('click', () => {
                 confirmedFilters = document.querySelectorAll('.fcheck input:checked').length;
+                activeFilters.clear();
+                document.querySelectorAll('.fcheck input:checked').forEach(cb => activeFilters.add(cb.dataset.filter));
                 const badge = document.getElementById('filter-badge');
                 if (confirmedFilters > 0) { badge.textContent = confirmedFilters; badge.classList.add('visible'); }
                 else { badge.classList.remove('visible'); }
                 closeFilter();
+                const _savedY = window.scrollY;
+                renderMenu();
+                restoreCartUI();
+                window.scrollTo(0, _savedY);
             });
             document.querySelectorAll('.fcheck input').forEach(cb => {
                 cb.addEventListener('change', updateFilterUI);
@@ -2063,6 +2084,9 @@
                     const isVeg = /vegetarian[oa]?|veggie/.test(nameOnly);
                     const isWkndDish = item.desc && item.desc.toLowerCase().includes('solo weekend');
                     const wkndOk = isWeekend();
+                    const hasBlockedAllergen = activeFilters.size > 0 && item.allergens && item.allergens.some(a => activeFilters.has(a));
+                    if (isWkndDish && !wkndOk) card.classList.add('weekend-only');
+                    if (hasBlockedAllergen) card.classList.add('allergen-blocked');
                     if (cat.max1) tags.unshift(`<span class="dish-tag max1-card"><i class="fas fa-user"></i> Max 1</span>`);
                     if (isSpicy) tags.push(`<span class="dish-tag spicy"><i class="fas fa-fire"></i> ${t.spicyTag||'Piccante'}</span>`);
                     if (isVeg) tags.push(`<span class="dish-tag veg"><i class="fas fa-leaf"></i> ${t.vegTag||'Veg'}</span>`);
@@ -2070,7 +2094,6 @@
                     const tagsHtml = tags.length ? `<div class="dish-tags">${tags.join('')}</div>` : '';
                     const iName = getLang(item,'name');
                     const iDesc = getLang(item,'desc');
-                    // weekend-only: solo badge info, sempre ordinabile
 
                     const imgSrc = dishImgs[item.id] || item.img || null;
                     card.innerHTML = `
@@ -2347,6 +2370,8 @@
 
         let diCurrentId = null;
         let diQty = 0;
+        let diIsBlocked = false;
+        let activeFilters = new Set();
 
         function openDishInfo(id) {
             const item = menuData.flatMap(c => c.items.map(i => ({...i, max1: c.max1}))).find(i => i.id === id);
@@ -2357,9 +2382,24 @@
             document.getElementById('di-name').textContent = `${item.id}. ${getLang(item,'name')}`;
             const rawDesc = getLang(item,'desc');
             const isWkndItem = item.desc && item.desc.toLowerCase().includes('solo weekend');
+            const wkndOkNow = isWeekend();
+            const isWkndBlocked = isWkndItem && !wkndOkNow;
+            const isAllergenBlocked = activeFilters.size > 0 && item.allergens && item.allergens.some(a => activeFilters.has(a));
+            diIsBlocked = isWkndBlocked || isAllergenBlocked;
+
             document.getElementById('di-desc').textContent = isWkndItem
-                ? rawDesc.replace(/\(?\s*solo weekend e festivi[^)]*\)?\s*/gi, '').trim() + ' — ' + (tLang.weekendTagInfo || 'Solo weekend e festivi')
+                ? rawDesc.replace(/\(?\s*solo weekend e festivi[^)]*\)?\s*/gi, '').trim() + (wkndOkNow ? ' — ' + (tLang.weekendTagInfo || 'Solo weekend e festivi') : '')
                 : rawDesc;
+
+            // notice weekend nel popup
+            const weekendNotice = document.getElementById('di-weekend-notice');
+            if (isWkndBlocked) {
+                weekendNotice.style.display = 'flex';
+                const wmsg = document.getElementById('di-weekend-msg');
+                if (wmsg) wmsg.textContent = tLang.weekendTagInfo || 'Disponibile solo sabato, domenica e festivi';
+            } else {
+                weekendNotice.style.display = 'none';
+            }
 
             const hero = document.getElementById('di-hero');
             const icon = document.getElementById('di-hero-icon');
@@ -2422,6 +2462,7 @@
             const item = menuData.flatMap(c => c.items.map(i => ({...i, max1: c.max1}))).find(i => i.id === diCurrentId);
             if (!item) return;
             newQty = Math.max(0, newQty);
+            if (diIsBlocked && newQty > diQty) return; // non si può aumentare se bloccato
             if (item.max1 && newQty > tableSize) { openMax1Explain(diCurrentId); return; }
             if (item.max1) newQty = Math.min(newQty, tableSize);
             diQty = newQty;
@@ -2461,12 +2502,15 @@
             numEl.textContent = diQty;
             if (diQty === 0) {
                 ctaBtn.style.display = '';
+                ctaBtn.disabled = diIsBlocked;
+                ctaBtn.style.opacity = diIsBlocked ? '0.4' : '';
+                ctaBtn.style.cursor  = diIsBlocked ? 'default' : '';
                 pill.classList.remove('visible');
             } else {
                 ctaBtn.style.display = 'none';
                 pill.classList.add('visible');
             }
-            plusBtn.disabled = false;
+            plusBtn.disabled = diIsBlocked || (item && item.max1 && diQty >= tableSize);
         }
 
         // apre/chiude popup piatto con scroll lock
