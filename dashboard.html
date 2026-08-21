@@ -2,541 +2,535 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jun Restaurant — Staff</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jun — KDS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'DM Sans',-apple-system,sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#0d0d0d;--surface:#161616;--border:#242424;
-  --gold:#c9a84c;--green:#27ae60;--blue:#2563eb;--red:#e74c3c;--orange:#e67e22;
-  --text:#e8e8e8;--text2:#888;--text3:#444;
+  --bg:#0a0a0a; --surf:#161616; --border:#222;
+  --t1:#f0f0f0; --t2:#888; --t3:#3a3a3a;
+  --c-new:#d97706; --c-prep:#2563eb; --c-ready:#16a34a;
+  --c-req:#ea580c; --c-urg:#dc2626;
 }
-body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+html,body{height:100%;background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,sans-serif;overflow-x:hidden;}
 
 /* ── HEADER ── */
 header{
+  position:sticky;top:0;z-index:100;
   background:#000;border-bottom:1px solid #1a1a1a;
-  padding:0 20px;height:56px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:200;
+  height:52px;padding:0 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
-.h-logo{height:28px;object-fit:contain;filter:brightness(0) invert(1);}
-.h-center{display:flex;align-items:center;gap:8px;}
-.h-live{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.h-label{font-size:0.78em;font-weight:600;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}
-#clock{font-size:1em;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+.h-logo{height:24px;object-fit:contain;filter:brightness(0) invert(1);flex-shrink:0;}
+.h-mid{display:flex;align-items:center;gap:10px;flex:1;justify-content:center;}
+.h-badge{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:20px;
+  font-size:0.76em;font-weight:700;letter-spacing:.2px;
+}
+.hb-o{background:rgba(217,119,6,.14);color:var(--c-new);}
+.hb-s{background:rgba(234,88,12,.14);color:var(--c-req);}
+.hb-r{background:rgba(22,163,74,.14);color:var(--c-ready);}
+.h-dot{width:7px;height:7px;border-radius:50%;background:var(--c-ready);animation:blink 2.2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+#clock{font-size:1em;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0;}
 
-/* ── STATS BAR ── */
-#stats-bar{
-  background:#111;border-bottom:1px solid #1d1d1d;
-  padding:8px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+/* ── TOOLBAR ── */
+#toolbar{
+  background:#0f0f0f;border-bottom:1px solid var(--border);
+  padding:5px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
 }
-.stat{display:flex;align-items:center;gap:6px;font-size:0.82em;color:var(--text2);}
-.stat-val{font-size:1em;font-weight:700;color:#fff;}
-.stat-sep{width:1px;height:16px;background:var(--border);}
+.tb{font-size:0.76em;color:var(--t2);}
+.tb strong{color:var(--t1);font-weight:700;}
+#tb-update{font-size:0.72em;color:var(--t3);}
 #demo-btn{
-  margin-left:auto;padding:5px 14px;background:rgba(201,168,76,.12);
-  border:1px solid rgba(201,168,76,.3);color:var(--gold);
-  border-radius:20px;font-size:0.78em;font-weight:600;cursor:pointer;font-family:inherit;
+  margin-left:auto;padding:5px 13px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--t2);border-radius:20px;font-size:0.74em;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .15s;
 }
-#demo-btn:hover{background:rgba(201,168,76,.2);}
+#demo-btn:hover{background:rgba(255,255,255,.1);color:var(--t1);}
+#demo-btn:disabled{opacity:.5;cursor:default;}
 
-/* ── MAIN GRID ── */
-.dashboard{
-  display:grid;grid-template-columns:1fr 1fr;
-  min-height:calc(100vh - 96px);
+/* ── GRID ── */
+#kds-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:10px;padding:10px;
+  align-items:start;
 }
-@media(max-width:640px){.dashboard{grid-template-columns:1fr;}}
-.col{padding:16px;border-right:1px solid var(--border);}
-.col:last-child{border-right:none;}
-.col-header{
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:16px;padding-bottom:12px;
-  border-bottom:1px solid var(--border);
-}
-.col-header h2{font-size:0.78em;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);}
-.col-badge{
-  background:#222;color:var(--gold);
-  font-size:0.75em;font-weight:700;
-  padding:2px 9px;border-radius:20px;
-  min-width:24px;text-align:center;
-}
-.cards{display:flex;flex-direction:column;gap:12px;}
-
-/* ── ORDER CARD ── */
-@keyframes slideIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes cardOut{to{opacity:0;transform:scale(0.96);max-height:0;overflow:hidden;padding:0;margin:0;border:0;}}
-@keyframes readyPulse{0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,0)}50%{box-shadow:0 0 0 8px rgba(39,174,96,.18)}}
-@keyframes deliveredFlash{0%{background:#0d2b1a}100%{background:#0f1f12}}
-
-.order-card{
-  background:var(--surface);border-radius:14px;
-  overflow:hidden;animation:slideIn .3s ease-out;
-  border:1px solid var(--border);
-  transition:box-shadow .3s;
-}
-.order-card.s-new   {border-top:4px solid var(--gold);}
-.order-card.s-prep  {border-top:4px solid var(--blue);}
-.order-card.s-ready {border-top:4px solid var(--green);animation:readyPulse 2.5s ease-in-out infinite;}
-.order-card.s-urgent{border-top:4px solid var(--red);border-color:var(--red);}
-.order-card.s-delivered{border-top:4px solid var(--green);background:#0d2b1a;}
-.order-card.card-out{animation:cardOut .35s ease-out forwards;}
-
-.card-inner{padding:16px;}
-
-/* Card top row */
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
-.card-table-num{font-size:3.2em;font-weight:800;color:#fff;line-height:1;letter-spacing:-0.04em;}
-.card-table-label{font-size:0.65em;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
-.card-right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
-.card-status-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:0.72em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-  padding:4px 10px;border-radius:20px;
-}
-.badge-new    {background:rgba(201,168,76,.15);color:var(--gold);}
-.badge-prep   {background:rgba(37,99,235,.15);color:#60a5fa;}
-.badge-ready  {background:rgba(39,174,96,.15);color:#4ade80;}
-.badge-urgent {background:rgba(231,76,60,.15);color:var(--red);}
-.badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1s ease-in-out infinite;}
-.card-timer{font-size:0.78em;font-weight:600;color:var(--text3);font-variant-numeric:tabular-nums;}
-.card-timer.t-warn{color:var(--orange);}
-.card-timer.t-urgent{color:var(--red);font-weight:700;}
-
-/* Items */
-.card-divider{border:none;border-top:1px solid #202020;margin:10px 0;}
-.card-items{list-style:none;margin-bottom:10px;display:flex;flex-direction:column;gap:4px;}
-.card-items li{display:flex;align-items:baseline;gap:8px;font-size:0.9em;}
-.item-qty{color:var(--gold);font-weight:700;min-width:26px;}
-.item-name{color:var(--text);flex:1;}
-.item-code{color:var(--text3);font-size:0.78em;}
-
-/* Note */
-.card-note{
-  display:flex;align-items:flex-start;gap:8px;
-  background:rgba(39,174,96,.07);border-left:3px solid var(--green);
-  padding:8px 10px;border-radius:0 8px 8px 0;
-  font-size:0.82em;color:#aaa;line-height:1.4;margin-bottom:10px;
-}
-.card-note i{color:var(--green);margin-top:1px;flex-shrink:0;}
-
-/* Action buttons */
-.card-action{
-  width:100%;padding:12px;border:none;border-radius:10px;
-  font-family:inherit;font-size:0.9em;font-weight:700;
-  cursor:pointer;transition:filter .15s, transform .1s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.card-action:active{transform:scale(0.97);}
-.card-action:hover{filter:brightness(1.12);}
-.btn-new    {background:var(--gold);color:#000;}
-.btn-prep   {background:var(--green);color:#fff;}
-.btn-ready  {background:var(--green);color:#fff;font-size:1em;}
-.btn-delivered{background:#1a3a2a;color:#4ade80;cursor:default;}
-
-/* Delivered state */
-.delivered-msg{
-  text-align:center;padding:20px;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-}
-.delivered-msg i{font-size:2.2em;color:var(--green);}
-.delivered-msg p{font-weight:700;color:var(--green);font-size:1em;}
-.delivered-msg small{color:var(--text3);font-size:0.8em;}
-
-/* ── STAFF CARD ── */
-.staff-card{
-  background:#150e00;border:1px solid rgba(230,115,0,.35);
-  border-top:4px solid var(--orange);border-radius:14px;
-  overflow:hidden;animation:slideIn .3s ease-out;
-}
-.staff-inner{padding:16px;}
-.staff-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
-.staff-table{font-size:3.2em;font-weight:800;color:#fff;line-height:1;letter-spacing:-0.04em;}
-.staff-table-label{font-size:0.65em;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
-.staff-type{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(230,115,0,.08);border-radius:10px;}
-.staff-type i{color:var(--orange);font-size:1.3em;width:24px;text-align:center;}
-.staff-type-label{font-size:0.95em;font-weight:600;color:#ff9f43;}
-.staff-dismiss{
-  width:100%;padding:11px;background:#e67e22;color:#000;
-  border:none;border-radius:10px;font-family:inherit;font-size:0.9em;font-weight:700;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.staff-dismiss:hover{filter:brightness(1.1);}
 
 /* ── EMPTY ── */
-.empty{text-align:center;padding:48px 16px;color:var(--text3);}
-.empty i{font-size:2.2em;margin-bottom:12px;display:block;opacity:.4;}
-.empty p{font-size:0.9em;}
+#kds-empty{
+  grid-column:1/-1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px;gap:14px;text-align:center;color:var(--t3);
+}
+#kds-empty i{font-size:2.8em;opacity:.25;}
+#kds-empty p{font-size:0.9em;}
+
+/* ── CARD ── */
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes cardOut{to{opacity:0;transform:scale(.95);pointer-events:none}}
+@keyframes readyPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}
+  50%    {box-shadow:0 0 0 8px rgba(22,163,74,.18)}
+}
+
+.kds-card{
+  background:var(--surf);border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;
+  animation:slideIn .22s ease-out;
+  border:1px solid var(--border);
+}
+.kds-card.s-ready{animation:readyPulse 2.6s ease-in-out infinite;}
+.kds-card.card-out{animation:cardOut .28s ease-out forwards;}
+
+/* ── CARD HEADER ── */
+.card-hd{
+  padding:11px 14px 13px;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  flex-shrink:0;
+}
+.s-new  .card-hd{background:var(--c-new);}
+.s-prep .card-hd{background:var(--c-prep);}
+.s-ready.card-hd,.s-ready .card-hd{background:var(--c-ready);}
+.s-req  .card-hd{background:var(--c-req);}
+.s-urg  .card-hd{background:var(--c-urg);}
+
+.card-hd-l{display:flex;flex-direction:column;line-height:1;}
+.card-hd-lbl{
+  font-size:0.58em;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:rgba(255,255,255,.65);
+  margin-bottom:1px;
+}
+.card-hd-num{
+  font-size:4em;font-weight:900;color:#fff;
+  letter-spacing:-0.05em;line-height:.9;
+}
+.card-hd-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.card-hd-status{
+  font-size:0.62em;font-weight:800;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(255,255,255,.75);
+}
+.card-hd-timer{
+  font-size:1.05em;font-weight:700;color:#fff;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ── CARD BODY ── */
+.card-body{padding:11px 13px;flex:1;display:flex;flex-direction:column;gap:8px;}
+
+.card-items{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.card-items li{display:flex;align-items:baseline;gap:7px;font-size:0.87em;}
+.i-qty{font-weight:800;min-width:26px;color:var(--t2);}
+.i-name{color:var(--t1);flex:1;line-height:1.35;}
+.i-code{color:var(--t3);font-size:0.78em;font-variant-numeric:tabular-nums;}
+
+.card-note{
+  display:flex;align-items:flex-start;gap:7px;
+  padding:7px 10px;border-radius:0 8px 8px 0;
+  border-left:2px solid var(--t3);
+  background:rgba(255,255,255,.03);
+  font-size:0.81em;color:var(--t2);line-height:1.4;
+}
+.card-note i{color:var(--t3);font-size:.85em;margin-top:2px;flex-shrink:0;}
+
+/* ── STAFF REQUEST TYPE ── */
+.req-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;background:rgba(234,88,12,.08);border-radius:10px;
+}
+.req-row i{color:var(--c-req);font-size:1.2em;width:20px;text-align:center;}
+.req-row span{font-size:0.95em;font-weight:600;color:#fb923c;}
+
+/* ── ACTION BUTTON ── */
+.card-btn{
+  width:100%;padding:14px;border:none;border-top:1px solid var(--border);
+  font-family:inherit;font-size:0.86em;font-weight:800;letter-spacing:.3px;
+  text-transform:uppercase;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:filter .12s;flex-shrink:0;
+  background:#111;
+}
+.card-btn:active{filter:brightness(.85);}
+.card-btn:hover{filter:brightness(1.15);}
+.btn-new  {color:var(--c-new);}
+.btn-prep {color:var(--c-prep);}
+.btn-ready{background:var(--c-ready);color:#fff;border-top-color:transparent;font-size:.92em;}
+.btn-req  {color:var(--c-req);}
+
+/* ── DELIVERED OVERLAY ── */
+.done-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:22px;gap:8px;text-align:center;
+}
+.done-wrap i{font-size:2.6em;color:var(--c-ready);}
+.done-wrap strong{color:var(--c-ready);font-size:1em;}
+.done-wrap small{color:var(--t3);font-size:0.8em;}
 </style>
 </head>
 <body>
 
 <header>
-  <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
-  <div class="h-center">
-    <div class="h-live"></div>
-    <span class="h-label">Staff Dashboard</span>
+  <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun">
+  <div class="h-mid">
+    <div class="h-badge hb-o"><i class="fas fa-utensils"></i> <span id="hb-orders">0</span></div>
+    <div class="h-badge hb-r"><i class="fas fa-bell-concierge"></i> <span id="hb-ready">0</span></div>
+    <div class="h-badge hb-s"><i class="fas fa-bell"></i> <span id="hb-staff">0</span></div>
+    <div class="h-dot"></div>
   </div>
-  <span id="clock">—</span>
+  <span id="clock">--:--</span>
 </header>
 
-<div id="stats-bar">
-  <div class="stat"><i class="fas fa-concierge-bell" style="color:var(--gold);"></i> Ordini attivi: <span class="stat-val" id="stat-orders">0</span></div>
-  <div class="stat-sep"></div>
-  <div class="stat"><i class="fas fa-bell" style="color:var(--orange);"></i> Richieste: <span class="stat-val" id="stat-staff">0</span></div>
-  <div class="stat-sep"></div>
-  <div class="stat" id="stat-update" style="color:var(--text3);font-size:0.78em;">—</div>
-  <button id="demo-btn" onclick="loadDemo()"><i class="fas fa-flask"></i> Carica demo</button>
+<div id="toolbar">
+  <span class="tb">Ordini: <strong id="tb-orders">0</strong></span>
+  <span class="tb">Pronti: <strong id="tb-ready">0</strong></span>
+  <span class="tb">Richieste: <strong id="tb-staff">0</strong></span>
+  <span id="tb-update"></span>
+  <button id="demo-btn" onclick="loadDemo()"><i class="fas fa-flask"></i> Demo</button>
 </div>
 
-<div class="dashboard">
-  <div class="col">
-    <div class="col-header">
-      <h2><i class="fas fa-utensils" style="margin-right:6px;color:var(--gold);"></i>Ordini</h2>
-      <span class="col-badge" id="badge-orders">0</span>
-    </div>
-    <div class="cards" id="orders-container">
-      <div class="empty" id="empty-orders"><i class="fas fa-check-circle"></i><p>Nessun ordine in attesa</p></div>
-    </div>
-  </div>
-
-  <div class="col">
-    <div class="col-header">
-      <h2><i class="fas fa-bell" style="margin-right:6px;color:var(--orange);"></i>Richieste Staff</h2>
-      <span class="col-badge" id="badge-staff">0</span>
-    </div>
-    <div class="cards" id="staff-container">
-      <div class="empty" id="empty-staff"><i class="fas fa-bell"></i><p>Nessuna richiesta</p></div>
-    </div>
+<div id="kds-grid">
+  <div id="kds-empty">
+    <i class="fas fa-circle-check"></i>
+    <p>Nessun ordine attivo</p>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL  = "https://jnzxhokxldzymnapcchd.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const SB_URL  = "https://jnzxhokxldzymnapcchd.supabase.co";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
+const client  = supabase.createClient(SB_URL, SB_ANON);
 
-// ── CLOCK ─────────────────────────────────────────────────────────────────
-function updateClock() {
+// ── State ──────────────────────────────────────────────────────────────────
+const liveData    = new Map();   // orderId → order
+const animating   = new Set();   // orderIds currently in exit animation
+
+// ── Clock ──────────────────────────────────────────────────────────────────
+function tick() {
   document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 }
-updateClock();
-setInterval(updateClock, 10000);
+tick(); setInterval(tick, 10000);
 
-// ── AUDIO ─────────────────────────────────────────────────────────────────
-function playBeep() {
+// ── Audio ──────────────────────────────────────────────────────────────────
+function beep() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [880, 1100].forEach((freq, i) => {
-      const osc = ctx.createOscillator(), g = ctx.createGain();
-      osc.connect(g); g.connect(ctx.destination);
-      osc.frequency.value = freq; osc.type = 'sine';
-      g.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.3);
-      osc.start(ctx.currentTime + i * 0.15);
-      osc.stop(ctx.currentTime + i * 0.15 + 0.3);
+    const ctx = new(window.AudioContext||window.webkitAudioContext)();
+    [880,1100].forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=f;o.type='sine';
+      g.gain.setValueAtTime(.3,ctx.currentTime+i*.15);
+      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.15+.3);
+      o.start(ctx.currentTime+i*.15);o.stop(ctx.currentTime+i*.15+.3);
     });
-  } catch(_) {}
+  } catch(_){}
 }
 
-// ── TIMER UTILS ───────────────────────────────────────────────────────────
-function elapsedMin(createdAt) {
-  return Math.floor((Date.now() - new Date(createdAt)) / 60000);
-}
-function timerText(min) {
-  return min < 1 ? 'adesso' : `${min} min${min >= 10 ? ' ⚠' : ''}`;
-}
-function timerClass(min, status) {
-  if (status === 'ready') return min >= 5 ? 't-urgent' : 't-warn';
-  if (min >= 10) return 't-urgent';
-  if (min >= 5) return 't-warn';
-  return '';
-}
+// ── Timer ──────────────────────────────────────────────────────────────────
+function elMin(ts){ return Math.floor((Date.now()-new Date(ts))/60000); }
+function fmtMin(m){ return m<1?'<1 min':`${m} min`; }
 
-// Aggiorna tutti i timer ogni minuto
-setInterval(() => {
-  document.querySelectorAll('.card-timer[data-created]').forEach(el => {
-    const min = elapsedMin(el.dataset.created);
-    const status = el.dataset.status;
-    el.textContent = '⏱ ' + timerText(min);
-    el.className = 'card-timer ' + timerClass(min, status);
-    // urgency border
-    const card = el.closest('.order-card');
-    if (card && status === 'pending' && min >= 10) {
-      card.classList.remove('s-new');
-      card.classList.add('s-urgent');
-      card.querySelector('.card-status-badge').className = 'card-status-badge badge-urgent';
-      card.querySelector('.badge-dot') && (card.querySelector('.card-status-badge').innerHTML =
-        '<span class="badge-dot"></span>ATTESA');
+setInterval(()=>{
+  document.querySelectorAll('[data-ts]').forEach(el=>{
+    el.textContent = fmtMin(elMin(el.dataset.ts));
+  });
+  // Escalate long-waiting pending cards to urgent
+  liveData.forEach((o,id)=>{
+    if(o.waiter_request||o.status!=='pending') return;
+    if(elMin(o.created_at)>=10){
+      const card=document.querySelector(`.kds-card[data-id="${id}"]`);
+      if(card&&!card.classList.contains('s-urg')){
+        card.classList.remove('s-new');
+        card.classList.add('s-urg');
+        card.querySelector('.card-hd-status').textContent='ATTESA';
+      }
     }
   });
-}, 60000);
+},60000);
 
-// ── PARSE ITEMS ───────────────────────────────────────────────────────────
-function parseItems(raw) {
-  try { return JSON.parse(raw); } catch {
-    return String(raw || '').split(',').filter(Boolean).map(s => {
-      const eq = s.indexOf('=');
-      return eq === -1 ? { qty: 1, name: s.trim(), code: '' }
-                       : { qty: parseInt(s.slice(1, eq)) || 1, name: s.slice(eq+1).trim(), code: '' };
+// ── Sort ───────────────────────────────────────────────────────────────────
+function sortKey(o){
+  const st=o.status, req=!!o.waiter_request;
+  const w = st==='ready' ? 0 : req ? 1 : st==='preparing' ? 2 : 3;
+  return w*1e13 + new Date(o.created_at).getTime();
+}
+
+// ── Parse items ────────────────────────────────────────────────────────────
+function parseItems(raw){
+  try{return JSON.parse(raw);}catch{
+    return String(raw||'').split(',').filter(Boolean).map(s=>{
+      const e=s.indexOf('=');
+      return e<0?{qty:1,name:s.trim(),code:''}:{qty:parseInt(s.slice(1,e))||1,name:s.slice(e+1).trim(),code:''};
     });
   }
 }
 
-// ── STATUS CONFIG ─────────────────────────────────────────────────────────
-const S = {
-  pending:  { card: 's-new',   badge: 'badge-new',  badgeTxt: 'NUOVO',          btn: 'btn-new',  btnTxt: '<i class="fas fa-fire"></i> In preparazione →' },
-  preparing:{ card: 's-prep',  badge: 'badge-prep', badgeTxt: 'IN PREP',        btn: 'btn-prep', btnTxt: '<i class="fas fa-check"></i> Pronto →' },
-  ready:    { card: 's-ready', badge: 'badge-ready',badgeTxt: 'PRONTO',         btn: 'btn-ready',btnTxt: '<i class="fas fa-motorcycle"></i> Servito — Consegnato ✓' },
+// ── Staff request labels ───────────────────────────────────────────────────
+const STAFF={
+  explanation:{icon:'fa-circle-info',label:'Spiegazione piatti'},
+  drinks:     {icon:'fa-mug-saucer', label:'Ordine bevande'},
+  bill:       {icon:'fa-receipt',    label:'Richiesta conto'},
+  call:       {icon:'fa-bell',       label:'Chiamata cameriere'},
+  other:      {icon:'fa-comment-dots',label:'Altra richiesta'},
 };
 
-// ── RENDER ORDER CARD ─────────────────────────────────────────────────────
-function renderOrderCard(order) {
-  const items   = parseItems(order.order_details);
-  const status  = order.status;
-  const cfg     = S[status] || S.pending;
-  const min     = elapsedMin(order.created_at);
-  const isUrgent= status === 'pending' && min >= 10;
-  const cardClass = isUrgent ? 's-urgent' : cfg.card;
-  const badgeClass= isUrgent ? 'badge-urgent' : cfg.badge;
-  const badgeTxt  = isUrgent ? 'ATTESA' : cfg.badgeTxt;
-  const time    = new Date(order.created_at).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+// ── Build order card ───────────────────────────────────────────────────────
+function buildOrderCard(o){
+  const items  = parseItems(o.order_details);
+  const st     = o.status;
+  const min    = elMin(o.created_at);
+  const isUrg  = st==='pending' && min>=10;
 
-  const itemsHtml = items.map(i =>
-    `<li><span class="item-qty">×${i.qty}</span><span class="item-name">${i.name}</span>${i.code ? `<span class="item-code">#${i.code}</span>` : ''}</li>`
+  const sClass  = isUrg ? 's-urg' : st==='pending' ? 's-new' : st==='preparing' ? 's-prep' : 's-ready';
+  const sTxt    = isUrg ? 'ATTESA' : st==='pending' ? 'NUOVO' : st==='preparing' ? 'IN PREP' : 'PRONTO';
+  const btnCls  = st==='pending' ? 'btn-new' : st==='preparing' ? 'btn-prep' : 'btn-ready';
+  const btnTxt  = st==='pending'
+    ? '<i class="fas fa-fire-burner"></i> In preparazione'
+    : st==='preparing'
+    ? '<i class="fas fa-bell-concierge"></i> Pronto'
+    : '<i class="fas fa-check"></i> Servito — Consegnato';
+
+  const itemsHtml = items.map(i=>
+    `<li>
+      <span class="i-qty">×${i.qty}</span>
+      <span class="i-name">${i.name}</span>
+      ${i.code?`<span class="i-code">#${i.code}</span>`:''}
+    </li>`
   ).join('');
 
-  const noteHtml = order.customer_notes
-    ? `<div class="card-note"><i class="fas fa-pen-to-square"></i>${order.customer_notes}</div>` : '';
+  const noteHtml = o.customer_notes
+    ? `<div class="card-note"><i class="fas fa-pen-line"></i>${o.customer_notes}</div>`:'';
 
   const card = document.createElement('div');
-  card.className = `order-card ${cardClass}`;
-  card.dataset.orderId = order.order_id;
-  card.dataset.status  = status;
-
-  card.innerHTML = `<div class="card-inner">
-    <div class="card-top">
-      <div>
-        <div class="card-table-label">Tavolo</div>
-        <div class="card-table-num">${order.table_number}</div>
+  card.className = `kds-card ${sClass}`;
+  card.dataset.id = String(o.order_id);
+  card.innerHTML = `
+    <div class="card-hd">
+      <div class="card-hd-l">
+        <span class="card-hd-lbl">Tavolo</span>
+        <span class="card-hd-num">${o.table_number}</span>
       </div>
-      <div class="card-right">
-        <div class="card-status-badge ${badgeClass}"><span class="badge-dot"></span>${badgeTxt}</div>
-        <div class="card-timer ${timerClass(min, status)}" data-created="${order.created_at}" data-status="${status}">⏱ ${timerText(min)}</div>
-        <div style="font-size:0.72em;color:var(--text3);">${time}</div>
+      <div class="card-hd-r">
+        <span class="card-hd-status">${sTxt}</span>
+        <span class="card-hd-timer" data-ts="${o.created_at}">${fmtMin(min)}</span>
       </div>
     </div>
-    <hr class="card-divider">
-    <ul class="card-items">${itemsHtml}</ul>
-    ${noteHtml}
-    <button class="card-action ${cfg.btn}">${cfg.btnTxt}</button>
-  </div>`;
+    <div class="card-body">
+      <ul class="card-items">${itemsHtml}</ul>
+      ${noteHtml}
+    </div>
+    <button class="card-btn ${btnCls}">${btnTxt}</button>`;
 
-  card.querySelector('.card-action').addEventListener('click', async () => {
-    if (status === 'ready') {
-      // Flash "Consegnato" prima di sparire
-      card.innerHTML = `<div class="delivered-msg">
-        <i class="fas fa-check-circle"></i>
-        <p>Consegnato!</p>
-        <small>Tavolo ${order.table_number}</small>
+  card.querySelector('.card-btn').addEventListener('click', async ()=>{
+    const id = String(o.order_id);
+    if(st==='ready'){
+      // Consegnato animation
+      animating.add(id);
+      liveData.delete(id);
+      card.querySelector('.card-body').innerHTML=`<div class="done-wrap">
+        <i class="fas fa-circle-check"></i>
+        <strong>Consegnato!</strong>
+        <small>Tavolo ${o.table_number}</small>
       </div>`;
-      card.classList.add('s-delivered');
-      setTimeout(async () => {
+      card.querySelector('.card-btn').remove();
+      updateStats();
+      setTimeout(()=>{
         card.classList.add('card-out');
-        await advanceStatus(order.order_id, status);
-        setTimeout(() => { card.remove(); updateBadges(); }, 350);
-      }, 1400);
+        setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},280);
+      },1300);
+      await advance(id,st);
     } else {
-      await advanceStatus(order.order_id, status);
+      // Optimistic update
+      const nst = st==='pending'?'preparing':'ready';
+      liveData.set(id,{...o,status:nst});
+      renderGrid();
+      await advance(id,st);
     }
   });
 
   return card;
 }
 
-// ── RENDER STAFF CARD ─────────────────────────────────────────────────────
-const STAFF_TYPES = {
-  explanation: { icon: 'fa-circle-info',          label: 'Spiegazione piatti' },
-  drinks:      { icon: 'fa-mug-saucer',           label: 'Ordine bevande' },
-  bill:        { icon: 'fa-file-invoice-dollar',  label: 'Richiesta conto' },
-  call:        { icon: 'fa-bell',                 label: 'Chiamata cameriere' },
-  other:       { icon: 'fa-comment-dots',         label: 'Altra richiesta' },
-};
-
-function renderStaffCard(order) {
-  const type = order.waiter_request || 'call';
-  const info = STAFF_TYPES[type] || STAFF_TYPES.other;
-  const time = new Date(order.created_at).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+// ── Build staff request card ───────────────────────────────────────────────
+function buildStaffCard(o){
+  const type = o.waiter_request||'call';
+  const info = STAFF[type]||STAFF.other;
+  const min  = elMin(o.created_at);
 
   const card = document.createElement('div');
-  card.className = 'staff-card';
-  card.dataset.orderId = order.order_id;
-
-  card.innerHTML = `<div class="staff-inner">
-    <div class="staff-top">
-      <div>
-        <div class="staff-table-label">Tavolo</div>
-        <div class="staff-table">${order.table_number}</div>
+  card.className = 'kds-card s-req';
+  card.dataset.id = String(o.order_id);
+  card.innerHTML = `
+    <div class="card-hd">
+      <div class="card-hd-l">
+        <span class="card-hd-lbl">Tavolo</span>
+        <span class="card-hd-num">${o.table_number}</span>
       </div>
-      <div style="text-align:right;font-size:0.78em;color:var(--text3);">${time}</div>
+      <div class="card-hd-r">
+        <span class="card-hd-status">RICHIESTA</span>
+        <span class="card-hd-timer" data-ts="${o.created_at}">${fmtMin(min)}</span>
+      </div>
     </div>
-    <div class="staff-type"><i class="fas ${info.icon}"></i><span class="staff-type-label">${info.label}</span></div>
-    <button class="staff-dismiss"><i class="fas fa-check"></i> Gestita ✓</button>
-  </div>`;
+    <div class="card-body">
+      <div class="req-row">
+        <i class="fas ${info.icon}"></i>
+        <span>${info.label}</span>
+      </div>
+    </div>
+    <button class="card-btn btn-req"><i class="fas fa-check"></i> Gestita</button>`;
 
-  card.querySelector('.staff-dismiss').addEventListener('click', async () => {
+  card.querySelector('.card-btn').addEventListener('click', async ()=>{
+    const id = String(o.order_id);
+    animating.add(id);
+    liveData.delete(id);
     card.classList.add('card-out');
-    await dismissStaff(order.order_id);
-    setTimeout(() => { card.remove(); updateBadges(); }, 350);
+    updateStats();
+    setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},280);
+    await client.from('orders').update({status:'handled'}).eq('order_id',id);
   });
 
   return card;
 }
 
-// ── SUPABASE OPS ──────────────────────────────────────────────────────────
-const CYCLE = ['pending','preparing','ready'];
+// ── Render full grid ───────────────────────────────────────────────────────
+function renderGrid(){
+  const grid  = document.getElementById('kds-grid');
+  const empty = document.getElementById('kds-empty');
 
-async function advanceStatus(orderId, cur) {
-  const idx  = CYCLE.indexOf(cur);
-  const next = idx >= CYCLE.length - 1 ? 'served' : CYCLE[idx + 1];
-  const { error } = await client.from('orders').update({ status: next }).eq('order_id', orderId);
-  if (error) console.warn('update error:', error.message);
-}
-
-async function dismissStaff(orderId) {
-  await client.from('orders').update({ status: 'handled' }).eq('order_id', orderId);
-}
-
-// ── BADGES ────────────────────────────────────────────────────────────────
-function updateBadges() {
-  const nO = document.getElementById('orders-container').querySelectorAll('.order-card').length;
-  const nS = document.getElementById('staff-container').querySelectorAll('.staff-card').length;
-  document.getElementById('badge-orders').textContent = nO;
-  document.getElementById('badge-staff').textContent  = nS;
-  document.getElementById('stat-orders').textContent  = nO;
-  document.getElementById('stat-staff').textContent   = nS;
-  document.getElementById('stat-update').textContent  = 'Aggiornato ' +
-    new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
-  document.getElementById('empty-orders').style.display = nO === 0 ? 'block' : 'none';
-  document.getElementById('empty-staff').style.display  = nS === 0 ? 'block' : 'none';
-}
-
-function removeCard(orderId) {
-  const card = document.querySelector(`[data-order-id="${orderId}"]`);
-  if (!card) return;
-  card.classList.add('card-out');
-  setTimeout(() => { card.remove(); updateBadges(); }, 350);
-}
-
-function updateOrderCard(order) {
-  const existing = document.querySelector(`.order-card[data-order-id="${order.order_id}"]`);
-  if (order.status === 'served') {
-    if (existing) { existing.classList.add('card-out'); setTimeout(() => { existing.remove(); updateBadges(); }, 350); }
-    return;
-  }
-  if (existing) { existing.replaceWith(renderOrderCard(order)); }
-  updateBadges();
-}
-
-// ── LOAD FROM SUPABASE ────────────────────────────────────────────────────
-async function loadInitialOrders() {
-  const { data, error } = await client
-    .from('orders').select('*')
-    .not('status','in','("served","handled")')
-    .order('created_at', { ascending: true });
-  if (error) { console.error(error); return; }
-  const oC = document.getElementById('orders-container');
-  const sC = document.getElementById('staff-container');
-  (data || []).forEach(o => {
-    if (o.waiter_request) sC.appendChild(renderStaffCard(o));
-    else                  oC.appendChild(renderOrderCard(o));
+  // Remove non-animating cards
+  grid.querySelectorAll('.kds-card').forEach(el=>{
+    if(!animating.has(el.dataset.id)) el.remove();
   });
-  updateBadges();
+
+  const sorted = [...liveData.values()].sort((a,b)=>sortKey(a)-sortKey(b));
+  sorted.forEach(o=>{
+    const card = o.waiter_request ? buildStaffCard(o) : buildOrderCard(o);
+    grid.appendChild(card);
+  });
+
+  updateEmpty();
+  updateStats();
 }
 
-// ── REALTIME ──────────────────────────────────────────────────────────────
-client.channel('staff-rt')
-  .on('postgres_changes', { event:'INSERT', schema:'public', table:'orders' }, ({ new: o }) => {
-    playBeep();
-    if (o.waiter_request) document.getElementById('staff-container').prepend(renderStaffCard(o));
-    else                  document.getElementById('orders-container').prepend(renderOrderCard(o));
-    updateBadges();
+function updateEmpty(){
+  const grid  = document.getElementById('kds-grid');
+  const empty = document.getElementById('kds-empty');
+  const hasCards = grid.querySelectorAll('.kds-card').length > 0;
+  if(!hasCards){
+    if(!grid.contains(empty)) grid.appendChild(empty);
+    empty.style.display='';
+  } else {
+    empty.style.display='none';
+  }
+}
+
+function updateStats(){
+  let nO=0,nR=0,nS=0;
+  liveData.forEach(o=>{
+    if(o.waiter_request) nS++;
+    else{nO++;if(o.status==='ready')nR++;}
+  });
+  document.getElementById('hb-orders').textContent=nO;
+  document.getElementById('hb-ready').textContent=nR;
+  document.getElementById('hb-staff').textContent=nS;
+  document.getElementById('tb-orders').textContent=nO;
+  document.getElementById('tb-ready').textContent=nR;
+  document.getElementById('tb-staff').textContent=nS;
+  document.getElementById('tb-update').textContent=
+    'Aggiornato '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Supabase ops ───────────────────────────────────────────────────────────
+const CYCLE=['pending','preparing','ready'];
+async function advance(id,cur){
+  const idx=CYCLE.indexOf(cur);
+  const next=idx>=CYCLE.length-1?'served':CYCLE[idx+1];
+  const{error}=await client.from('orders').update({status:next}).eq('order_id',id);
+  if(error) console.warn('advance:',error.message);
+}
+
+// ── Load ───────────────────────────────────────────────────────────────────
+async function loadInitialOrders(){
+  const{data,error}=await client.from('orders').select('*')
+    .not('status','in','("served","handled")')
+    .order('created_at',{ascending:true});
+  if(error){console.error(error);return;}
+  (data||[]).forEach(o=>liveData.set(String(o.order_id),o));
+  renderGrid();
+}
+
+// ── Realtime ───────────────────────────────────────────────────────────────
+client.channel('kds-rt')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},({new:o})=>{
+    beep();
+    liveData.set(String(o.order_id),o);
+    renderGrid();
   })
-  .on('postgres_changes', { event:'UPDATE', schema:'public', table:'orders' }, ({ new: o }) => {
-    if (o.waiter_request) { if (o.status === 'handled') removeCard(o.order_id); }
-    else updateOrderCard(o);
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders'},({new:o})=>{
+    const id=String(o.order_id);
+    if(o.status==='served'||o.status==='handled'){
+      liveData.delete(id);
+      if(!animating.has(id)){
+        const el=document.querySelector(`.kds-card[data-id="${id}"]`);
+        if(el){el.classList.add('card-out');setTimeout(()=>{el.remove();updateEmpty();updateStats();},280);}
+      }
+    } else {
+      liveData.set(id,o);
+      renderGrid();
+    }
   })
   .subscribe();
 
-// ── DEMO ORDERS ───────────────────────────────────────────────────────────
-function loadDemo() {
-  document.getElementById('demo-btn').textContent = '✓ Demo caricato';
-  document.getElementById('demo-btn').disabled = true;
-
-  const now = Date.now();
-  const demoOrders = [
-    {
-      order_id: 'demo-1', table_number: 3, status: 'pending',
-      created_at: new Date(now - 2 * 60000).toISOString(),
-      customer_notes: 'Senza wasabi — allergia sesamo',
-      order_details: JSON.stringify([
-        { qty: 2, name: 'Nigiri Salmone', code: '101' },
-        { qty: 1, name: 'Tacos JUN Selection', code: '201' },
-        { qty: 3, name: 'Uramaki Spicy Crunch', code: '301' },
-      ])
-    },
-    {
-      order_id: 'demo-2', table_number: 7, status: 'preparing',
-      created_at: new Date(now - 8 * 60000).toISOString(),
-      customer_notes: null,
-      order_details: JSON.stringify([
-        { qty: 4, name: 'Sashimi Tonno Premium', code: '150' },
-        { qty: 2, name: 'Gyoza Pollo', code: '401' },
-        { qty: 1, name: 'Miso Soup', code: '501' },
-      ])
-    },
-    {
-      order_id: 'demo-3', table_number: 12, status: 'ready',
-      created_at: new Date(now - 14 * 60000).toISOString(),
-      customer_notes: null,
-      order_details: JSON.stringify([
-        { qty: 2, name: 'JUN Selection (max1)', code: '001' },
-        { qty: 3, name: 'Dim Sum Gamberetti', code: '601' },
-        { qty: 2, name: 'Tataki Salmone', code: '701' },
-      ])
-    },
-    {
-      order_id: 'demo-4', table_number: 5, status: 'pending',
-      created_at: new Date(now - 13 * 60000).toISOString(), // urgente!
-      customer_notes: null,
-      order_details: JSON.stringify([
-        { qty: 6, name: 'Hosomaki Salmone', code: '801' },
-        { qty: 2, name: 'Edamame', code: '901' },
-      ])
-    },
-  ];
-
-  const demoStaff = [
-    {
-      order_id: 'demo-w1', table_number: 9,
-      created_at: new Date().toISOString(),
-      waiter_request: 'bill'
-    }
-  ];
-
-  const oC = document.getElementById('orders-container');
-  const sC = document.getElementById('staff-container');
-  demoOrders.forEach(o => oC.appendChild(renderOrderCard(o)));
-  demoStaff.forEach(o  => sC.appendChild(renderStaffCard(o)));
-  updateBadges();
+// ── Demo ───────────────────────────────────────────────────────────────────
+function loadDemo(){
+  const btn=document.getElementById('demo-btn');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-check"></i> Demo';
+  const now=Date.now();
+  [
+    {order_id:'demo-1',table_number:3,status:'pending',
+     created_at:new Date(now-2*60000).toISOString(),
+     customer_notes:'Senza wasabi — allergia sesamo',waiter_request:null,
+     order_details:JSON.stringify([
+       {qty:2,name:'Nigiri Salmone',code:'101'},
+       {qty:1,name:'Tacos JUN Selection',code:'201'},
+       {qty:3,name:'Uramaki Spicy Crunch',code:'301'},
+     ])},
+    {order_id:'demo-2',table_number:7,status:'preparing',
+     created_at:new Date(now-9*60000).toISOString(),
+     customer_notes:null,waiter_request:null,
+     order_details:JSON.stringify([
+       {qty:4,name:'Sashimi Tonno Premium',code:'150'},
+       {qty:2,name:'Gyoza Pollo',code:'401'},
+     ])},
+    {order_id:'demo-3',table_number:12,status:'ready',
+     created_at:new Date(now-14*60000).toISOString(),
+     customer_notes:null,waiter_request:null,
+     order_details:JSON.stringify([
+       {qty:2,name:'JUN Selection',code:'001'},
+       {qty:3,name:'Dim Sum Gamberetti',code:'601'},
+       {qty:1,name:'Tataki Salmone',code:'701'},
+     ])},
+    {order_id:'demo-4',table_number:5,status:'pending',
+     created_at:new Date(now-13*60000).toISOString(),
+     customer_notes:null,waiter_request:null,
+     order_details:JSON.stringify([
+       {qty:6,name:'Hosomaki Salmone',code:'801'},
+       {qty:2,name:'Edamame',code:'901'},
+     ])},
+    {order_id:'demo-w1',table_number:9,status:'pending',
+     created_at:new Date(now-1*60000).toISOString(),
+     customer_notes:null,waiter_request:'bill',order_details:'[]'},
+  ].forEach(o=>liveData.set(o.order_id,o));
+  renderGrid();
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────
 loadInitialOrders();
 </script>
 </body>
