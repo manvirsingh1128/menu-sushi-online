@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jun Restaurant — Staff Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 300;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #000;
+            border-bottom: 1px solid #333;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header img {
+            height: 38px;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #b8860b;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* STATS BAR */
+        #stats-bar {
+            background: #0a0a0a;
+            border-bottom: 1px solid #1a1a1a;
+            padding: 10px 24px;
+            display: flex;
+            gap: 28px;
+            align-items: center;
+            font-size: 0.82em;
+        }
+        .stat-item { display: flex; align-items: center; gap: 7px; color: #555; }
+        .stat-item span { color: #ccc; font-weight: 600; }
+        .stat-dot { width: 7px; height: 7px; border-radius: 50%; background: #2e8b57; animation: pulse-dot 2s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .header-clock {
+            font-size: 0.95em;
+            color: #888;
+            font-weight: 400;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: calc(100vh - 67px);
+        }
+
+        .column {
+            padding: 20px;
+            border-right: 1px solid #222;
+        }
+
+        .column:last-child { border-right: none; }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #333;
+        }
+
+        .column-header h2 {
+            font-size: 1em;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #888;
+        }
+
+        .column-header .badge {
+            background: #333;
+            color: #b8860b;
+            font-size: 0.75em;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* ORDER CARD */
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(-16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .order-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 18px;
+            animation: slide-in 0.3s ease-out;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+            user-select: none;
+        }
+
+        .order-card:hover { border-color: #555; }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .card-table {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .card-table span {
+            font-size: 0.38em;
+            font-weight: 400;
+            color: #888;
+            display: block;
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .card-time {
+            font-size: 0.82em;
+            color: #666;
+            text-align: right;
+        }
+
+        .card-status {
+            display: inline-block;
+            font-size: 0.72em;
+            font-weight: 500;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .status-pending    { background: #2a2a2a; color: #888; border: 1px solid #444; }
+        .status-preparing  { background: #2a1f00; color: #b8860b; border: 1px solid #b8860b; }
+        .status-ready      { background: #0d2b1a; color: #2e8b57; border: 1px solid #2e8b57; }
+
+        .card-divider {
+            border: none;
+            border-top: 1px solid #2a2a2a;
+            margin-bottom: 14px;
+        }
+
+        .card-items {
+            list-style: none;
+            margin-bottom: 14px;
+        }
+
+        .card-items li {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 0.95em;
+            border-bottom: 1px solid #1f1f1f;
+        }
+
+        .card-items li:last-child { border-bottom: none; }
+
+        .item-qty {
+            color: #b8860b;
+            font-weight: 700;
+            min-width: 28px;
+            font-size: 1em;
+        }
+
+        .item-name { color: #e0e0e0; flex: 1; }
+
+        .item-code {
+            color: #555;
+            font-size: 0.8em;
+        }
+
+        .card-notes {
+            background: #0f1a0f;
+            border-left: 3px solid #2e8b57;
+            padding: 8px 12px;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.85em;
+            color: #aaa;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .card-notes strong {
+            color: #2e8b57;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-action {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: filter 0.2s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .card-action:hover { filter: brightness(1.15); }
+
+        .action-pending   { background: #b8860b; color: #000; }
+        .action-preparing { background: #2e8b57; color: #fff; }
+        .action-ready     { background: #333; color: #aaa; }
+
+        /* STAFF CARD */
+        .staff-card {
+            background: #1a0e00;
+            border: 1px solid #e65c00;
+            border-radius: 10px;
+            padding: 18px;
+            animation: slide-in 0.3s ease-out;
+        }
+
+        .staff-card .card-top { margin-bottom: 12px; }
+
+        .staff-type {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .staff-type i {
+            font-size: 1.4em;
+            color: #e65c00;
+        }
+
+        .staff-type-label {
+            font-size: 1.05em;
+            font-weight: 500;
+            color: #ff8c42;
+        }
+
+        .staff-dismiss {
+            width: 100%;
+            padding: 11px;
+            background: #e65c00;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: filter 0.2s ease;
+        }
+
+        .staff-dismiss:hover { filter: brightness(1.12); }
+
+        .card-out {
+            animation: fade-out 0.3s ease-out forwards;
+        }
+
+        @keyframes fade-out {
+            to { opacity: 0; transform: translateY(-10px); max-height: 0; padding: 0; margin: 0; overflow: hidden; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #444;
+        }
+
+        .empty-state i { font-size: 2.5em; margin-bottom: 12px; display: block; }
+        .empty-state p { font-size: 0.9em; }
+
+        @media (max-width: 700px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .column { border-right: none; border-bottom: 1px solid #222; }
+            .column:last-child { border-bottom: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant" style="height:32px;filter:brightness(0) invert(1);">
+    <span class="header-title">Staff Dashboard</span>
+    <span class="header-clock" id="clock">—</span>
+</header>
+
+<div id="stats-bar">
+    <div class="stat-item"><div class="stat-dot"></div> Live</div>
+    <div class="stat-item"><i class="fas fa-concierge-bell" style="font-size:0.9em;"></i> Ordini attivi: <span id="stat-orders">0</span></div>
+    <div class="stat-item"><i class="fas fa-bell" style="font-size:0.9em;"></i> Richieste: <span id="stat-staff">0</span></div>
+    <div class="stat-item" style="margin-left:auto;color:#333;">Aggiornato: <span id="stat-time">—</span></div>
+</div>
+
+<div class="dashboard">
+    <div class="column" id="col-orders">
+        <div class="column-header">
+            <h2>Ordini</h2>
+            <span class="badge" id="badge-orders">0</span>
+        </div>
+        <div class="cards-container" id="orders-container">
+            <div class="empty-state" id="empty-orders">
+                <i class="fas fa-concierge-bell"></i>
+                <p>Nessun ordine attivo</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="column" id="col-staff">
+        <div class="column-header">
+            <h2>Richieste Staff</h2>
+            <span class="badge" id="badge-staff">0</span>
+        </div>
+        <div class="cards-container" id="staff-container">
+            <div class="empty-state" id="empty-staff">
+                <i class="fas fa-bell"></i>
+                <p>Nessuna richiesta</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL  = "https://jnzxhokxldzymnapcchd.supabase.co";
+    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
+
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // ── Clock ────────────────────────────────────────────────────────────────
+    function updateClock() {
+        document.getElementById('clock').textContent =
+            new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    }
+    updateClock();
+    setInterval(updateClock, 10000);
+
+    // ── Audio beep (Web Audio API, no file esterno) ──────────────────────────
+    function playBeep() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 880;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.4, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.35);
+        } catch (_) {}
+    }
+
+    // ── Parsing order_details (JSON o fallback stringa legacy) ───────────────
+    function parseOrderDetails(raw) {
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return String(raw).split(',').filter(Boolean).map(item => {
+                const eq = item.indexOf('=');
+                if (eq === -1) return { qty: 1, name: item.trim(), code: '' };
+                return { qty: parseInt(item.slice(1, eq)) || 1, name: item.slice(eq + 1).trim(), code: '' };
+            });
+        }
+    }
+
+    // ── Stato ordine ─────────────────────────────────────────────────────────
+    const STATUS_CYCLE = ['pending', 'preparing', 'ready'];
+    const STATUS_LABEL = {
+        pending:   'Nuovo',
+        preparing: 'In preparazione',
+        ready:     'Pronto',
+    };
+    const STATUS_ACTION = {
+        pending:   'Segna: In preparazione →',
+        preparing: 'Segna: Pronto →',
+        ready:     'Segna: Servito ✓',
+    };
+
+    async function advanceStatus(orderId, currentStatus) {
+        const idx = STATUS_CYCLE.indexOf(currentStatus);
+        const next = idx === STATUS_CYCLE.length - 1 ? 'served' : STATUS_CYCLE[idx + 1];
+        await client.from('orders').update({ status: next }).eq('order_id', orderId);
+    }
+
+    async function dismissStaff(orderId) {
+        await client.from('orders').update({ status: 'handled' }).eq('order_id', orderId);
+    }
+
+    // ── Badge counters ────────────────────────────────────────────────────────
+    function updateBadges() {
+        const nOrders = document.getElementById('orders-container').querySelectorAll('.order-card').length;
+        const nStaff  = document.getElementById('staff-container').querySelectorAll('.staff-card').length;
+
+        document.getElementById('badge-orders').textContent = nOrders;
+        document.getElementById('badge-staff').textContent  = nStaff;
+        document.getElementById('stat-orders').textContent  = nOrders;
+        document.getElementById('stat-staff').textContent   = nStaff;
+        document.getElementById('stat-time').textContent    = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+        document.getElementById('empty-orders').style.display = nOrders === 0 ? 'block' : 'none';
+        document.getElementById('empty-staff').style.display  = nStaff  === 0 ? 'block' : 'none';
+    }
+
+    // ── Render card ordine ────────────────────────────────────────────────────
+    function renderOrderCard(order) {
+        const items = parseOrderDetails(order.order_details);
+        const time  = new Date(order.created_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        const status = order.status;
+
+        const card = document.createElement('div');
+        card.className = 'order-card';
+        card.dataset.orderId = order.order_id;
+        card.dataset.status  = status;
+
+        const itemsHtml = items.map(i =>
+            `<li>
+                <span class="item-qty">×${i.qty}</span>
+                <span class="item-name">${i.name}</span>
+                ${i.code ? `<span class="item-code">#${i.code}</span>` : ''}
+            </li>`
+        ).join('');
+
+        const notesHtml = order.customer_notes
+            ? `<div class="card-notes"><strong>Note cliente</strong>${order.customer_notes}</div>`
+            : '';
+
+        card.innerHTML = `
+            <div class="card-top">
+                <div class="card-table">
+                    <span>Tavolo</span>${order.table_number}
+                </div>
+                <div class="card-time">
+                    ${time}
+                    <div class="card-status status-${status}">${STATUS_LABEL[status] || status}</div>
+                </div>
+            </div>
+            <hr class="card-divider">
+            <ul class="card-items">${itemsHtml}</ul>
+            ${notesHtml}
+            <button class="card-action action-${status}">${STATUS_ACTION[status]}</button>
+        `;
+
+        card.querySelector('.card-action').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await advanceStatus(order.order_id, status);
+        });
+
+        return card;
+    }
+
+    // ── Render card staff ─────────────────────────────────────────────────────
+    const STAFF_ICONS = {
+        call:        { icon: 'fa-bell',              label: 'Chiamata cameriere' },
+        bill:        { icon: 'fa-file-invoice-dollar', label: 'Richiesta conto' },
+        explanation: { icon: 'fa-question-circle',   label: 'Spiegazione piatti' },
+        error:       { icon: 'fa-exclamation-triangle', label: 'Segnalazione errore' },
+        other:       { icon: 'fa-ellipsis-h',        label: 'Altra richiesta' },
+    };
+
+    function renderStaffCard(order) {
+        const time = new Date(order.created_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        const type = order.waiter_request || 'other';
+        const info = STAFF_ICONS[type] || STAFF_ICONS.other;
+
+        const card = document.createElement('div');
+        card.className = 'staff-card';
+        card.dataset.orderId = order.order_id;
+
+        card.innerHTML = `
+            <div class="card-top">
+                <div class="card-table">
+                    <span>Tavolo</span>${order.table_number}
+                </div>
+                <div class="card-time">${time}</div>
+            </div>
+            <div class="staff-type">
+                <i class="fas ${info.icon}"></i>
+                <span class="staff-type-label">${info.label}</span>
+            </div>
+            <button class="staff-dismiss">Gestita ✓</button>
+        `;
+
+        card.querySelector('.staff-dismiss').addEventListener('click', async () => {
+            card.classList.add('card-out');
+            await dismissStaff(order.order_id);
+            setTimeout(() => { card.remove(); updateBadges(); }, 300);
+        });
+
+        return card;
+    }
+
+    // ── Rimuovi card (con animazione) ─────────────────────────────────────────
+    function removeCard(orderId) {
+        const card = document.querySelector(`[data-order-id="${orderId}"]`);
+        if (!card) return;
+        card.classList.add('card-out');
+        setTimeout(() => { card.remove(); updateBadges(); }, 300);
+    }
+
+    // ── Aggiorna card esistente al cambio stato ───────────────────────────────
+    function updateOrderCard(order) {
+        const existing = document.querySelector(`.order-card[data-order-id="${order.order_id}"]`);
+
+        if (order.status === 'served') {
+            if (existing) {
+                existing.classList.add('card-out');
+                setTimeout(() => { existing.remove(); updateBadges(); }, 300);
+            }
+            return;
+        }
+
+        if (existing) {
+            const newCard = renderOrderCard(order);
+            existing.replaceWith(newCard);
+        }
+        updateBadges();
+    }
+
+    // ── Carica ordini esistenti ───────────────────────────────────────────────
+    async function loadInitialOrders() {
+        const { data, error } = await client
+            .from('orders')
+            .select('*')
+            .not('status', 'in', '("served","handled")')
+            .order('created_at', { ascending: true });
+
+        if (error) { console.error('Errore caricamento ordini:', error); return; }
+
+        const ordersContainer = document.getElementById('orders-container');
+        const staffContainer  = document.getElementById('staff-container');
+
+        data.forEach(order => {
+            if (order.waiter_request) {
+                staffContainer.appendChild(renderStaffCard(order));
+            } else {
+                ordersContainer.appendChild(renderOrderCard(order));
+            }
+        });
+
+        updateBadges();
+    }
+
+    // ── Supabase Realtime ─────────────────────────────────────────────────────
+    function subscribeRealtime() {
+        client.channel('orders-realtime')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, ({ new: order }) => {
+                playBeep();
+                if (order.waiter_request) {
+                    document.getElementById('staff-container').prepend(renderStaffCard(order));
+                } else {
+                    document.getElementById('orders-container').prepend(renderOrderCard(order));
+                }
+                updateBadges();
+            })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, ({ new: order }) => {
+                if (order.waiter_request) {
+                    if (order.status === 'handled') removeCard(order.order_id);
+                } else {
+                    updateOrderCard(order);
+                }
+            })
+            .subscribe();
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadInitialOrders().then(subscribeRealtime);
+</script>
+</body>
+</html>

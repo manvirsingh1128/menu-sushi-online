@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; -webkit-user-select: none; }
         button, a, [onclick] { touch-action: manipulation; } /* blocca double-tap zoom su elementi interattivi */
@@ -1088,10 +1089,10 @@
                     <button id="wp-close"><i class="fas fa-times"></i></button>
                 </div>
                 <div id="wp-options">
-                    <button class="wp-opt"><i class="fas fa-circle-info"></i><span data-i18n="waiterOpt1">Spiegazione sui piatti</span></button>
-                    <button class="wp-opt"><i class="fas fa-mug-saucer"></i><span data-i18n="waiterOpt2">Ordine bevande</span></button>
-                    <button class="wp-opt"><i class="fas fa-credit-card"></i><span data-i18n="waiterOpt3">Richiesta conto</span></button>
-                    <button class="wp-opt"><i class="fas fa-comment-dots"></i><span data-i18n="waiterOpt4">Altra assistenza</span></button>
+                    <button class="wp-opt" data-type="explanation"><i class="fas fa-circle-info"></i><span data-i18n="waiterOpt1">Spiegazione sui piatti</span></button>
+                    <button class="wp-opt" data-type="drinks"><i class="fas fa-mug-saucer"></i><span data-i18n="waiterOpt2">Ordine bevande</span></button>
+                    <button class="wp-opt" data-type="bill"><i class="fas fa-credit-card"></i><span data-i18n="waiterOpt3">Richiesta conto</span></button>
+                    <button class="wp-opt" data-type="other"><i class="fas fa-comment-dots"></i><span data-i18n="waiterOpt4">Altra assistenza</span></button>
                 </div>
                 <button id="wp-send" data-i18n="waiterSend">Invia richiesta</button>
             </div>
@@ -1725,11 +1726,23 @@
                 });
             });
             document.getElementById('wp-send').addEventListener('click', () => {
-                const sel = document.querySelector('.wp-opt.sel span');
+                const selBtn  = document.querySelector('.wp-opt.sel');
+                const sel     = selBtn ? selBtn.querySelector('span') : null;
+                const reqType = selBtn ? (selBtn.dataset.type || 'other') : 'call';
                 document.getElementById('wp-ok-sub').textContent = sel ? sel.textContent : '';
                 wpMain.style.display = 'none';
                 wpOk.style.display = 'flex';
                 setTimeout(closePopup, 1500);
+                // Invia richiesta cameriere a Supabase
+                if (_sb) {
+                    _sb.from('orders').insert({
+                        table_number: tableNumber,
+                        order_details: JSON.stringify([]),
+                        customer_notes: sel ? sel.textContent : null,
+                        status: 'pending',
+                        waiter_request: reqType
+                    }).then(({ error }) => { if (error) console.warn('[Jun] cameriere:', error.message); });
+                }
             });
         });
 
@@ -2518,6 +2531,28 @@
         }
 
         function cartSendOrder() {
+            // Costruisce order_details PRIMA di svuotare il carrello
+            const _details = Object.entries(cart).map(([id, qty]) => {
+                const item = menuData.flatMap(c => c.items).find(i => i.id == id);
+                const cat  = menuData.find(c => c.items.some(i => i.id == id));
+                return { qty, name: item ? item.name : `#${id}`, code: String(id), cat: cat ? cat.name : '' };
+            });
+            const _note = document.getElementById('np-text')?.value?.trim() || null;
+
+            // Invia a Supabase (fire-and-forget, non blocca UI)
+            if (_sb && _details.length > 0) {
+                _sb.from('orders').insert({
+                    table_number: tableNumber,
+                    order_details: JSON.stringify(_details),
+                    customer_notes: _note,
+                    status: 'pending',
+                    waiter_request: null
+                }).then(({ error }) => { if (error) console.warn('[Jun] ordine:', error.message); });
+            }
+            // Svuota nota
+            const _npText = document.getElementById('np-text');
+            if (_npText) _npText.value = '';
+
             // accumula quantità ordinate per categoria max1 (conta tra ordini successivi)
             Object.keys(cart).forEach(id => {
                 const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
@@ -2961,6 +2996,11 @@
         const SESSION_KEY = 'jun_session';
         const VALID_CODE = 'jun2025';
         const ADMIN_PW = 'JUN321@';
+
+        // ── SUPABASE ──
+        const _SB_URL  = "https://jnzxhokxldzymnapcchd.supabase.co";
+        const _SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
+        const _sb = (typeof supabase !== 'undefined') ? supabase.createClient(_SB_URL, _SB_ANON) : null;
 
         function _adminPwCheck() {
             const input = document.getElementById('admin-pw-input');

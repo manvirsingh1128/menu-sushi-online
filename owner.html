@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jun Restaurant — Proprietario</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'DM Sans',-apple-system,sans-serif;}
+:root{
+  --bg:#0a0a0a; --surface:#111; --surface2:#181818; --border:#222;
+  --gold:#c9a84c; --gold-dim:#7a6230;
+  --green:#2e8b57; --red:#c0392b; --blue:#2563eb;
+  --text:#e8e8e8; --text2:#888; --text3:#555;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* PASSWORD GATE */
+#pw-gate{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;}
+#pw-gate img{height:44px;object-fit:contain;}
+#pw-box{background:#161616;border:1px solid #222;border-radius:20px;padding:32px 28px;width:88%;max-width:320px;}
+#pw-box h2{font-size:1.1em;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-0.02em;}
+#pw-box p{font-size:0.82em;color:var(--text3);margin-bottom:20px;line-height:1.5;}
+#pw-input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.06);border:1.5px solid #2a2a2a;border-radius:12px;color:#fff;font-size:1em;outline:none;font-family:inherit;}
+#pw-error{color:#ff6b6b;font-size:0.8em;margin:8px 0 12px;display:none;}
+#pw-btn{width:100%;padding:14px;background:var(--gold);color:#000;border:none;border-radius:12px;font-size:0.95em;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.h-logo{height:28px;object-fit:contain;}
+.h-title{font-size:0.8em;font-weight:600;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;}
+.h-right{display:flex;align-items:center;gap:16px;}
+#last-update{font-size:0.78em;color:var(--text3);}
+
+/* TABS */
+#tab-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;}
+#tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{padding:12px 18px;border:none;background:none;color:var(--text3);font-size:0.88em;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:inherit;transition:color .2s,border-color .2s;}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* DATE RANGE */
+#range-bar{padding:16px 20px 0;display:flex;gap:8px;flex-wrap:wrap;}
+.range-btn{padding:6px 14px;border:1px solid var(--border);background:none;color:var(--text2);font-size:0.8em;font-weight:600;border-radius:20px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.range-btn.active{background:var(--gold);color:#000;border-color:var(--gold);}
+
+/* MAIN */
+main{padding:20px;}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;}
+@media(min-width:700px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 16px;}
+.kpi-label{font-size:0.75em;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.kpi-value{font-size:2em;font-weight:800;color:#fff;letter-spacing:-0.04em;line-height:1;}
+.kpi-sub{font-size:0.78em;color:var(--text3);margin-top:4px;}
+.kpi-icon{float:right;color:var(--gold);font-size:1.2em;opacity:.6;}
+
+/* CHARTS */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+.chart-title{font-size:0.85em;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;}
+.chart-wrap{position:relative;width:100%;}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:0.88em;}
+.data-table th{text-align:left;padding:8px 12px;color:var(--text3);font-size:0.78em;font-weight:600;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);}
+.data-table td{padding:10px 12px;border-bottom:1px solid #151515;color:var(--text);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(255,255,255,0.02);}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:0.78em;font-weight:700;background:#1a1a1a;color:var(--text3);}
+.rank-1{background:rgba(201,168,76,.15);color:var(--gold);}
+.rank-2{background:rgba(192,192,192,.12);color:#aaa;}
+.rank-3{background:rgba(176,132,80,.12);color:#b08450;}
+.qty-bar{display:inline-block;height:6px;border-radius:3px;background:var(--gold);opacity:.6;vertical-align:middle;margin-right:6px;}
+.tag-zero{display:inline-block;background:rgba(192,57,43,.15);color:#e74c3c;font-size:0.72em;font-weight:600;padding:2px 8px;border-radius:10px;}
+
+/* SECTION */
+.section{display:none;}
+.section.active{display:block;}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-state i{font-size:2.5em;margin-bottom:12px;display:block;}
+
+/* LOADING */
+#loading{text-align:center;padding:60px 20px;color:var(--text3);}
+#loading i{animation:spin 1s linear infinite;display:inline-block;margin-bottom:12px;font-size:2em;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:480px){
+  .kpi-value{font-size:1.6em;}
+  .chart-card{padding:14px;}
+  main{padding:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
+  <div id="pw-box">
+    <h2>Area Proprietario</h2>
+    <p>Accesso riservato. Inserisci la password per continuare.</p>
+    <input id="pw-input" type="password" placeholder="Password" autocomplete="off">
+    <p id="pw-error">Password errata</p>
+    <button id="pw-btn">Accedi</button>
+  </div>
+</div>
+
+<!-- APP (nascosta fino a login) -->
+<div id="app" style="display:none;">
+
+<header>
+  <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun" style="filter:brightness(0) invert(1);">
+  <span class="h-title">Proprietario</span>
+  <div class="h-right">
+    <span id="last-update"></span>
+  </div>
+</header>
+
+<div id="tab-bar">
+  <button class="tab-btn active" data-tab="oggi"><i class="fas fa-chart-line" style="margin-right:6px;"></i>Oggi</button>
+  <button class="tab-btn" data-tab="piatti"><i class="fas fa-utensils" style="margin-right:6px;"></i>Piatti</button>
+  <button class="tab-btn" data-tab="analisi"><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Analisi</button>
+</div>
+
+<div id="range-bar">
+  <button class="range-btn active" data-days="0">Oggi</button>
+  <button class="range-btn" data-days="7">7 giorni</button>
+  <button class="range-btn" data-days="30">30 giorni</button>
+  <button class="range-btn" data-days="-1">Tutto</button>
+</div>
+
+<div id="loading"><i class="fas fa-circle-notch"></i><p>Caricamento dati...</p></div>
+
+<main id="main-content" style="display:none;">
+
+  <!-- ── OGGI ── -->
+  <div class="section active" id="sec-oggi">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-users kpi-icon"></i>Coperti</div>
+        <div class="kpi-value" id="k-coperti">—</div>
+        <div class="kpi-sub">persone nel periodo</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-paper-plane kpi-icon"></i>Ordini</div>
+        <div class="kpi-value" id="k-ordini">—</div>
+        <div class="kpi-sub">ordini inviati</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-trophy kpi-icon"></i>Piatto top</div>
+        <div class="kpi-value" style="font-size:1.1em;line-height:1.2;" id="k-top">—</div>
+        <div class="kpi-sub" id="k-top-qty"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-clock kpi-icon"></i>Ora di punta</div>
+        <div class="kpi-value" id="k-ora">—</div>
+        <div class="kpi-sub" id="k-ora-sub"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Ordini per ora del giorno</div>
+      <div class="chart-wrap" style="height:200px;">
+        <canvas id="chart-hourly"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Top 10 piatti — periodo selezionato</div>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="chart-top10"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PIATTI ── -->
+  <div class="section" id="sec-piatti">
+    <div class="chart-card">
+      <div class="chart-title">Classifica piatti ordinati</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="dish-table">
+          <thead><tr><th>#</th><th>Piatto</th><th>Categoria</th><th>Quantità</th><th>% totale</th></tr></thead>
+          <tbody id="dish-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ANALISI ── -->
+  <div class="section" id="sec-analisi">
+    <div class="chart-card">
+      <div class="chart-title">Ordini per giorno (ultimi 30 gg)</div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="chart-daily"></canvas>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="chart-card">
+        <div class="chart-title">Giorno della settimana</div>
+        <div class="chart-wrap" style="height:200px;">
+          <canvas id="chart-weekday"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Categorie</div>
+        <div class="chart-wrap" style="height:200px;">
+          <canvas id="chart-cat"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div><!-- /app -->
+
+<script>
+const OWNER_PW   = 'JUN321@';
+const SB_URL     = "https://jnzxhokxldzymnapcchd.supabase.co";
+const SB_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
+const sb         = supabase.createClient(SB_URL, SB_ANON);
+
+let allOrders = [];   // ordini grezzi da Supabase
+let activeDays = 0;   // 0=oggi, 7=settimana, 30=mese, -1=tutto
+let charts     = {};  // istanze Chart.js
+
+// ── PASSWORD GATE ──────────────────────────────────────────────────────────
+function checkPw() {
+  if (document.getElementById('pw-input').value === OWNER_PW) {
+    document.getElementById('pw-gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+    setTimeout(() => { document.getElementById('pw-error').style.display = 'none'; }, 2000);
+  }
+}
+document.getElementById('pw-btn').addEventListener('click', checkPw);
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPw(); });
+
+// ── TABS ──────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sec-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── DATE RANGE ────────────────────────────────────────────────────────────
+document.querySelectorAll('.range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeDays = parseInt(btn.dataset.days);
+    render();
+  });
+});
+
+// ── SUPABASE FETCH ────────────────────────────────────────────────────────
+async function loadData() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('main-content').style.display = 'none';
+
+  const { data, error } = await sb
+    .from('orders')
+    .select('*')
+    .is('waiter_request', null)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    document.getElementById('loading').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#c0392b;animation:none;"></i><p style="color:#888;">Errore caricamento dati</p>';
+    return;
+  }
+
+  allOrders = (data || []).map(o => {
+    let items = [];
+    try { items = JSON.parse(o.order_details || '[]'); } catch {}
+    return { ...o, items };
+  });
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+  document.getElementById('last-update').textContent = 'Aggiornato ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  render();
+}
+
+// ── FILTRA PER PERIODO ────────────────────────────────────────────────────
+function filteredOrders() {
+  if (activeDays === -1) return allOrders;
+  const cutoff = new Date();
+  if (activeDays === 0) {
+    cutoff.setHours(0, 0, 0, 0);
+  } else {
+    cutoff.setDate(cutoff.getDate() - activeDays);
+    cutoff.setHours(0, 0, 0, 0);
+  }
+  return allOrders.filter(o => new Date(o.created_at) >= cutoff);
+}
+
+// ── AGGREGATE DISHES ─────────────────────────────────────────────────────
+function aggregateDishes(orders) {
+  const map = {};
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const k = item.name || `#${item.code}`;
+      if (!map[k]) map[k] = { name: k, cat: item.cat || 'Altro', qty: 0 };
+      map[k].qty += (item.qty || 1);
+    });
+  });
+  return Object.values(map).sort((a, b) => b.qty - a.qty);
+}
+
+// ── KPI ───────────────────────────────────────────────────────────────────
+function computeKPIs(orders) {
+  const totalOrders = orders.length;
+  const dishes = aggregateDishes(orders);
+  const totalItems = dishes.reduce((s, d) => s + d.qty, 0);
+
+  // orario di punta
+  const byHour = Array(24).fill(0);
+  orders.forEach(o => { byHour[new Date(o.created_at).getHours()]++; });
+  const peakHour = byHour.indexOf(Math.max(...byHour));
+
+  return { totalOrders, dishes, totalItems, byHour, peakHour };
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  const orders = filteredOrders();
+  const { totalOrders, dishes, totalItems, byHour, peakHour } = computeKPIs(orders);
+
+  // KPI cards
+  document.getElementById('k-coperti').textContent   = '—';   // senza people_count non possiamo
+  document.getElementById('k-ordini').textContent    = totalOrders;
+  document.getElementById('k-top').textContent       = dishes[0] ? dishes[0].name : '—';
+  document.getElementById('k-top-qty').textContent   = dishes[0] ? `${dishes[0].qty} porzioni` : '';
+  document.getElementById('k-ora').textContent       = totalOrders ? `${peakHour}:00` : '—';
+  document.getElementById('k-ora-sub').textContent   = totalOrders ? `${byHour[peakHour]} ordini` : '';
+
+  // Charts
+  renderHourly(byHour);
+  renderTop10(dishes);
+  renderDishTable(dishes, totalItems);
+  renderDaily(orders);
+  renderWeekday(orders);
+  renderCat(dishes);
+}
+
+// ── CHART: ORARIO ─────────────────────────────────────────────────────────
+function renderHourly(byHour) {
+  const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+  const ctx = document.getElementById('chart-hourly').getContext('2d');
+  if (charts.hourly) charts.hourly.destroy();
+  charts.hourly = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: byHour, backgroundColor: 'rgba(201,168,76,0.5)', borderColor: '#c9a84c', borderWidth: 1, borderRadius: 4 }]
+    },
+    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis(), ticks: { ...darkTick(), maxTicksLimit: 8 } }, y: { ...darkAxis(), beginAtZero: true } } }
+  });
+}
+
+// ── CHART: TOP 10 PIATTI ─────────────────────────────────────────────────
+function renderTop10(dishes) {
+  const top = dishes.slice(0, 10);
+  const ctx = document.getElementById('chart-top10').getContext('2d');
+  if (charts.top10) charts.top10.destroy();
+  charts.top10 = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: top.map(d => d.name.length > 22 ? d.name.slice(0, 22) + '…' : d.name),
+      datasets: [{ data: top.map(d => d.qty), backgroundColor: top.map((_, i) => i === 0 ? 'rgba(201,168,76,0.85)' : 'rgba(201,168,76,0.35)'), borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      ...darkOpts(),
+      plugins: { legend: { display: false } },
+      scales: { x: { ...darkAxis(), beginAtZero: true }, y: { ...darkAxis(), ticks: { ...darkTick(), font: { size: 11 } } } }
+    }
+  });
+}
+
+// ── TABLE: PIATTI ─────────────────────────────────────────────────────────
+function renderDishTable(dishes, totalItems) {
+  const tbody = document.getElementById('dish-tbody');
+  tbody.innerHTML = '';
+  if (!dishes.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:24px;">Nessun dato nel periodo</td></tr>'; return; }
+  dishes.forEach((d, i) => {
+    const pct = totalItems ? ((d.qty / totalItems) * 100).toFixed(1) : 0;
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const barW = totalItems ? Math.round((d.qty / dishes[0].qty) * 80) : 0;
+    tbody.innerHTML += `<tr>
+      <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+      <td>${d.name}</td>
+      <td style="color:var(--text3);font-size:0.85em;">${d.cat || '—'}</td>
+      <td><span class="qty-bar" style="width:${barW}px;"></span>${d.qty}</td>
+      <td style="color:var(--text3);">${pct}%</td>
+    </tr>`;
+  });
+}
+
+// ── CHART: DAILY (ultimi 30 gg) ───────────────────────────────────────────
+function renderDaily(orders) {
+  const days = 30;
+  const labels = [], counts = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+    const d2 = new Date(d); d2.setDate(d2.getDate() + 1);
+    labels.push(d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
+    counts.push(orders.filter(o => { const t = new Date(o.created_at); return t >= d && t < d2; }).length);
+  }
+  const ctx = document.getElementById('chart-daily').getContext('2d');
+  if (charts.daily) charts.daily.destroy();
+  charts.daily = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ data: counts, borderColor: '#c9a84c', backgroundColor: 'rgba(201,168,76,0.08)', fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#c9a84c' }] },
+    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis(), ticks: { ...darkTick(), maxTicksLimit: 10 } }, y: { ...darkAxis(), beginAtZero: true } } }
+  });
+}
+
+// ── CHART: WEEKDAY ────────────────────────────────────────────────────────
+function renderWeekday(orders) {
+  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  const counts = Array(7).fill(0);
+  orders.forEach(o => { counts[new Date(o.created_at).getDay()]++; });
+  const ctx = document.getElementById('chart-weekday').getContext('2d');
+  if (charts.weekday) charts.weekday.destroy();
+  charts.weekday = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: days, datasets: [{ data: counts, backgroundColor: 'rgba(46,139,87,0.5)', borderColor: '#2e8b57', borderWidth: 1, borderRadius: 4 }] },
+    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis() }, y: { ...darkAxis(), beginAtZero: true } } }
+  });
+}
+
+// ── CHART: CATEGORIE ─────────────────────────────────────────────────────
+function renderCat(dishes) {
+  const catMap = {};
+  dishes.forEach(d => {
+    const c = d.cat || 'Altro';
+    catMap[c] = (catMap[c] || 0) + d.qty;
+  });
+  const labels = Object.keys(catMap);
+  const data   = Object.values(catMap);
+  const colors = ['#c9a84c','#2e8b57','#2563eb','#9b59b6','#e67e22','#1abc9c','#e74c3c','#34495e','#f39c12','#16a085','#8e44ad','#2980b9'];
+  const ctx = document.getElementById('chart-cat').getContext('2d');
+  if (charts.cat) charts.cat.destroy();
+  charts.cat = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 0 }] },
+    options: { ...darkOpts(), plugins: { legend: { display: false } }, cutout: '60%' }
+  });
+}
+
+// ── CHART DEFAULTS (dark theme) ───────────────────────────────────────────
+function darkOpts() {
+  return {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
+    plugins: { tooltip: { backgroundColor: '#1a1a1a', titleColor: '#e8e8e8', bodyColor: '#aaa', borderColor: '#333', borderWidth: 1 } }
+  };
+}
+function darkAxis() { return { grid: { color: '#1a1a1a' }, border: { color: '#222' } }; }
+function darkTick() { return { color: '#555', font: { size: 10, family: 'DM Sans' } }; }
+
+// ── REALTIME (aggiorna quando arriva nuovo ordine) ────────────────────────
+sb.channel('owner-realtime')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, ({ new: o }) => {
+    if (o.waiter_request) return;
+    let items = [];
+    try { items = JSON.parse(o.order_details || '[]'); } catch {}
+    allOrders.push({ ...o, items });
+    document.getElementById('last-update').textContent = 'Aggiornato ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    render();
+  })
+  .subscribe();
+</script>
+</body>
+</html>
