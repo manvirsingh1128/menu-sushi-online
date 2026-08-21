@@ -404,12 +404,7 @@ const CYCLE = ['pending','preparing','ready'];
 async function advanceStatus(orderId, cur) {
   const idx  = CYCLE.indexOf(cur);
   const next = idx >= CYCLE.length - 1 ? 'served' : CYCLE[idx + 1];
-  const now  = new Date().toISOString();
-  const upd  = { status: next };
-  if (next === 'preparing') upd.preparing_at = now;
-  if (next === 'ready')     upd.ready_at     = now;
-  if (next === 'served')    upd.served_at    = now;
-  const { error } = await client.from('orders').update(upd).eq('order_id', orderId);
+  const { error } = await client.from('orders').update({ status: next }).eq('order_id', orderId);
   if (error) console.warn('update error:', error.message);
 }
 

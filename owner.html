@@ -62,7 +62,7 @@ header{
   height:calc(64px + env(safe-area-inset-bottom,0px));
   background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--border);
-  display:grid;grid-template-columns:repeat(5,1fr);
+  display:grid;grid-template-columns:repeat(4,1fr);
   z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);
 }
 .nav-btn{
@@ -143,26 +143,6 @@ main{padding:0 16px 24px;}
 .tag-crit{background:rgba(192,57,43,.2);color:var(--red);font-size:0.7em;font-weight:700;
   padding:2px 7px;border-radius:10px;}
 
-/* ── VALUTAZIONE SERVIZIO ── */
-.rating-wrap{display:flex;flex-direction:column;gap:14px;}
-.rating-header{display:flex;align-items:center;gap:12px;}
-.rating-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
-.rating-dot.good   {background:#2d6a4f;}
-.rating-dot.ok     {background:#b8860b;}
-.rating-dot.bad    {background:#c0392b;}
-.rating-label{font-size:1.1em;font-weight:800;letter-spacing:-0.02em;}
-.rating-label.good {color:#2d6a4f;}
-.rating-label.ok   {color:#b8860b;}
-.rating-label.bad  {color:#c0392b;}
-.rating-desc{font-size:0.86em;color:var(--text2);line-height:1.55;}
-.rating-bar-wrap{position:relative;height:8px;border-radius:99px;background:var(--bg-card2);overflow:hidden;}
-.rating-bar-fill{height:100%;border-radius:99px;transition:width .6s ease;}
-.rating-bar-fill.good{background:#2d6a4f;}
-.rating-bar-fill.ok  {background:#b8860b;}
-.rating-bar-fill.bad {background:#c0392b;}
-.rating-scale{display:flex;justify-content:space-between;font-size:0.68em;color:var(--text3);margin-top:5px;}
-.rating-no-data{font-size:0.86em;color:var(--text3);padding:8px 0;line-height:1.6;}
-
 /* ── CONFRONTO ── */
 .cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px;}
 .cmp-side{text-align:center;padding:12px 8px;}
@@ -214,11 +194,6 @@ main{padding:0 16px 24px;}
   <button class="nav-btn" data-tab="tavoli">
     <i class="fas fa-chair"></i>
     <span>Tavoli</span>
-    <div class="nav-pip"></div>
-  </button>
-  <button class="nav-btn" data-tab="tempi">
-    <i class="fas fa-stopwatch"></i>
-    <span>Tempi</span>
     <div class="nav-pip"></div>
   </button>
   <button class="nav-btn" data-tab="analisi">
@@ -362,61 +337,6 @@ main{padding:0 16px 24px;}
           <tbody id="table-tbody"></tbody>
         </table>
       </div>
-    </div>
-  </div>
-
-  <!-- ── TEMPI ── -->
-  <div class="section" id="sec-tempi">
-
-    <!-- Hero: tempo totale -->
-    <div class="s-card" style="text-align:center;padding:24px 16px;">
-      <div style="font-size:0.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Dal ordine al tavolo</div>
-      <div style="font-size:4em;font-weight:800;color:var(--accent);letter-spacing:-0.04em;line-height:1;" id="t-total">—</div>
-      <div style="font-size:0.85em;color:var(--text3);margin-top:4px;">minuti in media</div>
-      <div style="margin-top:16px;font-size:0.78em;color:var(--text3);" id="t-note"></div>
-    </div>
-
-    <!-- 3 fasi -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-      <div class="s-card" style="text-align:center;padding:14px 8px;">
-        <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><i class="fas fa-clock" style="font-size:.85em;color:var(--text2);"></i></div>
-        <div style="font-size:1.6em;font-weight:800;color:var(--accent);" id="t-wait">—</div>
-        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">Attesa</div>
-        <div style="font-size:0.67em;color:var(--text3);margin-top:3px;line-height:1.3;">ordine → cucina</div>
-      </div>
-      <div class="s-card" style="text-align:center;padding:14px 8px;">
-        <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><i class="fas fa-kitchen-set" style="font-size:.85em;color:var(--text2);"></i></div>
-        <div style="font-size:1.6em;font-weight:800;color:var(--accent);" id="t-prep">—</div>
-        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">Cucina</div>
-        <div style="font-size:0.67em;color:var(--text3);margin-top:3px;line-height:1.3;">cucina → pronto</div>
-      </div>
-      <div class="s-card" style="text-align:center;padding:14px 8px;">
-        <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><i class="fas fa-person-walking" style="font-size:.85em;color:var(--text2);"></i></div>
-        <div style="font-size:1.6em;font-weight:800;color:var(--accent);" id="t-del">—</div>
-        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">Consegna</div>
-        <div style="font-size:0.67em;color:var(--text3);margin-top:3px;line-height:1.3;">pronto → tavolo</div>
-      </div>
-    </div>
-
-    <!-- Valutazione servizio -->
-    <div class="s-card" id="t-rating-card">
-      <div class="s-title"><i class="fas fa-gauge-high"></i>Valutazione servizio</div>
-      <div id="t-rating-block">
-        <!-- Iniettato da JS -->
-      </div>
-    </div>
-
-    <!-- Tempi per categoria -->
-    <div class="s-card">
-      <div class="s-title"><i class="fas fa-chart-bar"></i>Minuti medi per categoria</div>
-      <div class="chart-wrap" style="height:220px;">
-        <canvas id="chart-timing-cat"></canvas>
-      </div>
-    </div>
-
-    <!-- Avviso -->
-    <div style="background:#f7f7f5;border-radius:12px;padding:14px 16px;margin-top:0;font-size:0.78em;color:var(--text3);line-height:1.6;">
-      <strong style="color:var(--text2);">Come funziona:</strong> i tempi si registrano automaticamente quando lo staff clicca i pulsanti di stato nella dashboard. I dati crescono con l'uso reale.
     </div>
   </div>
 
@@ -716,7 +636,6 @@ function render() {
   }
 
   // Charts & tables
-  renderTimings(orders);
   renderHourly(byHour);
   renderTop10(dishes);
   renderDishTable(dishes, totalItems);
@@ -726,130 +645,6 @@ function render() {
   renderDaily(orders);
   renderWeekday(orders);
   renderCat(dishes);
-}
-
-// ── TIMING ────────────────────────────────────────────────────────────────
-function calcTimings(orders) {
-  const waits = [], preps = [], delivs = [];
-  const catPreps = {};
-
-  orders.filter(o => !o.waiter_request && o.preparing_at).forEach(o => {
-    const created = new Date(o.created_at);
-    const prepAt  = new Date(o.preparing_at);
-    const w = (prepAt - created) / 60000;
-    if (w >= 0 && w < 60) waits.push(w);
-
-    if (o.ready_at) {
-      const p = (new Date(o.ready_at) - prepAt) / 60000;
-      if (p >= 0 && p < 60) {
-        preps.push(p);
-        // per categoria
-        (o.items || []).forEach(item => {
-          const cat = item.cat || 'Altro';
-          if (!catPreps[cat]) catPreps[cat] = [];
-          catPreps[cat].push(p);
-        });
-      }
-    }
-    if (o.ready_at && o.served_at) {
-      const d = (new Date(o.served_at) - new Date(o.ready_at)) / 60000;
-      if (d >= 0 && d < 30) delivs.push(d);
-    }
-  });
-
-  const avg = arr => arr.length ? Math.round(arr.reduce((s,v)=>s+v,0)/arr.length) : null;
-  const avgWait = avg(waits), avgPrep = avg(preps), avgDel = avg(delivs);
-  const avgTotal = (avgWait !== null && avgPrep !== null && avgDel !== null)
-    ? avgWait + avgPrep + avgDel : null;
-
-  // per categoria: media prep
-  const catData = Object.entries(catPreps)
-    .map(([cat, arr]) => ({ cat, avg: Math.round(arr.reduce((s,v)=>s+v,0)/arr.length) }))
-    .filter(c => c.avg > 0)
-    .sort((a,b) => b.avg - a.avg)
-    .slice(0, 10);
-
-  return { avgWait, avgPrep, avgDel, avgTotal, catData, n: waits.length };
-}
-
-function renderTimings(orders) {
-  const { avgWait, avgPrep, avgDel, avgTotal, catData, n } = calcTimings(orders);
-  const fmt = v => v !== null ? `${v}` : '—';
-
-  document.getElementById('t-total').textContent = fmt(avgTotal);
-  document.getElementById('t-wait').textContent  = fmt(avgWait);
-  document.getElementById('t-prep').textContent  = fmt(avgPrep);
-  document.getElementById('t-del').textContent   = fmt(avgDel);
-  document.getElementById('t-note').textContent  = n
-    ? `Calcolato su ${n} ordini con dati completi` : 'Nessun dato ancora — cresce con l\'uso reale';
-
-  // Valutazione servizio
-  const ratingBlock = document.getElementById('t-rating-block');
-  if (avgTotal === null) {
-    ratingBlock.innerHTML = `<p class="rating-no-data">
-      I dati crescono automaticamente man mano che lo staff gestisce gli ordini dalla dashboard.
-      Ogni volta che un ordine viene spostato da "in preparazione" a "pronto" a "servito",
-      il sistema registra i tempi in modo invisibile.
-    </p>`;
-  } else {
-    const MAX = 30;
-    const pct = Math.min(100, Math.round((avgTotal / MAX) * 100));
-    let cls, label, desc, action;
-    if (avgTotal <= 15) {
-      cls = 'good'; label = 'Ottimo';
-      desc = `Il cibo arriva in tavola in ${avgTotal} minuti. I clienti si aspettano al massimo 20 minuti in un all-you-can-eat — siete sotto soglia.`;
-      action = 'Continua così. Tieni d\'occhio la fase di cucina nei weekend.';
-    } else if (avgTotal <= 22) {
-      cls = 'ok'; label = 'Nella norma';
-      desc = `Il cibo impiega ${avgTotal} minuti ad arrivare. È nella media per un AYCE, ma c\'è margine di miglioramento.`;
-      const slowPhase = (avgPrep > avgWait && avgPrep > avgDel) ? 'cucina' : avgWait > avgDel ? 'la presa in carico' : 'la consegna';
-      action = `La fase più lenta è ${slowPhase}. Concentrati lì per migliorare.`;
-    } else {
-      cls = 'bad'; label = 'Da migliorare';
-      desc = `${avgTotal} minuti sono troppi. Oltre i 22 minuti i clienti iniziano a spazientirsi e la soddisfazione cala.`;
-      const slowPhase = (avgPrep >= avgWait && avgPrep >= avgDel) ? 'la cucina' : avgWait >= avgDel ? 'la presa in carico degli ordini' : 'la consegna al tavolo';
-      action = `Il collo di bottiglia principale è ${slowPhase}. Agire qui ha il maggiore impatto.`;
-    }
-    ratingBlock.innerHTML = `
-      <div class="rating-wrap">
-        <div class="rating-header">
-          <div class="rating-dot ${cls}"></div>
-          <div class="rating-label ${cls}">${label}</div>
-        </div>
-        <div class="rating-desc">${desc}</div>
-        <div class="rating-bar-wrap">
-          <div class="rating-bar-fill ${cls}" style="width:${pct}%;"></div>
-        </div>
-        <div class="rating-scale">
-          <span>0 min</span><span style="color:${cls==='good'?'#2d6a4f':cls==='ok'?'#b8860b':'#c0392b'};font-weight:700;">${avgTotal} min</span><span>30 min</span>
-        </div>
-        <div style="font-size:0.82em;color:var(--text2);padding:10px 12px;background:var(--bg-card2);border-radius:10px;line-height:1.5;">
-          <strong>Cosa fare:</strong> ${action}
-        </div>
-      </div>`;
-  }
-
-  // Grafico categorie
-  const ctx = document.getElementById('chart-timing-cat').getContext('2d');
-  if (charts['timing-cat']) charts['timing-cat'].destroy();
-  if (catData.length) {
-    charts['timing-cat'] = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: catData.map(c => c.cat),
-        datasets: [{ data: catData.map(c => c.avg),
-          backgroundColor: catData.map(c => c.avg > 14 ? 'rgba(192,57,43,.25)' : 'rgba(26,26,26,.15)'),
-          borderColor:      catData.map(c => c.avg > 14 ? '#c0392b' : '#1a1a1a'),
-          borderWidth: 1.5, borderRadius: 4 }]
-      },
-      options: { indexAxis:'y', ...dOpts(),
-        scales: { x: { ...dAxis(), beginAtZero:true, ticks:{...dTick(), callback: v=>`${v} min`} },
-                  y: { ...dAxis(), ticks:{...dTick(), font:{size:10,family:'DM Sans'}} } }
-      }
-    });
-  } else {
-    ctx.canvas.parentElement.innerHTML = '<p style="text-align:center;padding:40px;color:#aaa;font-size:.85em;">Nessun dato ancora</p>';
-  }
 }
 
 // ── CHARTS ────────────────────────────────────────────────────────────────
