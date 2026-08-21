@@ -159,10 +159,6 @@
         .dish-card.allergen-blocked { opacity: 0.5; }
         .dish-card.allergen-blocked .btn-add,
         .dish-card.allergen-blocked .qty-controls { pointer-events: none; opacity: 0.3; }
-        .dish-card.already-ordered { opacity: 0.45; }
-        .dish-card.already-ordered .btn-add,
-        .dish-card.already-ordered .qty-controls { pointer-events: none; opacity: 0.3; }
-        .dish-card.already-ordered .dish-info { cursor: pointer; }
         .already-ordered-tag {
             display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;
             font-size: 0.68em; font-weight: 700; color: #059669;
@@ -2263,7 +2259,6 @@
                     const isCatAlreadyOrdered = cat.max1 && orderedMax1Cats.has(cat.id);
                     if (isWkndDish && !wkndOk) card.classList.add('weekend-only');
                     if (hasBlockedAllergen) card.classList.add('allergen-blocked');
-                    if (isCatAlreadyOrdered) card.classList.add('already-ordered');
                     if (cat.max1) tags.unshift(`<span class="dish-tag max1-card"><i class="fas fa-user"></i> Max 1</span>`);
                     if (isSpicy) tags.push(`<span class="dish-tag spicy"><i class="fas fa-fire"></i> ${t.spicyTag||'Piccante'}</span>`);
                     if (isVeg) tags.push(`<span class="dish-tag veg"><i class="fas fa-leaf"></i> ${t.vegTag||'Veg'}</span>`);
@@ -2335,10 +2330,6 @@
         }
 
         function addItem(id, max1) {
-            if (max1) {
-                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
-                if (cat && orderedMax1Cats.has(cat.id)) return;
-            }
             if (max1 && (cart[id] || 0) >= tableSize) { openMax1Explain(id); return; }
             cart[id] = 1;
             document.getElementById(`add-${id}`).style.display = 'none';
@@ -2504,12 +2495,6 @@
                 if (addBtn) addBtn.style.display = '';
                 if (qtyEl) qtyEl.classList.remove('show');
                 if (card) card.classList.remove('in-cart');
-                // se categoria max1 già ordinata, griglia subito la card
-                const catOfItem = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
-                if (catOfItem && orderedMax1Cats.has(catOfItem.id)) {
-                    if (card) card.classList.add('already-ordered');
-                    if (addBtn) addBtn.style.display = 'none';
-                }
             });
             updateCartBadge();
             closeCart(() => {
@@ -2599,7 +2584,7 @@
             const isAllergenBlocked = activeFilters.size > 0 && item.allergens && item.allergens.some(a => activeFilters.has(a));
             const itemCat = menuData.find(c => c.items.some(i => i.id == id));
             const isAlreadyOrdered = itemCat && itemCat.max1 && orderedMax1Cats.has(itemCat.id);
-            diIsBlocked = isWkndBlocked || isAllergenBlocked || isAlreadyOrdered;
+            diIsBlocked = isWkndBlocked || isAllergenBlocked;
 
             // notice allergeni
             const allergenNotice = document.getElementById('di-allergen-notice');
