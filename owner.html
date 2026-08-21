@@ -20,33 +20,10 @@ button,[onclick]{touch-action:manipulation;}
 }
 
 body{background:var(--bg);color:var(--text);min-height:100vh;
-  padding-top:110px; /* 56px header + 54px range bar */
+  padding-top:68px;
   padding-bottom:calc(70px + env(safe-area-inset-bottom,0px));
 }
 
-/* ── PASSWORD GATE ── */
-#pw-gate{
-  position:fixed;inset:0;background:#fff;z-index:9999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:0;padding:32px 24px;
-}
-#pw-gate img{height:36px;margin-bottom:36px;filter:brightness(0);}
-#pw-box{width:100%;max-width:320px;}
-#pw-box h2{font-size:1.2em;font-weight:800;color:var(--text);margin-bottom:4px;}
-#pw-box p{font-size:0.85em;color:var(--text3);margin-bottom:20px;}
-#pw-input{
-  width:100%;padding:16px;background:var(--bg-card);
-  border:1.5px solid var(--border-mid);border-radius:14px;
-  color:var(--text);font-size:1em;outline:none;font-family:inherit;
-  transition:border-color .2s;
-}
-#pw-input:focus{border-color:var(--accent);}
-#pw-error{color:#c0392b;font-size:0.8em;margin:8px 0 12px;display:none;}
-#pw-btn{
-  width:100%;padding:16px;background:var(--accent);color:#fff;
-  border:none;border-radius:14px;font-size:1em;font-weight:700;
-  cursor:pointer;font-family:inherit;margin-top:6px;
-}
 
 /* ── HEADER ── */
 header{
@@ -209,20 +186,7 @@ main{padding:0 16px 24px;}
 </head>
 <body>
 
-<!-- PASSWORD GATE -->
-<div id="pw-gate">
-  <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
-  <div id="pw-box">
-    <h2>Area Proprietario</h2>
-    <p>Inserisci la password per accedere alle analisi.</p>
-    <input id="pw-input" type="password" placeholder="Password" autocomplete="off">
-    <p id="pw-error">Password errata</p>
-    <button id="pw-btn">Accedi</button>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none;">
+<div id="app">
 
 <header>
   <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun">
@@ -413,24 +377,24 @@ main{padding:0 16px 24px;}
     </div>
 
     <!-- 3 fasi -->
-    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);gap:8px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
       <div class="s-card" style="text-align:center;padding:14px 8px;">
-        <div style="font-size:1.5em;margin-bottom:4px;">⏳</div>
+        <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><i class="fas fa-clock" style="font-size:.85em;color:var(--text2);"></i></div>
         <div style="font-size:1.6em;font-weight:800;color:var(--accent);" id="t-wait">—</div>
-        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;">Attesa</div>
-        <div style="font-size:0.68em;color:var(--text3);margin-top:2px;line-height:1.3;">ordine → cucina inizia</div>
+        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">Attesa</div>
+        <div style="font-size:0.67em;color:var(--text3);margin-top:3px;line-height:1.3;">ordine → cucina</div>
       </div>
       <div class="s-card" style="text-align:center;padding:14px 8px;">
-        <div style="font-size:1.5em;margin-bottom:4px;">🔥</div>
+        <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><i class="fas fa-kitchen-set" style="font-size:.85em;color:var(--text2);"></i></div>
         <div style="font-size:1.6em;font-weight:800;color:var(--accent);" id="t-prep">—</div>
-        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;">Cucina</div>
-        <div style="font-size:0.68em;color:var(--text3);margin-top:2px;line-height:1.3;">cucina → piatto pronto</div>
+        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">Cucina</div>
+        <div style="font-size:0.67em;color:var(--text3);margin-top:3px;line-height:1.3;">cucina → pronto</div>
       </div>
       <div class="s-card" style="text-align:center;padding:14px 8px;">
-        <div style="font-size:1.5em;margin-bottom:4px;">🏃</div>
+        <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><i class="fas fa-person-walking" style="font-size:.85em;color:var(--text2);"></i></div>
         <div style="font-size:1.6em;font-weight:800;color:var(--accent);" id="t-del">—</div>
-        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;">Consegna</div>
-        <div style="font-size:0.68em;color:var(--text3);margin-top:2px;line-height:1.3;">pronto → al tavolo</div>
+        <div style="font-size:0.65em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">Consegna</div>
+        <div style="font-size:0.67em;color:var(--text3);margin-top:3px;line-height:1.3;">pronto → tavolo</div>
       </div>
     </div>
 
@@ -498,7 +462,6 @@ main{padding:0 16px 24px;}
 </div><!-- /app -->
 
 <script>
-const OWNER_PW = 'JUN321@';
 const SB_URL   = "https://jnzxhokxldzymnapcchd.supabase.co";
 const SB_ANON  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
 const sb = supabase.createClient(SB_URL, SB_ANON);
@@ -508,23 +471,6 @@ let demoOrders  = [];
 let demoMode    = false;
 let activeDays  = 0;
 let charts      = {};
-
-// ── PASSWORD GATE ──────────────────────────────────────────────────────────
-function checkPw() {
-  if (document.getElementById('pw-input').value === OWNER_PW) {
-    document.getElementById('pw-gate').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    loadData();
-  } else {
-    const err = document.getElementById('pw-error');
-    err.style.display = 'block';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-    setTimeout(() => { err.style.display = 'none'; }, 2000);
-  }
-}
-document.getElementById('pw-btn').addEventListener('click', checkPw);
-document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPw(); });
 
 // ── BOTTOM NAV ────────────────────────────────────────────────────────────
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1056,6 +1002,8 @@ sb.channel('owner-rt')
     realOrders.push(parseOrder(o));
     render();
   }).subscribe();
+
+loadData();
 </script>
 </body>
 </html>
