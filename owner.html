@@ -20,8 +20,8 @@ button,[onclick]{touch-action:manipulation;}
 }
 
 body{background:var(--bg);color:var(--text);min-height:100vh;
-  padding-top:108px; /* 56px header + 52px tabs */
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-top:110px; /* 56px header + 54px range bar */
+  padding-bottom:calc(70px + env(safe-area-inset-bottom,0px));
 }
 
 /* ── PASSWORD GATE ── */
@@ -51,51 +51,57 @@ body{background:var(--bg);color:var(--text);min-height:100vh;
 /* ── HEADER ── */
 header{
   position:fixed;top:0;left:0;right:0;height:56px;
-  background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;z-index:200;
+  padding:0 16px;z-index:200;gap:12px;
 }
-.h-logo{height:26px;object-fit:contain;filter:brightness(0);}
-.h-right{display:flex;align-items:center;gap:12px;}
-#live-dot{width:7px;height:7px;border-radius:50%;background:#2d6a4f;animation:blink 2s ease-in-out infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-#demo-toggle{
-  padding:5px 12px;border-radius:20px;font-size:0.75em;font-weight:700;
-  background:var(--bg-card);border:1.5px solid var(--border-mid);
-  color:var(--text2);cursor:pointer;font-family:inherit;
-}
-#demo-toggle.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-
-/* ── TABS ── */
-#tab-bar{
-  position:fixed;top:56px;left:0;right:0;height:52px;
-  background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 12px;gap:8px;
-  overflow-x:auto;scrollbar-width:none;z-index:199;
-}
-#tab-bar::-webkit-scrollbar{display:none;}
-.tab-btn{
-  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
-  padding:7px 16px;font-family:inherit;font-size:0.83em;font-weight:600;
-  color:var(--text2);cursor:pointer;border:none;
-  background:var(--bg-card);border-radius:999px;
-  transition:all .18s;flex-shrink:0;
-}
-.tab-btn.active{background:var(--accent);color:#fff;}
-
-/* ── RANGE BAR ── */
+.h-logo{height:24px;object-fit:contain;filter:brightness(0);flex-shrink:0;}
+/* range pills inline nel header */
 #range-bar{
-  display:flex;gap:8px;padding:16px 16px 8px;overflow-x:auto;scrollbar-width:none;
+  display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;
+  flex:1;padding:0;
 }
 #range-bar::-webkit-scrollbar{display:none;}
 .range-btn{
-  padding:6px 16px;border-radius:999px;font-size:0.82em;font-weight:600;
+  padding:5px 13px;border-radius:999px;font-size:0.78em;font-weight:700;
   border:1.5px solid var(--border-mid);background:none;color:var(--text2);
   cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .18s;flex-shrink:0;
 }
 .range-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+#live-dot{width:7px;height:7px;border-radius:50%;background:#2d6a4f;
+  animation:blink 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#demo-toggle{
+  padding:5px 10px;border-radius:20px;font-size:0.72em;font-weight:700;
+  background:var(--bg-card);border:1.5px solid var(--border-mid);
+  color:var(--text2);cursor:pointer;font-family:inherit;flex-shrink:0;
+}
+#demo-toggle.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ── BOTTOM NAV ── */
+#bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(64px + env(safe-area-inset-bottom,0px));
+  background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(4,1fr);
+  z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;border:none;background:none;cursor:pointer;font-family:inherit;
+  color:var(--text3);transition:color .18s;padding:8px 4px;
+}
+.nav-btn.active{color:var(--accent);}
+.nav-btn i{font-size:1.3em;transition:transform .18s;}
+.nav-btn.active i{transform:scale(1.12);}
+.nav-btn span{font-size:0.65em;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+.nav-btn .nav-pip{
+  width:4px;height:4px;border-radius:50%;background:var(--accent);
+  margin-top:-2px;opacity:0;transition:opacity .18s;
+}
+.nav-btn.active .nav-pip{opacity:1;}
 
 /* ── DEMO BANNER ── */
 #demo-banner{
@@ -200,25 +206,38 @@ main{padding:0 16px 24px;}
 
 <header>
   <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun">
-  <div class="h-right">
-    <div id="live-dot" title="Aggiornamento real-time"></div>
-    <button id="demo-toggle" onclick="toggleDemo()">Demo</button>
+  <div id="range-bar">
+    <button class="range-btn active" data-days="0">Oggi</button>
+    <button class="range-btn" data-days="7">7 gg</button>
+    <button class="range-btn" data-days="30">30 gg</button>
+    <button class="range-btn" data-days="-1">Tutto</button>
   </div>
+  <div id="live-dot" title="Live"></div>
+  <button id="demo-toggle" onclick="toggleDemo()">Demo</button>
 </header>
 
-<div id="tab-bar">
-  <button class="tab-btn active" data-tab="oggi">Oggi</button>
-  <button class="tab-btn" data-tab="piatti">Piatti</button>
-  <button class="tab-btn" data-tab="tavoli">Tavoli</button>
-  <button class="tab-btn" data-tab="analisi">Analisi</button>
-</div>
-
-<div id="range-bar">
-  <button class="range-btn active" data-days="0">Oggi</button>
-  <button class="range-btn" data-days="7">7 giorni</button>
-  <button class="range-btn" data-days="30">30 giorni</button>
-  <button class="range-btn" data-days="-1">Tutto</button>
-</div>
+<nav id="bottom-nav">
+  <button class="nav-btn active" data-tab="oggi">
+    <i class="fas fa-chart-bar"></i>
+    <span>Oggi</span>
+    <div class="nav-pip"></div>
+  </button>
+  <button class="nav-btn" data-tab="piatti">
+    <i class="fas fa-utensils"></i>
+    <span>Piatti</span>
+    <div class="nav-pip"></div>
+  </button>
+  <button class="nav-btn" data-tab="tavoli">
+    <i class="fas fa-chair"></i>
+    <span>Tavoli</span>
+    <div class="nav-pip"></div>
+  </button>
+  <button class="nav-btn" data-tab="analisi">
+    <i class="fas fa-arrow-trend-up"></i>
+    <span>Analisi</span>
+    <div class="nav-pip"></div>
+  </button>
+</nav>
 
 <div id="demo-banner">
   <i class="fas fa-flask"></i>
@@ -427,14 +446,15 @@ function checkPw() {
 document.getElementById('pw-btn').addEventListener('click', checkPw);
 document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPw(); });
 
-// ── TABS ──────────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
+// ── BOTTOM NAV ────────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     const s = document.getElementById('sec-' + btn.dataset.tab);
     if (s) s.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
 
