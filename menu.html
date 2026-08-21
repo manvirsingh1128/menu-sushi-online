@@ -9,6 +9,7 @@
     <title>Jun Restaurant — Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <style>
         * { box-sizing: border-box; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; -webkit-user-select: none; }
         button, a, [onclick] { touch-action: manipulation; } /* blocca double-tap zoom su elementi interattivi */
@@ -766,6 +767,11 @@
             0%   { width: 0%; }
             60%  { width: 75%; }
             100% { width: 100%; }
+        }
+        @keyframes qrScanLine {
+            0%   { top: 4px; }
+            50%  { top: calc(100% - 6px); }
+            100% { top: 4px; }
         }
         @keyframes splashGlowPulse {
             0%, 100% { opacity: 0.7; }
@@ -3017,19 +3023,94 @@
         function showQRScreen() {
             Object.keys(cart).forEach(k => delete cart[k]);
             updateCartBadge();
-            document.getElementById('qr-screen').style.display = 'flex';
+            document.getElementById('qr-screen').style.display = 'block';
+            startQRScanner();
+        }
+
+        let _qrScanInterval = null;
+
+        function startQRScanner() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    const video = document.getElementById('qr-video');
+                    video.srcObject = stream;
+                    video.play();
+                    const canvas = document.getElementById('qr-canvas');
+                    const ctx = canvas.getContext('2d');
+                    _qrScanInterval = setInterval(() => {
+                        if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+                        canvas.width  = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0);
+                        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = typeof jsQR === 'function' ? jsQR(img.data, img.width, img.height) : null;
+                        if (code && code.data) _handleQRData(code.data);
+                    }, 300);
+                })
+                .catch(() => { /* camera non disponibile — schermata statica */ });
+        }
+
+        function stopQRScanner() {
+            clearInterval(_qrScanInterval);
+            _qrScanInterval = null;
+            const video = document.getElementById('qr-video');
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+        }
+
+        function _handleQRData(data) {
+            let k = null, t = null;
+            try {
+                const url = new URL(data);
+                k = url.searchParams.get('k');
+                t = url.searchParams.get('t');
+            } catch {
+                const p = new URLSearchParams(data);
+                k = p.get('k'); t = p.get('t');
+            }
+            if (k && t) {
+                stopQRScanner();
+                // Naviga all'URL con i parametri QR → checkSession() li processa
+                const url = new URL(window.location.href);
+                url.searchParams.set('k', k);
+                url.searchParams.set('t', t);
+                window.location.href = url.toString();
+            }
         }
 
     </script>
 
-    <!-- SCHERMATA SCAN QR -->
-    <div id="qr-screen" style="display:none;position:fixed;inset:0;background:#0f0f0f;z-index:99999;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;gap:52px;">
-        <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant" style="height:44px;object-fit:contain;">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
-            <div style="width:90px;height:90px;background:rgba(255,255,255,0.07);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-                <i class="fas fa-qrcode" style="font-size:2.4em;color:rgba(255,255,255,0.85);"></i>
+    <!-- SCHERMATA SCAN QR — camera live stile Google Lens -->
+    <div id="qr-screen" style="display:none;position:fixed;inset:0;background:#000;z-index:99999;overflow:hidden;">
+        <!-- Feed camera -->
+        <video id="qr-video" autoplay muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+        <canvas id="qr-canvas" style="display:none;"></canvas>
+
+        <!-- Overlay scuro ai bordi -->
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);"></div>
+
+        <!-- Contenuto sopra -->
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:env(safe-area-inset-top,52px) 40px env(safe-area-inset-bottom,60px);">
+
+            <!-- Logo -->
+            <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant" style="height:36px;object-fit:contain;margin-top:16px;">
+
+            <!-- Frame scansione -->
+            <div style="position:relative;width:230px;height:230px;flex-shrink:0;">
+                <!-- Angoli -->
+                <div style="position:absolute;top:0;left:0;width:30px;height:30px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:3px 0 0 0;"></div>
+                <div style="position:absolute;top:0;right:0;width:30px;height:30px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 3px 0 0;"></div>
+                <div style="position:absolute;bottom:0;left:0;width:30px;height:30px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 3px;"></div>
+                <div style="position:absolute;bottom:0;right:0;width:30px;height:30px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 3px 0;"></div>
+                <!-- Linea scansione animata -->
+                <div style="position:absolute;left:6px;right:6px;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.9),transparent);animation:qrScanLine 2s ease-in-out infinite;top:4px;"></div>
             </div>
-            <p style="font-size:1em;color:rgba(255,255,255,0.6);line-height:1.65;margin:0;max-width:250px;font-weight:400;">Scansiona il QR code al tuo tavolo per ordinare.</p>
+
+            <!-- Testo -->
+            <p style="color:rgba(255,255,255,0.75);font-size:0.95em;text-align:center;line-height:1.65;margin:0;max-width:240px;font-weight:400;">Scansiona il QR code al tuo tavolo per ordinare.</p>
         </div>
     </div>
 
