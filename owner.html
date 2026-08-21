@@ -166,6 +166,26 @@ main{padding:0 16px 24px;}
 .tag-crit{background:rgba(192,57,43,.2);color:var(--red);font-size:0.7em;font-weight:700;
   padding:2px 7px;border-radius:10px;}
 
+/* ── VALUTAZIONE SERVIZIO ── */
+.rating-wrap{display:flex;flex-direction:column;gap:14px;}
+.rating-header{display:flex;align-items:center;gap:12px;}
+.rating-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.rating-dot.good   {background:#2d6a4f;}
+.rating-dot.ok     {background:#b8860b;}
+.rating-dot.bad    {background:#c0392b;}
+.rating-label{font-size:1.1em;font-weight:800;letter-spacing:-0.02em;}
+.rating-label.good {color:#2d6a4f;}
+.rating-label.ok   {color:#b8860b;}
+.rating-label.bad  {color:#c0392b;}
+.rating-desc{font-size:0.86em;color:var(--text2);line-height:1.55;}
+.rating-bar-wrap{position:relative;height:8px;border-radius:99px;background:var(--bg-card2);overflow:hidden;}
+.rating-bar-fill{height:100%;border-radius:99px;transition:width .6s ease;}
+.rating-bar-fill.good{background:#2d6a4f;}
+.rating-bar-fill.ok  {background:#b8860b;}
+.rating-bar-fill.bad {background:#c0392b;}
+.rating-scale{display:flex;justify-content:space-between;font-size:0.68em;color:var(--text3);margin-top:5px;}
+.rating-no-data{font-size:0.86em;color:var(--text3);padding:8px 0;line-height:1.6;}
+
 /* ── CONFRONTO ── */
 .cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px;}
 .cmp-side{text-align:center;padding:12px 8px;}
@@ -414,10 +434,12 @@ main{padding:0 16px 24px;}
       </div>
     </div>
 
-    <!-- Semaforo qualità -->
+    <!-- Valutazione servizio -->
     <div class="s-card" id="t-rating-card">
       <div class="s-title"><i class="fas fa-gauge-high"></i>Valutazione servizio</div>
-      <div id="t-rating" style="font-size:1em;font-weight:600;line-height:1.5;color:var(--text2);">—</div>
+      <div id="t-rating-block">
+        <!-- Iniettato da JS -->
+      </div>
     </div>
 
     <!-- Tempi per categoria -->
@@ -815,16 +837,50 @@ function renderTimings(orders) {
   document.getElementById('t-note').textContent  = n
     ? `Calcolato su ${n} ordini con dati completi` : 'Nessun dato ancora — cresce con l\'uso reale';
 
-  // Semaforo qualità
-  const rating = document.getElementById('t-rating');
+  // Valutazione servizio
+  const ratingBlock = document.getElementById('t-rating-block');
   if (avgTotal === null) {
-    rating.innerHTML = '<span style="color:var(--text3);">Dati non ancora disponibili.</span>';
-  } else if (avgTotal <= 15) {
-    rating.innerHTML = '🟢 <strong style="color:#2d6a4f;">Ottimo</strong> — il cibo arriva in meno di 15 minuti. I clienti sono soddisfatti.';
-  } else if (avgTotal <= 22) {
-    rating.innerHTML = '🟡 <strong style="color:#b8860b;">Nella norma</strong> — tempi accettabili per un AYCE. Puoi migliorare la fase di cucina.';
+    ratingBlock.innerHTML = `<p class="rating-no-data">
+      I dati crescono automaticamente man mano che lo staff gestisce gli ordini dalla dashboard.
+      Ogni volta che un ordine viene spostato da "in preparazione" a "pronto" a "servito",
+      il sistema registra i tempi in modo invisibile.
+    </p>`;
   } else {
-    rating.innerHTML = '🔴 <strong style="color:var(--red);">Da migliorare</strong> — oltre 22 minuti rischia di infastidire i clienti. Controlla la fase più lenta.';
+    const MAX = 30;
+    const pct = Math.min(100, Math.round((avgTotal / MAX) * 100));
+    let cls, label, desc, action;
+    if (avgTotal <= 15) {
+      cls = 'good'; label = 'Ottimo';
+      desc = `Il cibo arriva in tavola in ${avgTotal} minuti. I clienti si aspettano al massimo 20 minuti in un all-you-can-eat — siete sotto soglia.`;
+      action = 'Continua così. Tieni d\'occhio la fase di cucina nei weekend.';
+    } else if (avgTotal <= 22) {
+      cls = 'ok'; label = 'Nella norma';
+      desc = `Il cibo impiega ${avgTotal} minuti ad arrivare. È nella media per un AYCE, ma c\'è margine di miglioramento.`;
+      const slowPhase = (avgPrep > avgWait && avgPrep > avgDel) ? 'cucina' : avgWait > avgDel ? 'la presa in carico' : 'la consegna';
+      action = `La fase più lenta è ${slowPhase}. Concentrati lì per migliorare.`;
+    } else {
+      cls = 'bad'; label = 'Da migliorare';
+      desc = `${avgTotal} minuti sono troppi. Oltre i 22 minuti i clienti iniziano a spazientirsi e la soddisfazione cala.`;
+      const slowPhase = (avgPrep >= avgWait && avgPrep >= avgDel) ? 'la cucina' : avgWait >= avgDel ? 'la presa in carico degli ordini' : 'la consegna al tavolo';
+      action = `Il collo di bottiglia principale è ${slowPhase}. Agire qui ha il maggiore impatto.`;
+    }
+    ratingBlock.innerHTML = `
+      <div class="rating-wrap">
+        <div class="rating-header">
+          <div class="rating-dot ${cls}"></div>
+          <div class="rating-label ${cls}">${label}</div>
+        </div>
+        <div class="rating-desc">${desc}</div>
+        <div class="rating-bar-wrap">
+          <div class="rating-bar-fill ${cls}" style="width:${pct}%;"></div>
+        </div>
+        <div class="rating-scale">
+          <span>0 min</span><span style="color:${cls==='good'?'#2d6a4f':cls==='ok'?'#b8860b':'#c0392b'};font-weight:700;">${avgTotal} min</span><span>30 min</span>
+        </div>
+        <div style="font-size:0.82em;color:var(--text2);padding:10px 12px;background:var(--bg-card2);border-radius:10px;line-height:1.5;">
+          <strong>Cosa fare:</strong> ${action}
+        </div>
+      </div>`;
   }
 
   // Grafico categorie
