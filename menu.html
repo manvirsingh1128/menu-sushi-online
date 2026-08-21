@@ -757,6 +757,59 @@
             #sticky-header { padding: 0 14px; }
         }
 
+        /* ── SPLASH SCREEN ── */
+        @keyframes splashLogoIn {
+            0%   { opacity: 0; transform: translateY(14px) scale(0.92); }
+            100% { opacity: 1; transform: translateY(0)    scale(1); }
+        }
+        @keyframes splashTrackIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        @keyframes splashBarFill {
+            0%   { width: 0%; }
+            60%  { width: 75%; }
+            100% { width: 100%; }
+        }
+        @keyframes splashGlowPulse {
+            0%, 100% { opacity: 0.7; }
+            50%       { opacity: 1; }
+        }
+        #splash {
+            position: fixed; inset: 0; z-index: 10000;
+            background: #0f0f0f;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 52px;
+            transition: opacity 0.55s ease;
+        }
+        #splash-logo {
+            height: 50px; object-fit: contain;
+            opacity: 0;
+            animation: splashLogoIn 1s 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        #splash-bar-track {
+            width: 140px; height: 2px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 2px; overflow: visible; position: relative;
+            opacity: 0;
+            animation: splashTrackIn 0.4s 0.7s ease forwards;
+        }
+        #splash-bar {
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+            width: 0; position: relative;
+            animation: splashBarFill 1.9s 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        #splash-bar::after {
+            content: '';
+            position: absolute; right: -1px; top: -5px; bottom: -5px; width: 18px;
+            background: rgba(255,255,255,0.9);
+            filter: blur(6px);
+            border-radius: 50%;
+            animation: splashGlowPulse 0.8s ease-in-out infinite;
+        }
+
         /* ── ONBOARDING ── */
         #onboarding {
             position: fixed; inset: 0; z-index: 9999;
@@ -823,6 +876,14 @@
     </style>
 </head>
 <body>
+
+    <!-- SPLASH -->
+    <div id="splash">
+        <img id="splash-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
+        <div id="splash-bar-track">
+            <div id="splash-bar"></div>
+        </div>
+    </div>
 
     <!-- ONBOARDING -->
     <div id="onboarding">
@@ -2715,34 +2776,40 @@
             document.getElementById('ob-table-num').textContent  = _obTable;
         }
 
+        function _dismissSplash(cb) {
+            const splash = document.getElementById('splash');
+            splash.style.opacity = '0';
+            setTimeout(() => { splash.style.display = 'none'; if (cb) cb(); }, 560);
+        }
+
         function _obStartMenu() {
             tableSize   = _obPeople;
             tableNumber = _obTable;
             sessionStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
             document.getElementById('people-label').textContent = tableSize;
+            renderMenu();
+            restoreCartUI();
             const ob = document.getElementById('onboarding');
             ob.style.transition = 'opacity 0.35s';
             ob.style.opacity = '0';
-            setTimeout(() => {
-                ob.style.display = 'none';
-                renderMenu();
-                initScrollSpy();
-            }, 350);
+            setTimeout(() => { ob.style.display = 'none'; }, 350);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // controlla sessione onboarding
+            // render menu in background durante lo splash
             const saved = sessionStorage.getItem('jun_ob');
             if (saved) {
                 const d = JSON.parse(saved);
-                tableSize   = d.people || 2;
+                tableSize   = d.people || 1;
                 tableNumber = d.table  || 1;
                 document.getElementById('people-label').textContent = tableSize;
                 document.getElementById('onboarding').style.display = 'none';
-                renderMenu();
-                initScrollSpy();
             }
-            // else: onboarding già visibile, menu si carica dopo confirm
+            renderMenu();
+            initScrollSpy();
+
+            // splash: barra finisce a ~2.8s, poi dismiss
+            setTimeout(() => _dismissSplash(), 2900);
 
             // stepper persone
             document.getElementById('ob-people-minus').addEventListener('click', () => {
