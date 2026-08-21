@@ -2,108 +2,183 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Jun Restaurant — Proprietario</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'DM Sans',-apple-system,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'DM Sans',-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;}
+button,[onclick]{touch-action:manipulation;}
+
 :root{
-  --bg:#0a0a0a; --surface:#111; --surface2:#181818; --border:#222;
-  --gold:#c9a84c; --gold-dim:#7a6230;
-  --green:#2e8b57; --red:#c0392b; --blue:#2563eb;
-  --text:#e8e8e8; --text2:#888; --text3:#555;
+  --bg:#ffffff; --bg-card:#f7f7f5; --bg-card2:#f0f0ee;
+  --accent:#1a1a1a; --border:rgba(0,0,0,0.08); --border-mid:rgba(0,0,0,0.12);
+  --text:#252525; --text2:#666; --text3:#999;
+  --gold:#c9a84c; --green:#2d6a4f; --red:#c0392b; --blue:#2563eb;
 }
-body{background:var(--bg);color:var(--text);min-height:100vh;}
 
-/* PASSWORD GATE */
-#pw-gate{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;}
-#pw-gate img{height:44px;object-fit:contain;}
-#pw-box{background:#161616;border:1px solid #222;border-radius:20px;padding:32px 28px;width:88%;max-width:320px;}
-#pw-box h2{font-size:1.1em;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-0.02em;}
-#pw-box p{font-size:0.82em;color:var(--text3);margin-bottom:20px;line-height:1.5;}
-#pw-input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.06);border:1.5px solid #2a2a2a;border-radius:12px;color:#fff;font-size:1em;outline:none;font-family:inherit;}
-#pw-error{color:#ff6b6b;font-size:0.8em;margin:8px 0 12px;display:none;}
-#pw-btn{width:100%;padding:14px;background:var(--gold);color:#000;border:none;border-radius:12px;font-size:0.95em;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;}
+body{background:var(--bg);color:var(--text);min-height:100vh;
+  padding-top:108px; /* 56px header + 52px tabs */
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
 
-/* HEADER */
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.h-logo{height:28px;object-fit:contain;}
-.h-title{font-size:0.8em;font-weight:600;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;}
-.h-right{display:flex;align-items:center;gap:16px;}
-#last-update{font-size:0.78em;color:var(--text3);}
+/* ── PASSWORD GATE ── */
+#pw-gate{
+  position:fixed;inset:0;background:#fff;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;padding:32px 24px;
+}
+#pw-gate img{height:36px;margin-bottom:36px;filter:brightness(0);}
+#pw-box{width:100%;max-width:320px;}
+#pw-box h2{font-size:1.2em;font-weight:800;color:var(--text);margin-bottom:4px;}
+#pw-box p{font-size:0.85em;color:var(--text3);margin-bottom:20px;}
+#pw-input{
+  width:100%;padding:16px;background:var(--bg-card);
+  border:1.5px solid var(--border-mid);border-radius:14px;
+  color:var(--text);font-size:1em;outline:none;font-family:inherit;
+  transition:border-color .2s;
+}
+#pw-input:focus{border-color:var(--accent);}
+#pw-error{color:#c0392b;font-size:0.8em;margin:8px 0 12px;display:none;}
+#pw-btn{
+  width:100%;padding:16px;background:var(--accent);color:#fff;
+  border:none;border-radius:14px;font-size:1em;font-weight:700;
+  cursor:pointer;font-family:inherit;margin-top:6px;
+}
 
-/* TABS */
-#tab-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;}
+/* ── HEADER ── */
+header{
+  position:fixed;top:0;left:0;right:0;height:56px;
+  background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;z-index:200;
+}
+.h-logo{height:26px;object-fit:contain;filter:brightness(0);}
+.h-right{display:flex;align-items:center;gap:12px;}
+#live-dot{width:7px;height:7px;border-radius:50%;background:#2d6a4f;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#demo-toggle{
+  padding:5px 12px;border-radius:20px;font-size:0.75em;font-weight:700;
+  background:var(--bg-card);border:1.5px solid var(--border-mid);
+  color:var(--text2);cursor:pointer;font-family:inherit;
+}
+#demo-toggle.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ── TABS ── */
+#tab-bar{
+  position:fixed;top:56px;left:0;right:0;height:52px;
+  background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 12px;gap:8px;
+  overflow-x:auto;scrollbar-width:none;z-index:199;
+}
 #tab-bar::-webkit-scrollbar{display:none;}
-.tab-btn{padding:12px 18px;border:none;background:none;color:var(--text3);font-size:0.88em;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:inherit;transition:color .2s,border-color .2s;}
-.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-btn{
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  padding:7px 16px;font-family:inherit;font-size:0.83em;font-weight:600;
+  color:var(--text2);cursor:pointer;border:none;
+  background:var(--bg-card);border-radius:999px;
+  transition:all .18s;flex-shrink:0;
+}
+.tab-btn.active{background:var(--accent);color:#fff;}
+
+/* ── RANGE BAR ── */
+#range-bar{
+  display:flex;gap:8px;padding:16px 16px 8px;overflow-x:auto;scrollbar-width:none;
+}
+#range-bar::-webkit-scrollbar{display:none;}
+.range-btn{
+  padding:6px 16px;border-radius:999px;font-size:0.82em;font-weight:600;
+  border:1.5px solid var(--border-mid);background:none;color:var(--text2);
+  cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .18s;flex-shrink:0;
+}
+.range-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ── DEMO BANNER ── */
+#demo-banner{
+  background:#fffbf0;border:1.5px solid rgba(201,168,76,.4);
+  border-radius:14px;margin:8px 16px;padding:12px 16px;
+  display:none;align-items:center;gap:10px;font-size:0.84em;
+}
+#demo-banner.show{display:flex;}
+#demo-banner i{color:var(--gold);font-size:1.1em;flex-shrink:0;}
+#demo-banner strong{color:var(--text);}
+#demo-banner span{color:var(--text3);}
+
+/* ── MAIN ── */
+main{padding:0 16px 24px;}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.kpi-card{
+  background:var(--bg-card);border-radius:16px;padding:16px 14px;
+}
+.kpi-icon-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.kpi-icon-el{width:32px;height:32px;border-radius:10px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.85em;}
+.kpi-label{font-size:0.72em;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;}
+.kpi-value{font-size:1.9em;font-weight:800;color:var(--text);letter-spacing:-0.04em;line-height:1;margin:4px 0 2px;}
+.kpi-sub{font-size:0.72em;color:var(--text3);}
+.kpi-gold .kpi-icon-el{background:var(--gold);}
+.kpi-gold .kpi-value{color:var(--gold);}
 
 /* TREND BADGE */
-.trend-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72em;font-weight:700;padding:3px 8px;border-radius:20px;margin-left:6px;}
-.trend-up  {background:rgba(46,139,87,.15);color:#4ade80;}
-.trend-down{background:rgba(192,57,43,.15);color:#f87171;}
-.trend-flat{background:rgba(100,100,100,.12);color:#888;}
+.trend{display:inline-flex;align-items:center;gap:3px;font-size:0.7em;font-weight:700;
+  padding:2px 7px;border-radius:20px;margin-top:3px;}
+.trend-up  {background:rgba(45,106,79,.1);color:var(--green);}
+.trend-down{background:rgba(192,57,43,.1);color:var(--red);}
+.trend-flat{background:rgba(0,0,0,.06);color:var(--text3);}
 
-/* SLOW MOVERS */
-.slow-tag{background:rgba(231,76,60,.1);color:#e74c3c;font-size:0.7em;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
-.ok-tag  {background:rgba(39,174,96,.1);color:#4ade80;font-size:0.7em;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
+/* ── SECTION CARD ── */
+.s-card{background:var(--bg-card);border-radius:16px;padding:18px 14px;margin-bottom:12px;}
+.s-title{font-size:0.78em;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.s-title i{color:var(--accent);}
 
-/* DATE RANGE */
-#range-bar{padding:16px 20px 0;display:flex;gap:8px;flex-wrap:wrap;}
-.range-btn{padding:6px 14px;border:1px solid var(--border);background:none;color:var(--text2);font-size:0.8em;font-weight:600;border-radius:20px;cursor:pointer;font-family:inherit;transition:all .2s;}
-.range-btn.active{background:var(--gold);color:#000;border-color:var(--gold);}
-
-/* MAIN */
-main{padding:20px;}
-
-/* KPI CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;}
-@media(min-width:700px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 16px;}
-.kpi-label{font-size:0.75em;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
-.kpi-value{font-size:2em;font-weight:800;color:#fff;letter-spacing:-0.04em;line-height:1;}
-.kpi-sub{font-size:0.78em;color:var(--text3);margin-top:4px;}
-.kpi-icon{float:right;color:var(--gold);font-size:1.2em;opacity:.6;}
-
-/* CHARTS */
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
-.chart-title{font-size:0.85em;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;}
+/* ── CHARTS ── */
 .chart-wrap{position:relative;width:100%;}
 
-/* TABLE */
-.data-table{width:100%;border-collapse:collapse;font-size:0.88em;}
-.data-table th{text-align:left;padding:8px 12px;color:var(--text3);font-size:0.78em;font-weight:600;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);}
-.data-table td{padding:10px 12px;border-bottom:1px solid #151515;color:var(--text);}
-.data-table tr:last-child td{border-bottom:none;}
-.data-table tr:hover td{background:rgba(255,255,255,0.02);}
-.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:0.78em;font-weight:700;background:#1a1a1a;color:var(--text3);}
-.rank-1{background:rgba(201,168,76,.15);color:var(--gold);}
-.rank-2{background:rgba(192,192,192,.12);color:#aaa;}
-.rank-3{background:rgba(176,132,80,.12);color:#b08450;}
-.qty-bar{display:inline-block;height:6px;border-radius:3px;background:var(--gold);opacity:.6;vertical-align:middle;margin-right:6px;}
-.tag-zero{display:inline-block;background:rgba(192,57,43,.15);color:#e74c3c;font-size:0.72em;font-weight:600;padding:2px 8px;border-radius:10px;}
+/* ── DATA TABLE ── */
+.dt{width:100%;border-collapse:collapse;font-size:0.86em;}
+.dt th{text-align:left;padding:6px 8px;color:var(--text3);font-size:0.72em;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border-mid);}
+.dt td{padding:10px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+.dt tr:last-child td{border-bottom:none;}
+.rank{display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:7px;font-size:0.75em;font-weight:700;
+  background:var(--bg-card2);color:var(--text3);}
+.r1{background:rgba(201,168,76,.18);color:#8a6e28;}
+.r2{background:rgba(150,150,150,.15);color:#777;}
+.r3{background:rgba(176,132,80,.12);color:#8a6040;}
+.qty-bar{display:inline-block;height:5px;border-radius:3px;background:var(--accent);opacity:.25;
+  vertical-align:middle;margin-right:5px;}
+.tag-slow{background:rgba(192,57,43,.1);color:var(--red);font-size:0.7em;font-weight:700;
+  padding:2px 7px;border-radius:10px;}
+.tag-crit{background:rgba(192,57,43,.2);color:var(--red);font-size:0.7em;font-weight:700;
+  padding:2px 7px;border-radius:10px;}
 
-/* SECTION */
+/* ── CONFRONTO ── */
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px;}
+.cmp-side{text-align:center;padding:12px 8px;}
+.cmp-side:first-child{border-right:1px solid var(--border);}
+.cmp-label{font-size:0.72em;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:6px;}
+.cmp-num{font-size:2.4em;font-weight:800;letter-spacing:-0.04em;line-height:1;}
+.cmp-sub{font-size:0.72em;color:var(--text3);margin-top:2px;}
+.cmp-footer{border-top:1px solid var(--border);padding-top:12px;text-align:center;}
+
+/* ── SECTION VISIBILITY ── */
 .section{display:none;}
 .section.active{display:block;}
 
-/* EMPTY */
-.empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
-.empty-state i{font-size:2.5em;margin-bottom:12px;display:block;}
-
-/* LOADING */
-#loading{text-align:center;padding:60px 20px;color:var(--text3);}
-#loading i{animation:spin 1s linear infinite;display:inline-block;margin-bottom:12px;font-size:2em;}
+/* ── LOADING / EMPTY ── */
+#loading{text-align:center;padding:64px 20px;color:var(--text3);}
+#loading i{font-size:2em;margin-bottom:12px;display:block;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-@media(max-width:480px){
-  .kpi-value{font-size:1.6em;}
-  .chart-card{padding:14px;}
-  main{padding:12px;}
-}
+.empty-msg{text-align:center;padding:28px 16px;color:var(--text3);font-size:0.88em;}
 </style>
 </head>
 <body>
@@ -113,29 +188,29 @@ main{padding:20px;}
   <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
   <div id="pw-box">
     <h2>Area Proprietario</h2>
-    <p>Accesso riservato. Inserisci la password per continuare.</p>
+    <p>Inserisci la password per accedere alle analisi.</p>
     <input id="pw-input" type="password" placeholder="Password" autocomplete="off">
     <p id="pw-error">Password errata</p>
     <button id="pw-btn">Accedi</button>
   </div>
 </div>
 
-<!-- APP (nascosta fino a login) -->
+<!-- APP -->
 <div id="app" style="display:none;">
 
 <header>
-  <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun" style="filter:brightness(0) invert(1);">
-  <span class="h-title">Proprietario</span>
+  <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun">
   <div class="h-right">
-    <span id="last-update"></span>
+    <div id="live-dot" title="Aggiornamento real-time"></div>
+    <button id="demo-toggle" onclick="toggleDemo()">Demo</button>
   </div>
 </header>
 
 <div id="tab-bar">
-  <button class="tab-btn active" data-tab="oggi"><i class="fas fa-chart-line" style="margin-right:6px;"></i>Oggi</button>
-  <button class="tab-btn" data-tab="piatti"><i class="fas fa-utensils" style="margin-right:6px;"></i>Piatti</button>
-  <button class="tab-btn" data-tab="tavoli"><i class="fas fa-chair" style="margin-right:6px;"></i>Tavoli</button>
-  <button class="tab-btn" data-tab="analisi"><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Analisi</button>
+  <button class="tab-btn active" data-tab="oggi">Oggi</button>
+  <button class="tab-btn" data-tab="piatti">Piatti</button>
+  <button class="tab-btn" data-tab="tavoli">Tavoli</button>
+  <button class="tab-btn" data-tab="analisi">Analisi</button>
 </div>
 
 <div id="range-bar">
@@ -145,7 +220,12 @@ main{padding:20px;}
   <button class="range-btn" data-days="-1">Tutto</button>
 </div>
 
-<div id="loading"><i class="fas fa-circle-notch"></i><p>Caricamento dati...</p></div>
+<div id="demo-banner">
+  <i class="fas fa-flask"></i>
+  <div><strong>Modalità demo</strong><br><span>Dati simulati — premi Demo per tornare ai dati reali</span></div>
+</div>
+
+<div id="loading"><i class="fas fa-circle-notch"></i><p>Caricamento...</p></div>
 
 <main id="main-content" style="display:none;">
 
@@ -153,37 +233,57 @@ main{padding:20px;}
   <div class="section active" id="sec-oggi">
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-paper-plane kpi-icon"></i>Ordini</div>
+        <div class="kpi-icon-row">
+          <span class="kpi-label">Ordini</span>
+          <div class="kpi-icon-el"><i class="fas fa-paper-plane"></i></div>
+        </div>
         <div class="kpi-value" id="k-ordini">—</div>
-        <div class="kpi-sub" id="k-ordini-trend"></div>
+        <div id="k-ordini-trend"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-layer-group kpi-icon"></i>Piatti/Ordine</div>
+        <div class="kpi-icon-row">
+          <span class="kpi-label">Portate/Ord.</span>
+          <div class="kpi-icon-el" style="background:#2d6a4f;"><i class="fas fa-layer-group"></i></div>
+        </div>
         <div class="kpi-value" id="k-avg">—</div>
-        <div class="kpi-sub">portate medie per ordine</div>
+        <div class="kpi-sub">portate medie</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-trophy kpi-icon"></i>Piatto top</div>
-        <div class="kpi-value" style="font-size:1.1em;line-height:1.2;" id="k-top">—</div>
+      <div class="kpi-card kpi-gold" style="grid-column:1/-1;">
+        <div class="kpi-icon-row">
+          <span class="kpi-label">Piatto più ordinato</span>
+          <div class="kpi-icon-el"><i class="fas fa-trophy"></i></div>
+        </div>
+        <div class="kpi-value" style="font-size:1.2em;line-height:1.3;" id="k-top">—</div>
         <div class="kpi-sub" id="k-top-qty"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-clock kpi-icon"></i>Ora di punta</div>
+        <div class="kpi-icon-row">
+          <span class="kpi-label">Ora di punta</span>
+          <div class="kpi-icon-el" style="background:#c9a84c;"><i class="fas fa-fire"></i></div>
+        </div>
         <div class="kpi-value" id="k-ora">—</div>
         <div class="kpi-sub" id="k-ora-sub"></div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-row">
+          <span class="kpi-label">Tavolo top</span>
+          <div class="kpi-icon-el" style="background:#2563eb;"><i class="fas fa-chair"></i></div>
+        </div>
+        <div class="kpi-value" id="k-tab-top">—</div>
+        <div class="kpi-sub" id="k-tab-top-sub"></div>
+      </div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-title">Ordini per ora del giorno</div>
-      <div class="chart-wrap" style="height:200px;">
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-chart-bar"></i>Ordini per ora</div>
+      <div class="chart-wrap" style="height:180px;">
         <canvas id="chart-hourly"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-title">Top 10 piatti — periodo selezionato</div>
-      <div class="chart-wrap" style="height:280px;">
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-ranking-star"></i>Top 10 piatti</div>
+      <div class="chart-wrap" style="height:260px;">
         <canvas id="chart-top10"></canvas>
       </div>
     </div>
@@ -191,21 +291,21 @@ main{padding:20px;}
 
   <!-- ── PIATTI ── -->
   <div class="section" id="sec-piatti">
-    <div class="chart-card">
-      <div class="chart-title">Classifica piatti ordinati</div>
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-list-ol"></i>Classifica completa</div>
       <div style="overflow-x:auto;">
-        <table class="data-table" id="dish-table">
-          <thead><tr><th>#</th><th>Piatto</th><th>Categoria</th><th>Quantità</th><th>% totale</th></tr></thead>
+        <table class="dt">
+          <thead><tr><th>#</th><th>Piatto</th><th>Pz</th><th>%</th></tr></thead>
           <tbody id="dish-tbody"></tbody>
         </table>
       </div>
     </div>
-    <div class="chart-card" id="slow-card">
-      <div class="chart-title" style="color:#e74c3c;">⚠ Piatti poco ordinati — candidati da rivalutare</div>
-      <p style="font-size:0.8em;color:var(--text3);margin-bottom:16px;">Piatti ordinati poche volte nel periodo selezionato. Considera se promuoverli o rimuoverli dal menu.</p>
+    <div class="s-card">
+      <div class="s-title" style="color:#c0392b;"><i class="fas fa-triangle-exclamation"></i>Piatti poco ordinati</div>
+      <p style="font-size:0.8em;color:var(--text3);margin-bottom:14px;line-height:1.5;">Piatti ordinati meno del 5% del piatto top — valuta se promuoverli o toglierli.</p>
       <div style="overflow-x:auto;">
-        <table class="data-table">
-          <thead><tr><th>Piatto</th><th>Categoria</th><th>Ordinato</th><th>Stato</th></tr></thead>
+        <table class="dt">
+          <thead><tr><th>Piatto</th><th>Categoria</th><th>Pz</th><th></th></tr></thead>
           <tbody id="slow-tbody"></tbody>
         </table>
       </div>
@@ -214,39 +314,43 @@ main{padding:20px;}
 
   <!-- ── TAVOLI ── -->
   <div class="section" id="sec-tavoli">
-    <div class="kpi-grid" style="margin-bottom:20px;">
+    <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-chair kpi-icon"></i>Tavolo top</div>
+        <div class="kpi-icon-row"><span class="kpi-label">Tavolo top</span>
+          <div class="kpi-icon-el" style="background:#2563eb;"><i class="fas fa-fire"></i></div></div>
         <div class="kpi-value" id="kt-top">—</div>
         <div class="kpi-sub" id="kt-top-sub"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-calculator kpi-icon"></i>Media ordini/tavolo</div>
+        <div class="kpi-icon-row"><span class="kpi-label">Media ord./tavolo</span>
+          <div class="kpi-icon-el"><i class="fas fa-calculator"></i></div></div>
         <div class="kpi-value" id="kt-avg">—</div>
+        <div class="kpi-sub">ordini nel periodo</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-row"><span class="kpi-label">Portate/tavolo</span>
+          <div class="kpi-icon-el" style="background:#2d6a4f;"><i class="fas fa-layer-group"></i></div></div>
+        <div class="kpi-value" id="kt-portate">—</div>
+        <div class="kpi-sub">media portate</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-row"><span class="kpi-label">Tavoli attivi</span>
+          <div class="kpi-icon-el"><i class="fas fa-hashtag"></i></div></div>
+        <div class="kpi-value" id="kt-count">—</div>
         <div class="kpi-sub">nel periodo</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-fire kpi-icon"></i>Portate/tavolo</div>
-        <div class="kpi-value" id="kt-portate">—</div>
-        <div class="kpi-sub">media portate per tavolo</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-hashtag kpi-icon"></i>Tavoli attivi</div>
-        <div class="kpi-value" id="kt-count">—</div>
-        <div class="kpi-sub">tavoli che hanno ordinato</div>
-      </div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Ordini per numero tavolo</div>
-      <div class="chart-wrap" style="height:260px;">
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-chart-bar"></i>Ordini per tavolo</div>
+      <div class="chart-wrap" style="height:220px;">
         <canvas id="chart-tables"></canvas>
       </div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Classifica tavoli</div>
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-ranking-star"></i>Classifica tavoli</div>
       <div style="overflow-x:auto;">
-        <table class="data-table">
-          <thead><tr><th>#</th><th>Tavolo</th><th>Ordini</th><th>Portate totali</th><th>Portate/ordine</th></tr></thead>
+        <table class="dt">
+          <thead><tr><th>#</th><th>Tavolo</th><th>Ordini</th><th>Portate</th><th>P/Ord</th></tr></thead>
           <tbody id="table-tbody"></tbody>
         </table>
       </div>
@@ -255,44 +359,38 @@ main{padding:20px;}
 
   <!-- ── ANALISI ── -->
   <div class="section" id="sec-analisi">
-    <!-- Confronto settimana -->
-    <div class="chart-card" style="margin-bottom:16px;">
-      <div class="chart-title">Confronto — questa settimana vs settimana scorsa</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;">
-        <div style="text-align:center;">
-          <div style="font-size:0.75em;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Questa settimana</div>
-          <div style="font-size:2.4em;font-weight:800;color:#fff;" id="cmp-this">—</div>
-          <div style="font-size:0.78em;color:var(--text3);">ordini</div>
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-arrow-trend-up"></i>Questa settimana vs settimana scorsa</div>
+      <div class="cmp-grid">
+        <div class="cmp-side">
+          <div class="cmp-label">Questa settimana</div>
+          <div class="cmp-num" id="cmp-this">—</div>
+          <div class="cmp-sub">ordini</div>
         </div>
-        <div style="text-align:center;">
-          <div style="font-size:0.75em;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Settimana scorsa</div>
-          <div style="font-size:2.4em;font-weight:800;color:#555;" id="cmp-last">—</div>
-          <div style="font-size:0.78em;color:var(--text3);">ordini</div>
+        <div class="cmp-side">
+          <div class="cmp-label">Settimana scorsa</div>
+          <div class="cmp-num" style="color:var(--text3);" id="cmp-last">—</div>
+          <div class="cmp-sub">ordini</div>
         </div>
       </div>
-      <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-        <span id="cmp-badge" style="font-size:0.9em;font-weight:700;color:var(--text3);">—</span>
-      </div>
+      <div class="cmp-footer"><span id="cmp-badge"></span></div>
     </div>
-
-    <div class="chart-card">
-      <div class="chart-title">Ordini per giorno (ultimi 30 gg)</div>
-      <div class="chart-wrap" style="height:220px;">
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-calendar-days"></i>Ultimi 30 giorni</div>
+      <div class="chart-wrap" style="height:200px;">
         <canvas id="chart-daily"></canvas>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="chart-card">
-        <div class="chart-title">Giorno della settimana</div>
-        <div class="chart-wrap" style="height:200px;">
-          <canvas id="chart-weekday"></canvas>
-        </div>
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-calendar-week"></i>Per giorno della settimana</div>
+      <div class="chart-wrap" style="height:180px;">
+        <canvas id="chart-weekday"></canvas>
       </div>
-      <div class="chart-card">
-        <div class="chart-title">Categorie</div>
-        <div class="chart-wrap" style="height:200px;">
-          <canvas id="chart-cat"></canvas>
-        </div>
+    </div>
+    <div class="s-card">
+      <div class="s-title"><i class="fas fa-chart-pie"></i>Distribuzione categorie</div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="chart-cat"></canvas>
       </div>
     </div>
   </div>
@@ -301,14 +399,16 @@ main{padding:20px;}
 </div><!-- /app -->
 
 <script>
-const OWNER_PW   = 'JUN321@';
-const SB_URL     = "https://jnzxhokxldzymnapcchd.supabase.co";
-const SB_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
-const sb         = supabase.createClient(SB_URL, SB_ANON);
+const OWNER_PW = 'JUN321@';
+const SB_URL   = "https://jnzxhokxldzymnapcchd.supabase.co";
+const SB_ANON  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
+const sb = supabase.createClient(SB_URL, SB_ANON);
 
-let allOrders = [];   // ordini grezzi da Supabase
-let activeDays = 0;   // 0=oggi, 7=settimana, 30=mese, -1=tutto
-let charts     = {};  // istanze Chart.js
+let realOrders  = [];
+let demoOrders  = [];
+let demoMode    = false;
+let activeDays  = 0;
+let charts      = {};
 
 // ── PASSWORD GATE ──────────────────────────────────────────────────────────
 function checkPw() {
@@ -317,10 +417,11 @@ function checkPw() {
     document.getElementById('app').style.display = 'block';
     loadData();
   } else {
-    document.getElementById('pw-error').style.display = 'block';
+    const err = document.getElementById('pw-error');
+    err.style.display = 'block';
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-input').focus();
-    setTimeout(() => { document.getElementById('pw-error').style.display = 'none'; }, 2000);
+    setTimeout(() => { err.style.display = 'none'; }, 2000);
   }
 }
 document.getElementById('pw-btn').addEventListener('click', checkPw);
@@ -332,8 +433,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
-    const sec = document.getElementById('sec-' + btn.dataset.tab);
-    if (sec) sec.classList.add('active');
+    const s = document.getElementById('sec-' + btn.dataset.tab);
+    if (s) s.classList.add('active');
   });
 });
 
@@ -347,154 +448,238 @@ document.querySelectorAll('.range-btn').forEach(btn => {
   });
 });
 
-// ── SUPABASE FETCH ────────────────────────────────────────────────────────
+// ── LOAD FROM SUPABASE ────────────────────────────────────────────────────
 async function loadData() {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('main-content').style.display = 'none';
 
-  const { data, error } = await sb
-    .from('orders')
-    .select('*')
-    .is('waiter_request', null)
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    document.getElementById('loading').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#c0392b;animation:none;"></i><p style="color:#888;">Errore caricamento dati</p>';
-    return;
-  }
-
-  allOrders = (data || []).map(o => {
-    let items = [];
-    try { items = JSON.parse(o.order_details || '[]'); } catch {}
-    return { ...o, items };
-  });
+  const { data, error } = await sb.from('orders').select('*')
+    .is('waiter_request', null).order('created_at', { ascending: true });
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('main-content').style.display = 'block';
-  document.getElementById('last-update').textContent = 'Aggiornato ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+  if (!error) {
+    realOrders = (data || []).map(parseOrder);
+  }
+  // se nessun ordine reale, carica demo automaticamente
+  if (realOrders.length === 0) {
+    demoMode = true;
+    document.getElementById('demo-toggle').classList.add('on');
+    document.getElementById('demo-banner').classList.add('show');
+  }
   render();
 }
 
-// ── FILTRA PER PERIODO ────────────────────────────────────────────────────
-function filteredOrders() {
-  if (activeDays === -1) return allOrders;
-  const cutoff = new Date();
-  if (activeDays === 0) {
-    cutoff.setHours(0, 0, 0, 0);
-  } else {
-    cutoff.setDate(cutoff.getDate() - activeDays);
-    cutoff.setHours(0, 0, 0, 0);
-  }
-  return allOrders.filter(o => new Date(o.created_at) >= cutoff);
+function parseOrder(o) {
+  let items = [];
+  try { items = JSON.parse(o.order_details || '[]'); } catch {}
+  return { ...o, items };
 }
 
-// ── AGGREGATE DISHES ─────────────────────────────────────────────────────
-function aggregateDishes(orders) {
-  const map = {};
-  orders.forEach(o => {
-    (o.items || []).forEach(item => {
-      const k = item.name || `#${item.code}`;
-      if (!map[k]) map[k] = { name: k, cat: item.cat || 'Altro', qty: 0 };
-      map[k].qty += (item.qty || 1);
-    });
-  });
-  return Object.values(map).sort((a, b) => b.qty - a.qty);
+// ── DEMO TOGGLE ───────────────────────────────────────────────────────────
+function toggleDemo() {
+  demoMode = !demoMode;
+  document.getElementById('demo-toggle').classList.toggle('on', demoMode);
+  document.getElementById('demo-banner').classList.toggle('show', demoMode);
+  render();
 }
 
-// ── WEEK COMPARE ─────────────────────────────────────────────────────────
-function weekCompare() {
+// ── DEMO DATA ─────────────────────────────────────────────────────────────
+const DEMO_DISHES = [
+  { n:'JUN Selection (max1)',      c:'001', cat:'JUN Selection',    w:12 },
+  { n:'JUN Uramaki Selection',     c:'010', cat:'JUN Uramaki',      w:9  },
+  { n:'Nigiri Salmone',            c:'101', cat:'Nigiri & Box',     w:11 },
+  { n:'Nigiri Tonno',              c:'102', cat:'Nigiri & Box',     w:7  },
+  { n:'Nigiri Gamberetti',         c:'103', cat:'Nigiri & Box',     w:5  },
+  { n:'Tacos JUN Selection',       c:'201', cat:'Tacos',            w:10 },
+  { n:'Tacos Salmone Avocado',     c:'202', cat:'Tacos',            w:6  },
+  { n:'Uramaki Spicy Crunch',      c:'301', cat:'Uramaki',          w:10 },
+  { n:'Uramaki Gamberi Tempura',   c:'302', cat:'Uramaki',          w:8  },
+  { n:'Uramaki California',        c:'303', cat:'Uramaki',          w:6  },
+  { n:'Sashimi Salmone',           c:'150', cat:'Sashimi',          w:8  },
+  { n:'Sashimi Tonno',             c:'151', cat:'Sashimi',          w:5  },
+  { n:'Gyoza Pollo',               c:'401', cat:'Dim Sum',          w:6  },
+  { n:'Dim Sum Gamberetti',        c:'402', cat:'Dim Sum',          w:4  },
+  { n:'Hosomaki Salmone',          c:'801', cat:'Hosomaki',         w:5  },
+  { n:'Hosomaki Tonno',            c:'802', cat:'Hosomaki',         w:4  },
+  { n:'Tataki Salmone',            c:'601', cat:'Tataki',           w:5  },
+  { n:'Tartare Salmone',           c:'901', cat:'Tartare',          w:3  },
+  { n:'Poke Salmone',              c:'701', cat:'Poke',             w:3  },
+  { n:'Edamame',                   c:'404', cat:'Antipasti',        w:2  },
+  { n:'Miso Soup',                 c:'502', cat:'Zuppe',            w:2  },
+  { n:'Pollo Teriyaki',            c:'1001',cat:'Secondi Pollo',    w:1  },
+  { n:'Gyoza Vegetariani',         c:'403', cat:'Dim Sum',          w:1  },
+];
+const TOTAL_W = DEMO_DISHES.reduce((s, d) => s + d.w, 0);
+
+function rng(seed) {
+  let s = seed;
+  return function() { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+}
+
+function generateDemoOrders() {
+  if (demoOrders.length) return demoOrders;
+  const r = rng(42);
+  const TABLES = [3,3,3,5,5,7,7,7,12,12,14,14,1,2,4,6,8,9,10,11,15,16,17,18,19,20];
   const now = new Date();
-  const thisStart = new Date(now); thisStart.setDate(now.getDate() - 7); thisStart.setHours(0,0,0,0);
-  const lastStart = new Date(now); lastStart.setDate(now.getDate() - 14); lastStart.setHours(0,0,0,0);
-  const thisW = allOrders.filter(o => !o.waiter_request && new Date(o.created_at) >= thisStart).length;
-  const lastW = allOrders.filter(o => { const t = new Date(o.created_at); return !o.waiter_request && t >= lastStart && t < thisStart; }).length;
-  const delta = lastW ? ((thisW - lastW) / lastW * 100) : null;
-  return { thisW, lastW, delta };
+  const orders = [];
+  let id = 0;
+
+  for (let dayBack = 29; dayBack >= 0; dayBack--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - dayBack);
+    const dow = date.getDay();
+    const isWeekend = (dow === 5 || dow === 6);
+    const isLunchDay = (dow === 0 || dow === 6);
+
+    // cena
+    const dinnerCount = Math.round(isWeekend ? 14 + r() * 6 : 7 + r() * 5);
+    for (let i = 0; i < dinnerCount; i++) {
+      const hour = 19 + Math.floor(r() * 3.5);
+      const min  = Math.floor(r() * 60);
+      const t = new Date(date); t.setHours(hour, min, 0, 0);
+      const table = TABLES[Math.floor(r() * TABLES.length)];
+      const nItems = 2 + Math.floor(r() * 4);
+      const items = [];
+      for (let j = 0; j < nItems; j++) {
+        let roll = r() * TOTAL_W, acc = 0, dish = DEMO_DISHES[0];
+        for (const d of DEMO_DISHES) { acc += d.w; if (roll <= acc) { dish = d; break; } }
+        const existing = items.find(x => x.code === dish.c);
+        if (existing) { existing.qty++; } else { items.push({ qty: 1 + Math.floor(r()*2), name: dish.n, code: dish.c, cat: dish.cat }); }
+      }
+      orders.push({ order_id: `demo-${id++}`, table_number: table, status:'served', waiter_request: null,
+        created_at: t.toISOString(), items });
+    }
+
+    // pranzo weekend
+    if (isLunchDay) {
+      const lunchCount = 4 + Math.floor(r() * 5);
+      for (let i = 0; i < lunchCount; i++) {
+        const hour = 12 + Math.floor(r() * 2); const min = Math.floor(r() * 60);
+        const t = new Date(date); t.setHours(hour, min, 0, 0);
+        const table = TABLES[Math.floor(r() * TABLES.length)];
+        const nItems = 2 + Math.floor(r() * 3);
+        const items = [];
+        for (let j = 0; j < nItems; j++) {
+          let roll = r() * TOTAL_W, acc = 0, dish = DEMO_DISHES[0];
+          for (const d of DEMO_DISHES) { acc += d.w; if (roll <= acc) { dish = d; break; } }
+          const existing = items.find(x => x.code === dish.c);
+          if (existing) { existing.qty++; } else { items.push({ qty: 1, name: dish.n, code: dish.c, cat: dish.cat }); }
+        }
+        orders.push({ order_id: `demo-${id++}`, table_number: table, status:'served', waiter_request: null,
+          created_at: t.toISOString(), items });
+      }
+    }
+  }
+  demoOrders = orders;
+  return orders;
 }
 
-// ── AGGREGATE TABLES ──────────────────────────────────────────────────────
-function aggregateTables(orders) {
-  const map = {};
+// ── FILTER ────────────────────────────────────────────────────────────────
+function allOrders() { return demoMode ? generateDemoOrders() : realOrders; }
+
+function filteredOrders() {
+  const orders = allOrders();
+  if (activeDays === -1) return orders;
+  const cutoff = new Date();
+  if (activeDays === 0) cutoff.setHours(0,0,0,0);
+  else { cutoff.setDate(cutoff.getDate() - activeDays); cutoff.setHours(0,0,0,0); }
+  return orders.filter(o => new Date(o.created_at) >= cutoff);
+}
+
+// ── AGGREGATE ─────────────────────────────────────────────────────────────
+function aggDishes(orders) {
+  const m = {};
+  orders.forEach(o => (o.items||[]).forEach(i => {
+    const k = i.name||`#${i.code}`;
+    if (!m[k]) m[k] = { name:k, cat:i.cat||'Altro', qty:0 };
+    m[k].qty += (i.qty||1);
+  }));
+  return Object.values(m).sort((a,b) => b.qty - a.qty);
+}
+
+function aggTables(orders) {
+  const m = {};
   orders.forEach(o => {
-    const t = o.table_number || '?';
-    if (!map[t]) map[t] = { table: t, orders: 0, items: 0 };
-    map[t].orders++;
-    map[t].items += (o.items || []).reduce((s, i) => s + (i.qty || 1), 0);
+    const t = o.table_number||'?';
+    if (!m[t]) m[t] = { table:t, orders:0, items:0 };
+    m[t].orders++;
+    m[t].items += (o.items||[]).reduce((s,i) => s+(i.qty||1), 0);
   });
-  return Object.values(map).sort((a, b) => b.orders - a.orders);
+  return Object.values(m).sort((a,b) => b.orders - a.orders);
 }
 
-// ── KPI ───────────────────────────────────────────────────────────────────
-function computeKPIs(orders) {
-  const totalOrders = orders.length;
-  const dishes = aggregateDishes(orders);
-  const totalItems = dishes.reduce((s, d) => s + d.qty, 0);
-  const avgPerOrder = totalOrders ? (totalItems / totalOrders).toFixed(1) : '—';
-
-  // orario di punta
-  const byHour = Array(24).fill(0);
-  orders.forEach(o => { byHour[new Date(o.created_at).getHours()]++; });
-  const peakHour = byHour.indexOf(Math.max(...byHour));
-
-  return { totalOrders, dishes, totalItems, avgPerOrder, byHour, peakHour };
+function weekCompare() {
+  const orders = allOrders().filter(o => !o.waiter_request);
+  const now = new Date();
+  const t0 = new Date(now); t0.setDate(now.getDate()-7);  t0.setHours(0,0,0,0);
+  const t1 = new Date(now); t1.setDate(now.getDate()-14); t1.setHours(0,0,0,0);
+  const thisW = orders.filter(o => new Date(o.created_at) >= t0).length;
+  const lastW = orders.filter(o => { const d=new Date(o.created_at); return d>=t1&&d<t0; }).length;
+  const delta = lastW ? ((thisW-lastW)/lastW*100) : null;
+  return { thisW, lastW, delta };
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render() {
   const orders = filteredOrders();
-  const { totalOrders, dishes, totalItems, avgPerOrder, byHour, peakHour } = computeKPIs(orders);
-  const tables = aggregateTables(orders);
+  const dishes = aggDishes(orders);
+  const tables = aggTables(orders);
+  const totalItems = dishes.reduce((s,d) => s+d.qty, 0);
+  const avgPer = orders.length ? (totalItems/orders.length).toFixed(1) : '—';
+  const byHour = Array(24).fill(0);
+  orders.forEach(o => byHour[new Date(o.created_at).getHours()]++);
+  const peakH = byHour.indexOf(Math.max(...byHour));
   const { thisW, lastW, delta } = weekCompare();
 
-  // KPI — oggi
-  document.getElementById('k-ordini').textContent  = totalOrders;
-  document.getElementById('k-avg').textContent     = avgPerOrder;
-  document.getElementById('k-top').textContent     = dishes[0] ? dishes[0].name : '—';
+  // KPI oggi
+  document.getElementById('k-ordini').textContent = orders.length;
+  document.getElementById('k-avg').textContent     = avgPer;
+  document.getElementById('k-top').textContent     = dishes[0]?.name || '—';
   document.getElementById('k-top-qty').textContent = dishes[0] ? `${dishes[0].qty} porzioni` : '';
-  document.getElementById('k-ora').textContent     = totalOrders ? `${peakHour}:00` : '—';
-  document.getElementById('k-ora-sub').textContent = totalOrders ? `${byHour[peakHour]} ordini` : '';
+  document.getElementById('k-ora').textContent     = orders.length ? `${peakH}:00` : '—';
+  document.getElementById('k-ora-sub').textContent = orders.length ? `${byHour[peakH]} ordini` : '';
 
-  // trend sotto "Ordini"
   if (delta !== null) {
-    const sign = delta >= 0 ? '+' : '';
-    const cls  = delta >= 0 ? 'trend-up' : 'trend-down';
-    const icon = delta >= 0 ? '▲' : '▼';
+    const cls = delta >= 0 ? 'trend-up' : 'trend-down';
+    const ico = delta >= 0 ? '▲' : '▼';
     document.getElementById('k-ordini-trend').innerHTML =
-      `<span class="trend-badge ${cls}">${icon} ${sign}${Math.round(delta)}% vs 7gg fa</span>`;
+      `<span class="trend ${cls}">${ico} ${delta>=0?'+':''}${Math.round(delta)}% vs 7gg fa</span>`;
   } else {
-    document.getElementById('k-ordini-trend').textContent = 'ordini nel periodo';
+    document.getElementById('k-ordini-trend').textContent = 'nel periodo';
   }
 
-  // KPI — tavoli
+  // KPI tavoli
   if (tables.length) {
     const top = tables[0];
-    document.getElementById('kt-top').textContent     = `T.${top.table}`;
-    document.getElementById('kt-top-sub').textContent = `${top.orders} ordini, ${top.items} portate`;
-    const avgOrd = (orders.length / tables.length).toFixed(1);
-    const avgPor = tables.reduce((s,t)=>s+(t.items/t.orders),0) / tables.length;
-    document.getElementById('kt-avg').textContent     = avgOrd;
-    document.getElementById('kt-portate').textContent = avgPor.toFixed(1);
-    document.getElementById('kt-count').textContent   = tables.length;
+    document.getElementById('k-tab-top').textContent    = `T.${top.table}`;
+    document.getElementById('k-tab-top-sub').textContent= `${top.orders} ordini`;
+    document.getElementById('kt-top').textContent       = `T.${top.table}`;
+    document.getElementById('kt-top-sub').textContent   = `${top.orders} ordini, ${top.items} portate`;
+    document.getElementById('kt-avg').textContent       = (orders.length/tables.length).toFixed(1);
+    const avgPor = tables.reduce((s,t)=>s+(t.items/t.orders),0)/tables.length;
+    document.getElementById('kt-portate').textContent   = avgPor.toFixed(1);
+    document.getElementById('kt-count').textContent     = tables.length;
   } else {
-    ['kt-top','kt-avg','kt-portate','kt-count'].forEach(id => {
-      document.getElementById(id).textContent = '—';
-    });
+    ['k-tab-top','k-tab-top-sub','kt-top','kt-top-sub','kt-avg','kt-portate','kt-count']
+      .forEach(id => document.getElementById(id).textContent = '—');
   }
 
   // Confronto settimane
   document.getElementById('cmp-this').textContent = thisW;
   document.getElementById('cmp-last').textContent = lastW;
-  const cmpBadge = document.getElementById('cmp-badge');
+  const badge = document.getElementById('cmp-badge');
   if (delta !== null) {
-    const sign = delta >= 0 ? '+' : '';
-    const cls  = delta >= 0 ? 'trend-up' : (delta < -5 ? 'trend-down' : 'trend-flat');
-    const icon = delta >= 0 ? '▲' : '▼';
-    cmpBadge.innerHTML = `<span class="trend-badge ${cls}" style="font-size:1em;padding:6px 14px;">${icon} ${sign}${Math.round(delta)}% rispetto alla settimana scorsa</span>`;
+    const cls = delta>=0?'trend-up':delta<-5?'trend-down':'trend-flat';
+    const ico = delta>=0?'▲':'▼';
+    badge.innerHTML = `<span class="trend ${cls}" style="font-size:.85em;padding:5px 12px;">
+      ${ico} ${delta>=0?'+':''}${Math.round(delta)}% rispetto alla settimana scorsa</span>`;
   } else {
-    cmpBadge.textContent = 'Dati insufficienti per il confronto';
+    badge.textContent = 'Dati insufficienti';
   }
 
-  // Charts
+  // Charts & tables
   renderHourly(byHour);
   renderTop10(dishes);
   renderDishTable(dishes, totalItems);
@@ -506,183 +691,156 @@ function render() {
   renderCat(dishes);
 }
 
-// ── CHART: ORARIO ─────────────────────────────────────────────────────────
+// ── CHARTS ────────────────────────────────────────────────────────────────
+function dOpts(extra={}) {
+  return { responsive:true, maintainAspectRatio:false, animation:{duration:300},
+    plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#fff',titleColor:'#252525',
+      bodyColor:'#666',borderColor:'rgba(0,0,0,.12)',borderWidth:1,padding:8,
+      titleFont:{family:'DM Sans',weight:'700'},bodyFont:{family:'DM Sans'}} },
+    ...extra };
+}
+function dAxis() { return { grid:{color:'rgba(0,0,0,.06)'}, border:{color:'rgba(0,0,0,.1)'} }; }
+function dTick() { return { color:'#aaa', font:{size:10,family:'DM Sans'} }; }
+
 function renderHourly(byHour) {
-  const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
   const ctx = document.getElementById('chart-hourly').getContext('2d');
   if (charts.hourly) charts.hourly.destroy();
   charts.hourly = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{ data: byHour, backgroundColor: 'rgba(201,168,76,0.5)', borderColor: '#c9a84c', borderWidth: 1, borderRadius: 4 }]
-    },
-    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis(), ticks: { ...darkTick(), maxTicksLimit: 8 } }, y: { ...darkAxis(), beginAtZero: true } } }
+    type:'bar',
+    data:{ labels:Array.from({length:24},(_,i)=>`${i}`),
+      datasets:[{data:byHour, backgroundColor:'rgba(26,26,26,.15)', borderColor:'#1a1a1a',
+        borderWidth:1, borderRadius:4, hoverBackgroundColor:'rgba(201,168,76,.5)'}] },
+    options:{ ...dOpts(), scales:{ x:{...dAxis(),ticks:{...dTick(),maxTicksLimit:12}}, y:{...dAxis(),beginAtZero:true,ticks:dTick()} } }
   });
 }
 
-// ── CHART: TOP 10 PIATTI ─────────────────────────────────────────────────
 function renderTop10(dishes) {
-  const top = dishes.slice(0, 10);
+  const top = dishes.slice(0,10);
   const ctx = document.getElementById('chart-top10').getContext('2d');
   if (charts.top10) charts.top10.destroy();
   charts.top10 = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: top.map(d => d.name.length > 22 ? d.name.slice(0, 22) + '…' : d.name),
-      datasets: [{ data: top.map(d => d.qty), backgroundColor: top.map((_, i) => i === 0 ? 'rgba(201,168,76,0.85)' : 'rgba(201,168,76,0.35)'), borderRadius: 4 }]
-    },
-    options: {
-      indexAxis: 'y',
-      ...darkOpts(),
-      plugins: { legend: { display: false } },
-      scales: { x: { ...darkAxis(), beginAtZero: true }, y: { ...darkAxis(), ticks: { ...darkTick(), font: { size: 11 } } } }
-    }
+    type:'bar',
+    data:{ labels:top.map(d=>d.name.length>20?d.name.slice(0,20)+'…':d.name),
+      datasets:[{data:top.map(d=>d.qty), indexAxis:'y',
+        backgroundColor:top.map((_,i)=>i===0?'rgba(201,168,76,.85)':'rgba(26,26,26,.14)'),
+        borderRadius:4}] },
+    options:{ indexAxis:'y',...dOpts(),
+      scales:{ x:{...dAxis(),beginAtZero:true,ticks:dTick()}, y:{...dAxis(),ticks:{...dTick(),font:{size:11,family:'DM Sans'}}} } }
   });
 }
 
-// ── TABLE: PIATTI ─────────────────────────────────────────────────────────
-function renderDishTable(dishes, totalItems) {
-  const tbody = document.getElementById('dish-tbody');
-  tbody.innerHTML = '';
-  if (!dishes.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:24px;">Nessun dato nel periodo</td></tr>'; return; }
-  dishes.forEach((d, i) => {
-    const pct = totalItems ? ((d.qty / totalItems) * 100).toFixed(1) : 0;
-    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-    const barW = totalItems ? Math.round((d.qty / dishes[0].qty) * 80) : 0;
-    tbody.innerHTML += `<tr>
-      <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
-      <td>${d.name}</td>
-      <td style="color:var(--text3);font-size:0.85em;">${d.cat || '—'}</td>
-      <td><span class="qty-bar" style="width:${barW}px;"></span>${d.qty}</td>
-      <td style="color:var(--text3);">${pct}%</td>
-    </tr>`;
-  });
-}
-
-// ── CHART: DAILY (ultimi 30 gg) ───────────────────────────────────────────
 function renderDaily(orders) {
-  const days = 30;
-  const labels = [], counts = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
-    const d2 = new Date(d); d2.setDate(d2.getDate() + 1);
-    labels.push(d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
-    counts.push(orders.filter(o => { const t = new Date(o.created_at); return t >= d && t < d2; }).length);
+  const labels=[], counts=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0);
+    const d2=new Date(d); d2.setDate(d2.getDate()+1);
+    labels.push(d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}));
+    counts.push(orders.filter(o=>{const t=new Date(o.created_at);return t>=d&&t<d2;}).length);
   }
-  const ctx = document.getElementById('chart-daily').getContext('2d');
-  if (charts.daily) charts.daily.destroy();
-  charts.daily = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets: [{ data: counts, borderColor: '#c9a84c', backgroundColor: 'rgba(201,168,76,0.08)', fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#c9a84c' }] },
-    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis(), ticks: { ...darkTick(), maxTicksLimit: 10 } }, y: { ...darkAxis(), beginAtZero: true } } }
+  const ctx=document.getElementById('chart-daily').getContext('2d');
+  if(charts.daily) charts.daily.destroy();
+  charts.daily=new Chart(ctx,{type:'line',
+    data:{labels,datasets:[{data:counts,borderColor:'#1a1a1a',backgroundColor:'rgba(26,26,26,.06)',
+      fill:true,tension:0.4,pointRadius:2,pointBackgroundColor:'#1a1a1a'}]},
+    options:{...dOpts(),scales:{x:{...dAxis(),ticks:{...dTick(),maxTicksLimit:10}},y:{...dAxis(),beginAtZero:true,ticks:dTick()}}}
   });
 }
 
-// ── CHART: WEEKDAY ────────────────────────────────────────────────────────
 function renderWeekday(orders) {
-  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-  const counts = Array(7).fill(0);
-  orders.forEach(o => { counts[new Date(o.created_at).getDay()]++; });
-  const ctx = document.getElementById('chart-weekday').getContext('2d');
-  if (charts.weekday) charts.weekday.destroy();
-  charts.weekday = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: days, datasets: [{ data: counts, backgroundColor: 'rgba(46,139,87,0.5)', borderColor: '#2e8b57', borderWidth: 1, borderRadius: 4 }] },
-    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis() }, y: { ...darkAxis(), beginAtZero: true } } }
+  const days=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  const counts=Array(7).fill(0);
+  orders.forEach(o=>counts[new Date(o.created_at).getDay()]++);
+  const ctx=document.getElementById('chart-weekday').getContext('2d');
+  if(charts.weekday) charts.weekday.destroy();
+  charts.weekday=new Chart(ctx,{type:'bar',
+    data:{labels:days,datasets:[{data:counts,backgroundColor:'rgba(45,106,79,.2)',
+      borderColor:'#2d6a4f',borderWidth:1.5,borderRadius:4}]},
+    options:{...dOpts(),scales:{x:{...dAxis(),ticks:dTick()},y:{...dAxis(),beginAtZero:true,ticks:dTick()}}}
   });
 }
 
-// ── CHART: CATEGORIE ─────────────────────────────────────────────────────
 function renderCat(dishes) {
-  const catMap = {};
-  dishes.forEach(d => {
-    const c = d.cat || 'Altro';
-    catMap[c] = (catMap[c] || 0) + d.qty;
-  });
-  const labels = Object.keys(catMap);
-  const data   = Object.values(catMap);
-  const colors = ['#c9a84c','#2e8b57','#2563eb','#9b59b6','#e67e22','#1abc9c','#e74c3c','#34495e','#f39c12','#16a085','#8e44ad','#2980b9'];
-  const ctx = document.getElementById('chart-cat').getContext('2d');
-  if (charts.cat) charts.cat.destroy();
-  charts.cat = new Chart(ctx, {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 0 }] },
-    options: { ...darkOpts(), plugins: { legend: { display: false } }, cutout: '60%' }
+  const m={};
+  dishes.forEach(d=>{const c=d.cat||'Altro'; m[c]=(m[c]||0)+d.qty;});
+  const labels=Object.keys(m), data=Object.values(m);
+  const cols=['#1a1a1a','#c9a84c','#2d6a4f','#2563eb','#9b59b6','#e67e22','#1abc9c','#e74c3c'];
+  const ctx=document.getElementById('chart-cat').getContext('2d');
+  if(charts.cat) charts.cat.destroy();
+  charts.cat=new Chart(ctx,{type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:cols.slice(0,labels.length),borderWidth:2,borderColor:'#f7f7f5'}]},
+    options:{...dOpts(),cutout:'58%',plugins:{...dOpts().plugins,legend:{display:true,position:'bottom',
+      labels:{color:'#666',font:{size:10,family:'DM Sans'},boxWidth:10,padding:8}}}}
   });
 }
 
-// ── TABLE: SLOW MOVERS ───────────────────────────────────────────────────
-function renderSlowMovers(dishes) {
-  const tbody = document.getElementById('slow-tbody');
-  if (!dishes.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#444;padding:16px;">Nessun dato</td></tr>'; return; }
-  const threshold = Math.max(2, Math.round(dishes[0].qty * 0.05)); // < 5% del piatto top
-  const slow = dishes.filter(d => d.qty <= threshold);
-  if (!slow.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#555;padding:16px;">Nessun piatto con poche ordinazioni nel periodo — ottimo!</td></tr>';
-    return;
-  }
-  tbody.innerHTML = slow.map(d => `<tr>
-    <td>${d.name}</td>
-    <td style="color:var(--text3);font-size:0.85em;">${d.cat || '—'}</td>
-    <td>${d.qty} volta${d.qty !== 1 ? 'e' : ''}</td>
-    <td>${d.qty <= 1 ? '<span class="slow-tag">Critico</span>' : '<span class="slow-tag">Scarso</span>'}</td>
-  </tr>`).join('');
-}
-
-// ── CHART: TAVOLI ─────────────────────────────────────────────────────────
 function renderTableChart(tables) {
-  const sorted = [...tables].sort((a, b) => Number(a.table) - Number(b.table));
-  const ctx = document.getElementById('chart-tables').getContext('2d');
-  if (charts.tables) charts.tables.destroy();
-  charts.tables = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: sorted.map(t => `T.${t.table}`),
-      datasets: [{ data: sorted.map(t => t.orders), backgroundColor: 'rgba(37,99,235,0.5)', borderColor: '#2563eb', borderWidth: 1, borderRadius: 4 }]
-    },
-    options: { ...darkOpts(), plugins: { legend: { display: false } }, scales: { x: { ...darkAxis() }, y: { ...darkAxis(), beginAtZero: true } } }
+  const sorted=[...tables].sort((a,b)=>Number(a.table)-Number(b.table));
+  const ctx=document.getElementById('chart-tables').getContext('2d');
+  if(charts.tables) charts.tables.destroy();
+  charts.tables=new Chart(ctx,{type:'bar',
+    data:{labels:sorted.map(t=>`T${t.table}`),
+      datasets:[{data:sorted.map(t=>t.orders),
+        backgroundColor:'rgba(37,99,235,.18)',borderColor:'#2563eb',borderWidth:1.5,borderRadius:4}]},
+    options:{...dOpts(),scales:{x:{...dAxis(),ticks:{...dTick(),font:{size:10}}},y:{...dAxis(),beginAtZero:true,ticks:dTick()}}}
   });
 }
 
-// ── TABLE: RANKING TAVOLI ─────────────────────────────────────────────────
-function renderTableRanking(tables) {
-  const tbody = document.getElementById('table-tbody');
-  if (!tables.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:16px;">Nessun dato</td></tr>'; return; }
-  tbody.innerHTML = tables.map((t, i) => {
-    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-    const avgPi = (t.items / t.orders).toFixed(1);
+// ── TABLES ────────────────────────────────────────────────────────────────
+function renderDishTable(dishes, totalItems) {
+  const tb = document.getElementById('dish-tbody');
+  if(!dishes.length){tb.innerHTML='<tr><td colspan="4" class="empty-msg">Nessun dato</td></tr>';return;}
+  tb.innerHTML=dishes.map((d,i)=>{
+    const pct=totalItems?((d.qty/totalItems)*100).toFixed(1):0;
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const bw=totalItems?Math.round((d.qty/dishes[0].qty)*60):0;
     return `<tr>
-      <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
-      <td><strong>Tavolo ${t.table}</strong></td>
-      <td>${t.orders}</td>
-      <td>${t.items}</td>
-      <td style="color:var(--text3);">${avgPi} portate</td>
+      <td><span class="rank ${rc}">${i+1}</span></td>
+      <td style="font-size:.87em;">${d.name}</td>
+      <td><span class="qty-bar" style="width:${bw}px;"></span>${d.qty}</td>
+      <td style="color:var(--text3);">${pct}%</td>
     </tr>`;
   }).join('');
 }
 
-// ── CHART DEFAULTS (dark theme) ───────────────────────────────────────────
-function darkOpts() {
-  return {
-    responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
-    plugins: { tooltip: { backgroundColor: '#1a1a1a', titleColor: '#e8e8e8', bodyColor: '#aaa', borderColor: '#333', borderWidth: 1 } }
-  };
+function renderSlowMovers(dishes) {
+  const tb=document.getElementById('slow-tbody');
+  if(!dishes.length){tb.innerHTML='<tr><td colspan="4" class="empty-msg">Nessun dato</td></tr>';return;}
+  const threshold=Math.max(2,Math.round(dishes[0].qty*0.05));
+  const slow=dishes.filter(d=>d.qty<=threshold);
+  if(!slow.length){
+    tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#2d6a4f;font-size:.85em;">✓ Nessun piatto critico — ottimo!</td></tr>';
+    return;
+  }
+  tb.innerHTML=slow.map(d=>`<tr>
+    <td style="font-size:.87em;">${d.name}</td>
+    <td style="color:var(--text3);font-size:.8em;">${d.cat}</td>
+    <td>${d.qty}</td>
+    <td>${d.qty<=1?'<span class="tag-crit">Critico</span>':'<span class="tag-slow">Scarso</span>'}</td>
+  </tr>`).join('');
 }
-function darkAxis() { return { grid: { color: '#1a1a1a' }, border: { color: '#222' } }; }
-function darkTick() { return { color: '#555', font: { size: 10, family: 'DM Sans' } }; }
 
-// ── REALTIME (aggiorna quando arriva nuovo ordine) ────────────────────────
-sb.channel('owner-realtime')
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, ({ new: o }) => {
-    if (o.waiter_request) return;
-    let items = [];
-    try { items = JSON.parse(o.order_details || '[]'); } catch {}
-    allOrders.push({ ...o, items });
-    document.getElementById('last-update').textContent = 'Aggiornato ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+function renderTableRanking(tables) {
+  const tb=document.getElementById('table-tbody');
+  if(!tables.length){tb.innerHTML='<tr><td colspan="5" class="empty-msg">Nessun dato</td></tr>';return;}
+  tb.innerHTML=tables.map((t,i)=>{
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    return `<tr>
+      <td><span class="rank ${rc}">${i+1}</span></td>
+      <td><strong>Tavolo ${t.table}</strong></td>
+      <td>${t.orders}</td>
+      <td>${t.items}</td>
+      <td style="color:var(--text3);">${(t.items/t.orders).toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── REALTIME ──────────────────────────────────────────────────────────────
+sb.channel('owner-rt')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},({new:o})=>{
+    if(o.waiter_request||demoMode) return;
+    realOrders.push(parseOrder(o));
     render();
-  })
-  .subscribe();
+  }).subscribe();
 </script>
 </body>
 </html>
