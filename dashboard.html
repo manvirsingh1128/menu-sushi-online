@@ -3,174 +3,216 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Jun — KDS</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<title>Jun — Staff</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#0a0a0a; --surf:#161616; --border:#222;
-  --t1:#f0f0f0; --t2:#888; --t3:#3a3a3a;
-  --c-new:#d97706; --c-prep:#2563eb; --c-ready:#16a34a;
-  --c-req:#ea580c; --c-urg:#dc2626;
-}
-html,body{height:100%;background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,sans-serif;overflow-x:hidden;}
+html,body{height:100%;font-family:'DM Sans',-apple-system,sans-serif;}
+body{background:#f2f2f2;color:#1a1a1a;overflow-x:hidden;}
 
 /* ── HEADER ── */
 header{
   position:sticky;top:0;z-index:100;
-  background:#000;border-bottom:1px solid #1a1a1a;
-  height:52px;padding:0 14px;
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:#000;height:52px;padding:0 16px;
+  display:flex;align-items:center;justify-content:space-between;
 }
-.h-logo{height:24px;object-fit:contain;filter:brightness(0) invert(1);flex-shrink:0;}
-.h-mid{display:flex;align-items:center;gap:10px;flex:1;justify-content:center;}
-.h-badge{
-  display:flex;align-items:center;gap:5px;
-  padding:4px 11px;border-radius:20px;
-  font-size:0.76em;font-weight:700;letter-spacing:.2px;
-}
-.hb-o{background:rgba(217,119,6,.14);color:var(--c-new);}
-.hb-s{background:rgba(234,88,12,.14);color:var(--c-req);}
-.hb-r{background:rgba(22,163,74,.14);color:var(--c-ready);}
-.h-dot{width:7px;height:7px;border-radius:50%;background:var(--c-ready);animation:blink 2.2s ease-in-out infinite;}
+.h-logo{height:22px;filter:brightness(0) invert(1);}
+.h-mid{display:flex;align-items:center;gap:10px;}
+.h-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:blink 2s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-#clock{font-size:1em;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.h-cnt{
+  display:flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;
+  font-size:0.74em;font-weight:700;
+}
+.h-cnt-o{background:rgba(217,119,6,.2);color:#fbbf24;}
+.h-cnt-r{background:rgba(234,88,12,.2);color:#fb923c;}
+#clock{font-size:0.95em;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
 
 /* ── TOOLBAR ── */
 #toolbar{
-  background:#0f0f0f;border-bottom:1px solid var(--border);
-  padding:5px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  background:#fff;border-bottom:1px solid #e5e5e5;
+  padding:6px 16px;display:flex;align-items:center;gap:14px;
 }
-.tb{font-size:0.76em;color:var(--t2);}
-.tb strong{color:var(--t1);font-weight:700;}
-#tb-update{font-size:0.72em;color:var(--t3);}
+.tb{font-size:0.76em;color:#888;}
+.tb strong{color:#1a1a1a;font-weight:700;}
+#tb-time{font-size:0.72em;color:#bbb;}
 #demo-btn{
   margin-left:auto;padding:5px 13px;
-  background:rgba(255,255,255,.05);border:1px solid var(--border);
-  color:var(--t2);border-radius:20px;font-size:0.74em;font-weight:600;
-  cursor:pointer;font-family:inherit;transition:all .15s;
+  background:#f0f0f0;border:1px solid #ddd;color:#555;
+  border-radius:20px;font-size:0.74em;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:background .15s;
 }
-#demo-btn:hover{background:rgba(255,255,255,.1);color:var(--t1);}
+#demo-btn:hover{background:#e5e5e5;}
 #demo-btn:disabled{opacity:.5;cursor:default;}
 
-/* ── GRID ── */
-#kds-grid{
+/* ── MOBILE TABS ── */
+#mob-tabs{
+  display:none;background:#fff;border-bottom:1px solid #e5e5e5;
+  padding:0 16px;gap:0;
+}
+@media(max-width:640px){
+  #mob-tabs{display:flex;}
+  .split{flex-direction:column!important;}
+  .col-req,.col-ord{width:100%!important;border:none!important;border-radius:0!important;}
+  .col-req,.col-ord{display:none;}
+  .col-req.active,.col-ord.active{display:flex;}
+}
+.mt-btn{
+  flex:1;padding:10px;border:none;background:none;
+  font-family:inherit;font-size:0.82em;font-weight:600;
+  color:#888;cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;
+}
+.mt-btn.on{color:#1a1a1a;border-bottom-color:#1a1a1a;}
+
+/* ── SPLIT LAYOUT ── */
+.split{
+  display:flex;min-height:calc(100vh - 96px);
+  align-items:stretch;
+}
+.col-req{
+  width:38%;flex-shrink:0;
+  display:flex;flex-direction:column;
+  background:#fff;border-right:1px solid #e5e5e5;
+}
+.col-ord{
+  flex:1;display:flex;flex-direction:column;
+  background:#f2f2f2;
+}
+.col-hd{
+  padding:10px 14px;border-bottom:1px solid #ebebeb;
+  display:flex;align-items:center;justify-content:space-between;
+  background:#fff;position:sticky;top:52px;z-index:10;
+}
+.col-hd-l{display:flex;align-items:center;gap:7px;}
+.col-hd-l h2{font-size:0.76em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#555;}
+.col-badge{
+  padding:2px 8px;border-radius:20px;
+  font-size:0.72em;font-weight:700;
+}
+.badge-req{background:#fff3eb;color:#ea580c;}
+.badge-ord{background:#fffbeb;color:#d97706;}
+.col-cards{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;}
+
+/* ── ORD GRID ── */
+.ord-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
-  gap:10px;padding:10px;
-  align-items:start;
+  gap:8px;padding:10px;align-items:start;
 }
 
 /* ── EMPTY ── */
-#kds-empty{
-  grid-column:1/-1;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:80px 20px;gap:14px;text-align:center;color:var(--t3);
+.empty-state{
+  padding:40px 16px;text-align:center;color:#ccc;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
 }
-#kds-empty i{font-size:2.8em;opacity:.25;}
-#kds-empty p{font-size:0.9em;}
+.empty-state i{font-size:2em;opacity:.4;}
+.empty-state p{font-size:0.85em;}
 
-/* ── CARD ── */
-@keyframes slideIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:none}}
-@keyframes cardOut{to{opacity:0;transform:scale(.95);pointer-events:none}}
-@keyframes readyPulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}
-  50%    {box-shadow:0 0 0 8px rgba(22,163,74,.18)}
-}
+/* ── CARD BASE ── */
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes cardOut{to{opacity:0;transform:scale(.96)}}
 
 .kds-card{
-  background:var(--surf);border-radius:14px;overflow:hidden;
+  background:#fff;border-radius:12px;
+  border:1px solid #e5e5e5;
+  border-left:3px solid #ddd;
   display:flex;flex-direction:column;
-  animation:slideIn .22s ease-out;
-  border:1px solid var(--border);
+  animation:slideIn .2s ease-out;
+  box-shadow:0 1px 4px rgba(0,0,0,.05);
 }
-.kds-card.s-ready{animation:readyPulse 2.6s ease-in-out infinite;}
-.kds-card.card-out{animation:cardOut .28s ease-out forwards;}
+.kds-card.card-out{animation:cardOut .25s ease-out forwards;}
 
-/* ── CARD HEADER ── */
-.card-hd{
-  padding:11px 14px 13px;
-  display:flex;align-items:flex-end;justify-content:space-between;
-  flex-shrink:0;
-}
-.s-new  .card-hd{background:var(--c-new);}
-.s-prep .card-hd{background:var(--c-prep);}
-.s-ready.card-hd,.s-ready .card-hd{background:var(--c-ready);}
-.s-req  .card-hd{background:var(--c-req);}
-.s-urg  .card-hd{background:var(--c-urg);}
+/* Status left-border colors */
+.s-new  {border-left-color:#d97706;}
+.s-prep {border-left-color:#2563eb;}
+.s-ready{border-left-color:#16a34a;}
+.s-req  {border-left-color:#ea580c;}
+.s-urg  {border-left-color:#dc2626;}
 
-.card-hd-l{display:flex;flex-direction:column;line-height:1;}
-.card-hd-lbl{
-  font-size:0.58em;font-weight:700;letter-spacing:1.5px;
-  text-transform:uppercase;color:rgba(255,255,255,.65);
-  margin-bottom:1px;
+/* ── CARD TOP ── */
+.card-top{
+  padding:10px 12px 8px;
+  display:flex;align-items:flex-start;justify-content:space-between;
 }
-.card-hd-num{
-  font-size:4em;font-weight:900;color:#fff;
-  letter-spacing:-0.05em;line-height:.9;
+.card-top-l{display:flex;flex-direction:column;gap:2px;}
+.card-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:0.64em;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;padding:2px 7px;border-radius:20px;
+  width:fit-content;
 }
-.card-hd-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
-.card-hd-status{
-  font-size:0.62em;font-weight:800;letter-spacing:1px;
-  text-transform:uppercase;color:rgba(255,255,255,.75);
+.cb-new  {background:#fef3c7;color:#d97706;}
+.cb-prep {background:#dbeafe;color:#2563eb;}
+.cb-ready{background:#dcfce7;color:#16a34a;}
+.cb-req  {background:#ffedd5;color:#ea580c;}
+.cb-urg  {background:#fee2e2;color:#dc2626;}
+.card-tnum{
+  font-size:2.6em;font-weight:800;line-height:1;
+  letter-spacing:-0.04em;color:#1a1a1a;
 }
-.card-hd-timer{
-  font-size:1.05em;font-weight:700;color:#fff;
-  font-variant-numeric:tabular-nums;
-}
+.card-tlbl{font-size:0.62em;font-weight:600;color:#999;letter-spacing:.5px;text-transform:uppercase;}
+.card-top-r{text-align:right;}
+.card-timer{font-size:0.75em;font-weight:600;color:#aaa;font-variant-numeric:tabular-nums;}
+.card-timer.t-warn{color:#d97706;}
+.card-timer.t-urg{color:#dc2626;font-weight:700;}
 
 /* ── CARD BODY ── */
-.card-body{padding:11px 13px;flex:1;display:flex;flex-direction:column;gap:8px;}
-
-.card-items{list-style:none;display:flex;flex-direction:column;gap:5px;}
-.card-items li{display:flex;align-items:baseline;gap:7px;font-size:0.87em;}
-.i-qty{font-weight:800;min-width:26px;color:var(--t2);}
-.i-name{color:var(--t1);flex:1;line-height:1.35;}
-.i-code{color:var(--t3);font-size:0.78em;font-variant-numeric:tabular-nums;}
-
+.card-body{padding:0 12px 10px;display:flex;flex-direction:column;gap:7px;}
+.card-div{border:none;border-top:1px solid #f0f0f0;margin:0;}
+.card-items{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.card-items li{display:flex;align-items:baseline;gap:6px;font-size:0.85em;}
+.i-qty{font-weight:700;min-width:24px;color:#888;}
+.i-name{color:#1a1a1a;flex:1;line-height:1.3;}
+.i-code{color:#ccc;font-size:0.78em;}
 .card-note{
-  display:flex;align-items:flex-start;gap:7px;
-  padding:7px 10px;border-radius:0 8px 8px 0;
-  border-left:2px solid var(--t3);
-  background:rgba(255,255,255,.03);
-  font-size:0.81em;color:var(--t2);line-height:1.4;
+  display:flex;align-items:flex-start;gap:6px;
+  padding:6px 9px;background:#f9fafb;border-radius:8px;
+  font-size:0.8em;color:#888;line-height:1.4;border-left:2px solid #e5e5e5;
 }
-.card-note i{color:var(--t3);font-size:.85em;margin-top:2px;flex-shrink:0;}
+.card-note i{color:#ccc;font-size:.85em;margin-top:1px;flex-shrink:0;}
 
-/* ── STAFF REQUEST TYPE ── */
+/* ── STAFF REQUEST ── */
 .req-row{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;background:rgba(234,88,12,.08);border-radius:10px;
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;background:#fff7f0;border-radius:9px;
+  font-size:0.9em;font-weight:600;color:#ea580c;
 }
-.req-row i{color:var(--c-req);font-size:1.2em;width:20px;text-align:center;}
-.req-row span{font-size:0.95em;font-weight:600;color:#fb923c;}
+.req-row i{font-size:1em;width:18px;text-align:center;color:#fb923c;}
 
-/* ── ACTION BUTTON ── */
+/* ── CARD ACTION ── */
 .card-btn{
-  width:100%;padding:14px;border:none;border-top:1px solid var(--border);
-  font-family:inherit;font-size:0.86em;font-weight:800;letter-spacing:.3px;
-  text-transform:uppercase;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:filter .12s;flex-shrink:0;
-  background:#111;
+  width:100%;padding:11px;border:none;
+  border-top:1px solid #f0f0f0;
+  border-radius:0 0 11px 11px;
+  font-family:inherit;font-size:0.82em;font-weight:700;
+  text-transform:uppercase;letter-spacing:.3px;
+  cursor:pointer;background:#fafafa;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:background .12s;color:#555;
 }
-.card-btn:active{filter:brightness(.85);}
-.card-btn:hover{filter:brightness(1.15);}
-.btn-new  {color:var(--c-new);}
-.btn-prep {color:var(--c-prep);}
-.btn-ready{background:var(--c-ready);color:#fff;border-top-color:transparent;font-size:.92em;}
-.btn-req  {color:var(--c-req);}
+.card-btn:hover{background:#f0f0f0;}
+.card-btn:active{background:#e8e8e8;}
+.btn-new  {color:#d97706;}
+.btn-new:hover{background:#fffbeb;}
+.btn-prep {color:#2563eb;}
+.btn-prep:hover{background:#eff6ff;}
+.btn-ready{background:#16a34a;color:#fff;border-top-color:transparent;}
+.btn-ready:hover{background:#15803d;}
+.btn-req  {color:#ea580c;}
+.btn-req:hover{background:#fff7f0;}
 
-/* ── DELIVERED OVERLAY ── */
+/* ── DONE OVERLAY ── */
 .done-wrap{
   flex:1;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  padding:22px;gap:8px;text-align:center;
+  padding:18px;gap:6px;text-align:center;
 }
-.done-wrap i{font-size:2.6em;color:var(--c-ready);}
-.done-wrap strong{color:var(--c-ready);font-size:1em;}
-.done-wrap small{color:var(--t3);font-size:0.8em;}
+.done-wrap i{font-size:2.2em;color:#16a34a;}
+.done-wrap strong{color:#16a34a;font-size:0.95em;}
+.done-wrap small{color:#bbb;font-size:0.78em;}
 </style>
 </head>
 <body>
@@ -178,27 +220,62 @@ header{
 <header>
   <img class="h-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun">
   <div class="h-mid">
-    <div class="h-badge hb-o"><i class="fas fa-utensils"></i> <span id="hb-orders">0</span></div>
-    <div class="h-badge hb-r"><i class="fas fa-bell-concierge"></i> <span id="hb-ready">0</span></div>
-    <div class="h-badge hb-s"><i class="fas fa-bell"></i> <span id="hb-staff">0</span></div>
+    <div class="h-cnt h-cnt-o"><i class="fas fa-utensils"></i> <span id="hb-ord">0</span></div>
+    <div class="h-cnt h-cnt-r"><i class="fas fa-bell"></i> <span id="hb-req">0</span></div>
     <div class="h-dot"></div>
   </div>
   <span id="clock">--:--</span>
 </header>
 
 <div id="toolbar">
-  <span class="tb">Ordini: <strong id="tb-orders">0</strong></span>
-  <span class="tb">Pronti: <strong id="tb-ready">0</strong></span>
-  <span class="tb">Richieste: <strong id="tb-staff">0</strong></span>
-  <span id="tb-update"></span>
+  <span class="tb">Ordini: <strong id="tb-o">0</strong></span>
+  <span class="tb">Pronti: <strong id="tb-r">0</strong></span>
+  <span class="tb">Richieste: <strong id="tb-s">0</strong></span>
+  <span id="tb-time"></span>
   <button id="demo-btn" onclick="loadDemo()"><i class="fas fa-flask"></i> Demo</button>
 </div>
 
-<div id="kds-grid">
-  <div id="kds-empty">
-    <i class="fas fa-circle-check"></i>
-    <p>Nessun ordine attivo</p>
+<div id="mob-tabs">
+  <button class="mt-btn on" onclick="mobTab('ord',this)"><i class="fas fa-utensils"></i> Ordini</button>
+  <button class="mt-btn" onclick="mobTab('req',this)"><i class="fas fa-bell"></i> Richieste</button>
+</div>
+
+<div class="split">
+
+  <!-- COL RICHIESTE CAMERIERE -->
+  <div class="col-req active" id="col-req">
+    <div class="col-hd">
+      <div class="col-hd-l">
+        <i class="fas fa-bell" style="color:#ea580c;font-size:.85em;"></i>
+        <h2>Richieste</h2>
+      </div>
+      <span class="col-badge badge-req" id="badge-req">0</span>
+    </div>
+    <div class="col-cards" id="req-container">
+      <div class="empty-state" id="empty-req">
+        <i class="fas fa-bell-slash"></i>
+        <p>Nessuna richiesta</p>
+      </div>
+    </div>
   </div>
+
+  <!-- COL ORDINI CUCINA -->
+  <div class="col-ord active" id="col-ord">
+    <div class="col-hd" style="background:#f2f2f2;border-bottom-color:#e0e0e0;">
+      <div class="col-hd-l">
+        <i class="fas fa-utensils" style="color:#d97706;font-size:.85em;"></i>
+        <h2>Ordini cucina</h2>
+      </div>
+      <span class="col-badge badge-ord" id="badge-ord">0</span>
+    </div>
+    <div class="ord-grid" id="ord-container">
+      <div class="empty-state" id="empty-ord" style="grid-column:1/-1">
+        <i class="fas fa-check-circle"></i>
+        <p>Nessun ordine in attesa</p>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -208,59 +285,68 @@ const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const client  = supabase.createClient(SB_URL, SB_ANON);
 
 // ── State ──────────────────────────────────────────────────────────────────
-const liveData    = new Map();   // orderId → order
-const animating   = new Set();   // orderIds currently in exit animation
+const reqData = new Map();  // waiter requests
+const ordData = new Map();  // food orders
+const animating = new Set();
+
+// ── Mobile tabs ────────────────────────────────────────────────────────────
+function mobTab(which, btn) {
+  document.querySelectorAll('.mt-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('col-req').classList.toggle('active', which==='req');
+  document.getElementById('col-ord').classList.toggle('active', which==='ord');
+}
 
 // ── Clock ──────────────────────────────────────────────────────────────────
-function tick() {
+function tick(){
   document.getElementById('clock').textContent =
     new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 }
-tick(); setInterval(tick, 10000);
+tick(); setInterval(tick,10000);
 
 // ── Audio ──────────────────────────────────────────────────────────────────
-function beep() {
-  try {
-    const ctx = new(window.AudioContext||window.webkitAudioContext)();
+function beep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
     [880,1100].forEach((f,i)=>{
       const o=ctx.createOscillator(),g=ctx.createGain();
       o.connect(g);g.connect(ctx.destination);
       o.frequency.value=f;o.type='sine';
-      g.gain.setValueAtTime(.3,ctx.currentTime+i*.15);
-      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.15+.3);
-      o.start(ctx.currentTime+i*.15);o.stop(ctx.currentTime+i*.15+.3);
+      g.gain.setValueAtTime(.28,ctx.currentTime+i*.15);
+      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.15+.28);
+      o.start(ctx.currentTime+i*.15);o.stop(ctx.currentTime+i*.15+.28);
     });
-  } catch(_){}
+  }catch(_){}
 }
 
 // ── Timer ──────────────────────────────────────────────────────────────────
 function elMin(ts){ return Math.floor((Date.now()-new Date(ts))/60000); }
 function fmtMin(m){ return m<1?'<1 min':`${m} min`; }
+function timerCls(m,st){
+  if(st==='ready') return m>=5?'t-urg':'t-warn';
+  if(m>=10) return 't-urg';
+  if(m>=5) return 't-warn';
+  return '';
+}
 
 setInterval(()=>{
   document.querySelectorAll('[data-ts]').forEach(el=>{
-    el.textContent = fmtMin(elMin(el.dataset.ts));
+    const m=elMin(el.dataset.ts);
+    const st=el.dataset.st||'';
+    el.textContent=fmtMin(m);
+    el.className='card-timer '+timerCls(m,st);
   });
-  // Escalate long-waiting pending cards to urgent
-  liveData.forEach((o,id)=>{
-    if(o.waiter_request||o.status!=='pending') return;
-    if(elMin(o.created_at)>=10){
+  ordData.forEach((o,id)=>{
+    if(o.status==='pending'&&elMin(o.created_at)>=10){
       const card=document.querySelector(`.kds-card[data-id="${id}"]`);
       if(card&&!card.classList.contains('s-urg')){
-        card.classList.remove('s-new');
-        card.classList.add('s-urg');
-        card.querySelector('.card-hd-status').textContent='ATTESA';
+        card.classList.remove('s-new');card.classList.add('s-urg');
+        const b=card.querySelector('.card-badge');
+        if(b){b.className='card-badge cb-urg';b.textContent='ATTESA';}
       }
     }
   });
 },60000);
-
-// ── Sort ───────────────────────────────────────────────────────────────────
-function sortKey(o){
-  const st=o.status, req=!!o.waiter_request;
-  const w = st==='ready' ? 0 : req ? 1 : st==='preparing' ? 2 : 3;
-  return w*1e13 + new Date(o.created_at).getTime();
-}
 
 // ── Parse items ────────────────────────────────────────────────────────────
 function parseItems(raw){
@@ -272,178 +358,181 @@ function parseItems(raw){
   }
 }
 
-// ── Staff request labels ───────────────────────────────────────────────────
+// ── Staff types ────────────────────────────────────────────────────────────
 const STAFF={
-  explanation:{icon:'fa-circle-info',label:'Spiegazione piatti'},
-  drinks:     {icon:'fa-mug-saucer', label:'Ordine bevande'},
-  bill:       {icon:'fa-receipt',    label:'Richiesta conto'},
-  call:       {icon:'fa-bell',       label:'Chiamata cameriere'},
+  explanation:{icon:'fa-circle-info', label:'Spiegazione piatti'},
+  drinks:     {icon:'fa-mug-saucer',  label:'Ordine bevande'},
+  bill:       {icon:'fa-receipt',     label:'Richiesta conto'},
+  call:       {icon:'fa-bell',        label:'Chiamata cameriere'},
   other:      {icon:'fa-comment-dots',label:'Altra richiesta'},
 };
 
+// ── Sort orders ────────────────────────────────────────────────────────────
+function ordSortKey(o){
+  const w=o.status==='ready'?0:o.status==='preparing'?1:2;
+  return w*1e13+new Date(o.created_at).getTime();
+}
+
 // ── Build order card ───────────────────────────────────────────────────────
 function buildOrderCard(o){
-  const items  = parseItems(o.order_details);
-  const st     = o.status;
-  const min    = elMin(o.created_at);
-  const isUrg  = st==='pending' && min>=10;
+  const items=parseItems(o.order_details);
+  const st=o.status;
+  const min=elMin(o.created_at);
+  const isUrg=st==='pending'&&min>=10;
 
-  const sClass  = isUrg ? 's-urg' : st==='pending' ? 's-new' : st==='preparing' ? 's-prep' : 's-ready';
-  const sTxt    = isUrg ? 'ATTESA' : st==='pending' ? 'NUOVO' : st==='preparing' ? 'IN PREP' : 'PRONTO';
-  const btnCls  = st==='pending' ? 'btn-new' : st==='preparing' ? 'btn-prep' : 'btn-ready';
-  const btnTxt  = st==='pending'
-    ? '<i class="fas fa-fire-burner"></i> In preparazione'
-    : st==='preparing'
-    ? '<i class="fas fa-bell-concierge"></i> Pronto'
-    : '<i class="fas fa-check"></i> Servito — Consegnato';
+  const sClass=isUrg?'s-urg':st==='pending'?'s-new':st==='preparing'?'s-prep':'s-ready';
+  const bCls  =isUrg?'cb-urg':st==='pending'?'cb-new':st==='preparing'?'cb-prep':'cb-ready';
+  const bTxt  =isUrg?'ATTESA':st==='pending'?'NUOVO':st==='preparing'?'IN PREP':'PRONTO';
+  const btnCls=st==='pending'?'btn-new':st==='preparing'?'btn-prep':'btn-ready';
+  const btnTxt=st==='pending'
+    ?'<i class="fas fa-fire-burner"></i> In preparazione'
+    :st==='preparing'
+    ?'<i class="fas fa-bell-concierge"></i> Pronto'
+    :'<i class="fas fa-check"></i> Servito';
 
-  const itemsHtml = items.map(i=>
-    `<li>
-      <span class="i-qty">×${i.qty}</span>
-      <span class="i-name">${i.name}</span>
-      ${i.code?`<span class="i-code">#${i.code}</span>`:''}
-    </li>`
+  const itemsHtml=items.map(i=>
+    `<li><span class="i-qty">×${i.qty}</span><span class="i-name">${i.name}</span>${i.code?`<span class="i-code">#${i.code}</span>`:''}</li>`
   ).join('');
+  const noteHtml=o.customer_notes
+    ?`<div class="card-note"><i class="fas fa-pen-line"></i>${o.customer_notes}</div>`:'';
 
-  const noteHtml = o.customer_notes
-    ? `<div class="card-note"><i class="fas fa-pen-line"></i>${o.customer_notes}</div>`:'';
-
-  const card = document.createElement('div');
-  card.className = `kds-card ${sClass}`;
-  card.dataset.id = String(o.order_id);
-  card.innerHTML = `
-    <div class="card-hd">
-      <div class="card-hd-l">
-        <span class="card-hd-lbl">Tavolo</span>
-        <span class="card-hd-num">${o.table_number}</span>
+  const card=document.createElement('div');
+  card.className=`kds-card ${sClass}`;
+  card.dataset.id=String(o.order_id);
+  card.innerHTML=`
+    <div class="card-top">
+      <div class="card-top-l">
+        <span class="card-badge ${bCls}">${bTxt}</span>
+        <span class="card-tlbl">Tavolo</span>
+        <span class="card-tnum">${o.table_number}</span>
       </div>
-      <div class="card-hd-r">
-        <span class="card-hd-status">${sTxt}</span>
-        <span class="card-hd-timer" data-ts="${o.created_at}">${fmtMin(min)}</span>
+      <div class="card-top-r">
+        <div class="card-timer ${timerCls(min,st)}" data-ts="${o.created_at}" data-st="${st}">${fmtMin(min)}</div>
       </div>
     </div>
     <div class="card-body">
+      <hr class="card-div">
       <ul class="card-items">${itemsHtml}</ul>
       ${noteHtml}
     </div>
     <button class="card-btn ${btnCls}">${btnTxt}</button>`;
 
-  card.querySelector('.card-btn').addEventListener('click', async ()=>{
-    const id = String(o.order_id);
+  card.querySelector('.card-btn').addEventListener('click',async()=>{
+    const id=String(o.order_id);
     if(st==='ready'){
-      // Consegnato animation
-      animating.add(id);
-      liveData.delete(id);
+      animating.add(id);ordData.delete(id);
       card.querySelector('.card-body').innerHTML=`<div class="done-wrap">
         <i class="fas fa-circle-check"></i>
         <strong>Consegnato!</strong>
-        <small>Tavolo ${o.table_number}</small>
-      </div>`;
+        <small>Tavolo ${o.table_number}</small></div>`;
       card.querySelector('.card-btn').remove();
       updateStats();
       setTimeout(()=>{
         card.classList.add('card-out');
-        setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},280);
+        setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},250);
       },1300);
       await advance(id,st);
     } else {
-      // Optimistic update
-      const nst = st==='pending'?'preparing':'ready';
-      liveData.set(id,{...o,status:nst});
-      renderGrid();
+      const nst=st==='pending'?'preparing':'ready';
+      ordData.set(id,{...o,status:nst});
+      renderOrders();
       await advance(id,st);
     }
   });
-
   return card;
 }
 
-// ── Build staff request card ───────────────────────────────────────────────
+// ── Build staff card ───────────────────────────────────────────────────────
 function buildStaffCard(o){
-  const type = o.waiter_request||'call';
-  const info = STAFF[type]||STAFF.other;
-  const min  = elMin(o.created_at);
+  const type=o.waiter_request||'call';
+  const info=STAFF[type]||STAFF.other;
+  const min=elMin(o.created_at);
 
-  const card = document.createElement('div');
-  card.className = 'kds-card s-req';
-  card.dataset.id = String(o.order_id);
-  card.innerHTML = `
-    <div class="card-hd">
-      <div class="card-hd-l">
-        <span class="card-hd-lbl">Tavolo</span>
-        <span class="card-hd-num">${o.table_number}</span>
+  const card=document.createElement('div');
+  card.className='kds-card s-req';
+  card.dataset.id=String(o.order_id);
+  card.innerHTML=`
+    <div class="card-top">
+      <div class="card-top-l">
+        <span class="card-badge cb-req">RICHIESTA</span>
+        <span class="card-tlbl">Tavolo</span>
+        <span class="card-tnum">${o.table_number}</span>
       </div>
-      <div class="card-hd-r">
-        <span class="card-hd-status">RICHIESTA</span>
-        <span class="card-hd-timer" data-ts="${o.created_at}">${fmtMin(min)}</span>
+      <div class="card-top-r">
+        <div class="card-timer" data-ts="${o.created_at}">${fmtMin(min)}</div>
       </div>
     </div>
     <div class="card-body">
-      <div class="req-row">
-        <i class="fas ${info.icon}"></i>
-        <span>${info.label}</span>
-      </div>
+      <hr class="card-div">
+      <div class="req-row"><i class="fas ${info.icon}"></i>${info.label}</div>
     </div>
     <button class="card-btn btn-req"><i class="fas fa-check"></i> Gestita</button>`;
 
-  card.querySelector('.card-btn').addEventListener('click', async ()=>{
-    const id = String(o.order_id);
-    animating.add(id);
-    liveData.delete(id);
+  card.querySelector('.card-btn').addEventListener('click',async()=>{
+    const id=String(o.order_id);
+    animating.add(id);reqData.delete(id);
     card.classList.add('card-out');
     updateStats();
-    setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},280);
+    setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},250);
     await client.from('orders').update({status:'handled'}).eq('order_id',id);
   });
-
   return card;
 }
 
-// ── Render full grid ───────────────────────────────────────────────────────
-function renderGrid(){
-  const grid  = document.getElementById('kds-grid');
-  const empty = document.getElementById('kds-empty');
+// ── Render orders ──────────────────────────────────────────────────────────
+function renderOrders(){
+  const cont=document.getElementById('ord-container');
+  const empty=document.getElementById('empty-ord');
 
-  // Remove non-animating cards
-  grid.querySelectorAll('.kds-card').forEach(el=>{
+  cont.querySelectorAll('.kds-card').forEach(el=>{
     if(!animating.has(el.dataset.id)) el.remove();
   });
 
-  const sorted = [...liveData.values()].sort((a,b)=>sortKey(a)-sortKey(b));
+  const sorted=[...ordData.values()].sort((a,b)=>ordSortKey(a)-ordSortKey(b));
   sorted.forEach(o=>{
-    const card = o.waiter_request ? buildStaffCard(o) : buildOrderCard(o);
-    grid.appendChild(card);
+    if(!animating.has(String(o.order_id)))
+      cont.appendChild(buildOrderCard(o));
   });
 
-  updateEmpty();
+  empty.style.display=ordData.size===0&&!cont.querySelector('.kds-card')?'':'none';
+  updateStats();
+}
+
+// ── Render requests ────────────────────────────────────────────────────────
+function renderRequests(){
+  const cont=document.getElementById('req-container');
+  const empty=document.getElementById('empty-req');
+
+  cont.querySelectorAll('.kds-card').forEach(el=>{
+    if(!animating.has(el.dataset.id)) el.remove();
+  });
+  [...reqData.values()]
+    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))
+    .forEach(o=>{ if(!animating.has(String(o.order_id))) cont.appendChild(buildStaffCard(o)); });
+
+  empty.style.display=reqData.size===0&&!cont.querySelector('.kds-card')?'':'none';
   updateStats();
 }
 
 function updateEmpty(){
-  const grid  = document.getElementById('kds-grid');
-  const empty = document.getElementById('kds-empty');
-  const hasCards = grid.querySelectorAll('.kds-card').length > 0;
-  if(!hasCards){
-    if(!grid.contains(empty)) grid.appendChild(empty);
-    empty.style.display='';
-  } else {
-    empty.style.display='none';
-  }
+  const oc=document.getElementById('ord-container');
+  const rc=document.getElementById('req-container');
+  document.getElementById('empty-ord').style.display=
+    ordData.size===0&&!oc.querySelector('.kds-card')?'':'none';
+  document.getElementById('empty-req').style.display=
+    reqData.size===0&&!rc.querySelector('.kds-card')?'':'none';
 }
 
 function updateStats(){
-  let nO=0,nR=0,nS=0;
-  liveData.forEach(o=>{
-    if(o.waiter_request) nS++;
-    else{nO++;if(o.status==='ready')nR++;}
-  });
-  document.getElementById('hb-orders').textContent=nO;
-  document.getElementById('hb-ready').textContent=nR;
-  document.getElementById('hb-staff').textContent=nS;
-  document.getElementById('tb-orders').textContent=nO;
-  document.getElementById('tb-ready').textContent=nR;
-  document.getElementById('tb-staff').textContent=nS;
-  document.getElementById('tb-update').textContent=
+  const nO=ordData.size,nR=ordData.size&&[...ordData.values()].filter(o=>o.status==='ready').length,nS=reqData.size;
+  document.getElementById('hb-ord').textContent=nO;
+  document.getElementById('hb-req').textContent=nS;
+  document.getElementById('tb-o').textContent=nO;
+  document.getElementById('tb-r').textContent=nR;
+  document.getElementById('tb-s').textContent=nS;
+  document.getElementById('badge-ord').textContent=nO;
+  document.getElementById('badge-req').textContent=nS;
+  document.getElementById('tb-time').textContent=
     'Aggiornato '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 }
 
@@ -462,28 +551,34 @@ async function loadInitialOrders(){
     .not('status','in','("served","handled")')
     .order('created_at',{ascending:true});
   if(error){console.error(error);return;}
-  (data||[]).forEach(o=>liveData.set(String(o.order_id),o));
-  renderGrid();
+  (data||[]).forEach(o=>{
+    const id=String(o.order_id);
+    if(o.waiter_request) reqData.set(id,o);
+    else ordData.set(id,o);
+  });
+  renderOrders();renderRequests();
 }
 
 // ── Realtime ───────────────────────────────────────────────────────────────
 client.channel('kds-rt')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},({new:o})=>{
     beep();
-    liveData.set(String(o.order_id),o);
-    renderGrid();
+    const id=String(o.order_id);
+    if(o.waiter_request){reqData.set(id,o);renderRequests();}
+    else{ordData.set(id,o);renderOrders();}
   })
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders'},({new:o})=>{
     const id=String(o.order_id);
     if(o.status==='served'||o.status==='handled'){
-      liveData.delete(id);
+      ordData.delete(id);reqData.delete(id);
       if(!animating.has(id)){
         const el=document.querySelector(`.kds-card[data-id="${id}"]`);
-        if(el){el.classList.add('card-out');setTimeout(()=>{el.remove();updateEmpty();updateStats();},280);}
+        if(el){el.classList.add('card-out');setTimeout(()=>{el.remove();updateEmpty();updateStats();},250);}
       }
+    } else if(o.waiter_request){
+      reqData.set(id,o);renderRequests();
     } else {
-      liveData.set(id,o);
-      renderGrid();
+      ordData.set(id,o);renderOrders();
     }
   })
   .subscribe();
@@ -493,42 +588,35 @@ function loadDemo(){
   const btn=document.getElementById('demo-btn');
   btn.disabled=true;btn.innerHTML='<i class="fas fa-check"></i> Demo';
   const now=Date.now();
-  [
+  const orders=[
     {order_id:'demo-1',table_number:3,status:'pending',
      created_at:new Date(now-2*60000).toISOString(),
      customer_notes:'Senza wasabi — allergia sesamo',waiter_request:null,
-     order_details:JSON.stringify([
-       {qty:2,name:'Nigiri Salmone',code:'101'},
-       {qty:1,name:'Tacos JUN Selection',code:'201'},
-       {qty:3,name:'Uramaki Spicy Crunch',code:'301'},
-     ])},
+     order_details:JSON.stringify([{qty:2,name:'Nigiri Salmone',code:'101'},{qty:1,name:'Tacos JUN',code:'201'},{qty:3,name:'Uramaki Spicy',code:'301'}])},
     {order_id:'demo-2',table_number:7,status:'preparing',
      created_at:new Date(now-9*60000).toISOString(),
      customer_notes:null,waiter_request:null,
-     order_details:JSON.stringify([
-       {qty:4,name:'Sashimi Tonno Premium',code:'150'},
-       {qty:2,name:'Gyoza Pollo',code:'401'},
-     ])},
+     order_details:JSON.stringify([{qty:4,name:'Sashimi Tonno',code:'150'},{qty:2,name:'Gyoza Pollo',code:'401'}])},
     {order_id:'demo-3',table_number:12,status:'ready',
      created_at:new Date(now-14*60000).toISOString(),
      customer_notes:null,waiter_request:null,
-     order_details:JSON.stringify([
-       {qty:2,name:'JUN Selection',code:'001'},
-       {qty:3,name:'Dim Sum Gamberetti',code:'601'},
-       {qty:1,name:'Tataki Salmone',code:'701'},
-     ])},
+     order_details:JSON.stringify([{qty:2,name:'JUN Selection',code:'001'},{qty:3,name:'Dim Sum',code:'601'}])},
     {order_id:'demo-4',table_number:5,status:'pending',
      created_at:new Date(now-13*60000).toISOString(),
      customer_notes:null,waiter_request:null,
-     order_details:JSON.stringify([
-       {qty:6,name:'Hosomaki Salmone',code:'801'},
-       {qty:2,name:'Edamame',code:'901'},
-     ])},
+     order_details:JSON.stringify([{qty:6,name:'Hosomaki Salmone',code:'801'},{qty:2,name:'Edamame',code:'901'}])},
+  ];
+  const reqs=[
     {order_id:'demo-w1',table_number:9,status:'pending',
      created_at:new Date(now-1*60000).toISOString(),
      customer_notes:null,waiter_request:'bill',order_details:'[]'},
-  ].forEach(o=>liveData.set(o.order_id,o));
-  renderGrid();
+    {order_id:'demo-w2',table_number:4,status:'pending',
+     created_at:new Date(now-3*60000).toISOString(),
+     customer_notes:null,waiter_request:'drinks',order_details:'[]'},
+  ];
+  orders.forEach(o=>ordData.set(o.order_id,o));
+  reqs.forEach(o=>reqData.set(o.order_id,o));
+  renderOrders();renderRequests();
 }
 
 loadInitialOrders();
