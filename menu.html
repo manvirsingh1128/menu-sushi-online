@@ -2767,43 +2767,49 @@
             setTimeout(() => { splash.style.display = 'none'; if (cb) cb(); }, 560);
         }
 
+        function _showOnboarding() {
+            const ob = document.getElementById('onboarding');
+            ob.style.opacity = '0';
+            ob.style.display = 'flex';
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                ob.style.transition = 'opacity 0.4s ease';
+                ob.style.opacity = '1';
+            }));
+        }
+
         function _obStartMenu() {
             tableSize   = _obPeople;
             tableNumber = _obTable;
             sessionStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
             document.getElementById('people-label').textContent = tableSize;
-
-            // nascondi onboarding subito
-            document.getElementById('onboarding').style.display = 'none';
-
-            // mostra splash (animazioni ripartono da zero)
-            document.getElementById('splash').style.display = 'flex';
-
-            // render menu in background durante splash
+            // menu già caricato in background, re-render solo per aggiornare tableSize (max1)
             renderMenu();
             restoreCartUI();
-            initScrollSpy();
-
-            // dismiss splash dopo animazione
-            setTimeout(() => _dismissSplash(), 2900);
+            const ob = document.getElementById('onboarding');
+            ob.style.transition = 'opacity 0.3s ease';
+            ob.style.opacity = '0';
+            setTimeout(() => { ob.style.display = 'none'; }, 300);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Splash parte sempre → menu carica in background → poi onboarding o menu
+            document.getElementById('onboarding').style.display = 'none';
+
             const saved = sessionStorage.getItem('jun_ob');
             if (saved) {
-                // sessione esistente: splash subito, menu in background
                 const d = JSON.parse(saved);
                 tableSize   = d.people || 1;
                 tableNumber = d.table  || 1;
                 document.getElementById('people-label').textContent = tableSize;
-                document.getElementById('onboarding').style.display = 'none';
-                renderMenu();
-                initScrollSpy();
-                setTimeout(() => _dismissSplash(), 2900);
-            } else {
-                // prima volta: nascondi splash, mostra onboarding
-                document.getElementById('splash').style.display = 'none';
             }
+
+            renderMenu();
+            initScrollSpy();
+
+            setTimeout(() => _dismissSplash(() => {
+                if (!saved) _showOnboarding(); // prima volta → mostra onboarding
+                // se sessione esiste → menu già visibile sotto
+            }), 2900);
 
             // stepper persone
             document.getElementById('ob-people-minus').addEventListener('click', () => {
