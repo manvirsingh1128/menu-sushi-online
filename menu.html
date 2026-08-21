@@ -1740,8 +1740,7 @@
                         order_details: JSON.stringify([]),
                         customer_notes: sel ? sel.textContent : null,
                         status: 'pending',
-                        waiter_request: reqType,
-                        people_count: tableSize
+                        waiter_request: reqType
                     }).then(({ error }) => { if (error) console.warn('[Jun] cameriere:', error.message); });
                 }
             });
@@ -2547,8 +2546,7 @@
                     order_details: JSON.stringify(_details),
                     customer_notes: _note,
                     status: 'pending',
-                    waiter_request: null,
-                    people_count: tableSize
+                    waiter_request: null
                 }).then(({ error }) => { if (error) console.warn('[Jun] ordine:', error.message); });
             }
             // Svuota nota

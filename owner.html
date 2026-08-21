@@ -251,14 +251,6 @@ main{padding:0 16px 24px;}
   <!-- ── OGGI ── -->
   <div class="section active" id="sec-oggi">
     <div class="kpi-grid">
-      <div class="kpi-card kpi-gold">
-        <div class="kpi-icon-row">
-          <span class="kpi-label">Coperti</span>
-          <div class="kpi-icon-el"><i class="fas fa-users"></i></div>
-        </div>
-        <div class="kpi-value" id="k-coperti">—</div>
-        <div class="kpi-sub" id="k-coperti-sub">persone nel periodo</div>
-      </div>
       <div class="kpi-card">
         <div class="kpi-icon-row">
           <span class="kpi-label">Ordini</span>
@@ -269,11 +261,11 @@ main{padding:0 16px 24px;}
       </div>
       <div class="kpi-card">
         <div class="kpi-icon-row">
-          <span class="kpi-label">Portate/Persona</span>
+          <span class="kpi-label">Portate/Ordine</span>
           <div class="kpi-icon-el" style="background:#2d6a4f;"><i class="fas fa-layer-group"></i></div>
         </div>
         <div class="kpi-value" id="k-avg">—</div>
-        <div class="kpi-sub" id="k-avg-sub">portate per persona</div>
+        <div class="kpi-sub" id="k-avg-sub">portate medie</div>
       </div>
       <div class="kpi-card kpi-gold" style="grid-column:1/-1;">
         <div class="kpi-icon-row">
@@ -553,15 +545,12 @@ function generateDemoOrders() {
   const now = new Date();
   const orders = [];
   let id = 0;
-  const tablePeople = {}; // chiave "table-date" → people_count fisso per sessione
-
   for (let dayBack = 29; dayBack >= 0; dayBack--) {
     const date = new Date(now);
     date.setDate(date.getDate() - dayBack);
     const dow = date.getDay();
     const isWeekend = (dow === 5 || dow === 6);
     const isLunchDay = (dow === 0 || dow === 6);
-    const dateStr = date.toISOString().slice(0, 10);
 
     const addOrders = (count, hourMin, hourMax) => {
       for (let i = 0; i < count; i++) {
@@ -569,9 +558,6 @@ function generateDemoOrders() {
         const min  = Math.floor(r() * 60);
         const t = new Date(date); t.setHours(hour, min, 0, 0);
         const table = TABLES[Math.floor(r() * TABLES.length)];
-        const key = `${table}-${dateStr}-${hour < 16 ? 'L' : 'D'}`;
-        if (!tablePeople[key]) tablePeople[key] = 2 + Math.floor(r() * 5); // 2-6 persone
-        const people_count = tablePeople[key];
         const nItems = 2 + Math.floor(r() * 4);
         const items = [];
         for (let j = 0; j < nItems; j++) {
@@ -580,7 +566,7 @@ function generateDemoOrders() {
           const existing = items.find(x => x.code === dish.c);
           if (existing) { existing.qty++; } else { items.push({ qty: 1 + Math.floor(r()*2), name: dish.n, code: dish.c, cat: dish.cat }); }
         }
-        orders.push({ order_id: `demo-${id++}`, table_number: table, people_count,
+        orders.push({ order_id: `demo-${id++}`, table_number: table,
           status:'served', waiter_request: null, created_at: t.toISOString(), items });
       }
     };
@@ -590,23 +576,6 @@ function generateDemoOrders() {
   }
   demoOrders = orders;
   return orders;
-}
-
-// ── COPERTI ───────────────────────────────────────────────────────────────
-// Per ogni tavolo per sessione (giorno + fascia pranzo/cena) prende people_count UNA volta
-function aggCoperti(orders) {
-  const seen = {};
-  let total = 0;
-  orders.filter(o => !o.waiter_request).forEach(o => {
-    const d = new Date(o.created_at);
-    const fascia = d.getHours() < 16 ? 'L' : 'D';
-    const key = `${o.table_number}-${d.toISOString().slice(0,10)}-${fascia}`;
-    if (!seen[key]) {
-      seen[key] = true;
-      total += (o.people_count || 1);
-    }
-  });
-  return total;
 }
 
 // ── FILTER ────────────────────────────────────────────────────────────────
@@ -666,16 +635,10 @@ function render() {
   const peakH = byHour.indexOf(Math.max(...byHour));
   const { thisW, lastW, delta } = weekCompare();
 
-  // Coperti
-  const coperti = aggCoperti(orders);
-  const avgPerPersona = coperti ? (totalItems / coperti).toFixed(1) : '—';
-
   // KPI oggi
-  document.getElementById('k-coperti').textContent     = coperti || '—';
-  document.getElementById('k-coperti-sub').textContent = coperti ? `${orders.length} ordini` : 'persone nel periodo';
-  document.getElementById('k-ordini').textContent      = orders.length;
-  document.getElementById('k-avg').textContent         = avgPerPersona;
-  document.getElementById('k-avg-sub').textContent     = coperti ? 'portate per persona' : 'portate per ordine';
+  document.getElementById('k-ordini').textContent = orders.length;
+  document.getElementById('k-avg').textContent    = avgPer;
+  document.getElementById('k-avg-sub').textContent= 'portate medie per ordine';
   document.getElementById('k-top').textContent         = dishes[0]?.name || '—';
   document.getElementById('k-top-qty').textContent     = dishes[0] ? `${dishes[0].qty} porzioni` : '';
   document.getElementById('k-ora').textContent         = orders.length ? `${peakH}:00` : '—';
