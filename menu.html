@@ -754,8 +754,10 @@
             .dish-img-wrap { width: 62px; height: 62px; }
             .dish-img-placeholder { width: 62px; height: 62px; }
             .cat-tab { padding: 6px 12px; font-size: 0.78em; }
-            .header-icon { padding: 8px 8px; font-size: 1.05em; }
+            .header-icon { padding: 8px 6px; font-size: 1.0em; }
             #footer-waiter, #footer-cart { font-size: 0.82em; padding: 12px 10px; gap: 6px; }
+            .logo { max-width: 80px; }
+            #notes-toggle-wrapper { display: none; }
         }
     </style>
 </head>
@@ -2220,8 +2222,7 @@
             return map;
         }
 
-        function openCart() {
-            const overlay = document.getElementById('cart-overlay');
+        function refreshCartList() {
             const list = document.getElementById('cart-list');
             const subtitle = document.getElementById('cart-subtitle');
             const ctaCount = document.getElementById('cart-cta-count');
@@ -2229,7 +2230,6 @@
             const map = buildDishMap();
             const entries = Object.entries(cart).filter(([, q]) => q > 0);
             const total = entries.reduce((a, [, q]) => a + q, 0);
-
             const t = translations[currentLang] || translations.it;
             list.innerHTML = '';
             if (entries.length === 0) {
@@ -2262,12 +2262,15 @@
                     list.appendChild(row);
                 });
             }
-
-            lockScroll();
-            overlay.classList.add('open');
         }
 
-        function closeCart() {
+        function openCart() {
+            refreshCartList();
+            lockScroll();
+            document.getElementById('cart-overlay').classList.add('open');
+        }
+
+        function closeCart(onClose) {
             const overlay = document.getElementById('cart-overlay');
             const sheet = document.getElementById('cart-sheet');
             sheet.style.animation = 'cartSlideDown 0.22s cubic-bezier(0.4,0,0.8,0.6) forwards';
@@ -2275,6 +2278,7 @@
                 sheet.style.animation = '';
                 overlay.classList.remove('open');
                 unlockScroll();
+                if (onClose) onClose();
             }, { once: true });
         }
 
@@ -2296,7 +2300,7 @@
                 if (qtyEl) qtyEl.classList.remove('show');
                 if (card) card.classList.remove('in-cart');
                 updateCartBadge();
-                openCart();
+                refreshCartList();
                 return;
             }
             cart[id] = newQty;
@@ -2312,7 +2316,6 @@
         }
 
         function cartSendOrder() {
-            // svuota carrello e resetta UI
             Object.keys(cart).forEach(id => {
                 delete cart[id];
                 const addBtn = document.getElementById(`add-${id}`);
@@ -2323,11 +2326,10 @@
                 if (card) card.classList.remove('in-cart');
             });
             updateCartBadge();
-            closeCart();
-            setTimeout(() => {
+            closeCart(() => {
                 document.getElementById('order-confirm-overlay').classList.add('open');
                 lockScroll();
-            }, 280);
+            });
         }
 
         function closeOrderConfirm() {
