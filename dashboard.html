@@ -21,10 +21,10 @@ header{position:sticky;top:0;z-index:200;background:#111;height:50px;padding:0 1
 .h-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:blink 2s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
 .h-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
-#clock{font-size:0.86em;font-weight:700;color:#e0e0e0;font-variant-numeric:tabular-nums;}
+#clock{font-size:0.86em;font-weight:700;color:#ddd;font-variant-numeric:tabular-nums;}
 #hist-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;color:#bbb;font-size:0.7em;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;}
 #hist-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
-#hist-badge{background:#ea580c;color:#fff;border-radius:20px;font-size:.75em;font-weight:800;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;}
+#hist-badge{background:#ea580c;color:#fff;border-radius:20px;font-size:.74em;font-weight:800;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;}
 #hist-badge.on{display:inline-flex;}
 
 /* ── TOOLBAR ── */
@@ -52,20 +52,17 @@ header{position:sticky;top:0;z-index:200;background:#111;height:50px;padding:0 1
 .col-hd{padding:8px 12px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;background:#fff;position:sticky;top:50px;z-index:10;}
 .col-hd-l{display:flex;align-items:center;gap:6px;}
 .col-hd-l h2{font-size:0.7em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#777;}
-.col-badge{padding:1px 7px;border-radius:20px;font-size:0.67em;font-weight:700;}
+.col-badge{padding:1px 7px;border-radius:20px;font-size:0.66em;font-weight:700;}
 .badge-req{background:#fff3eb;color:#ea580c;}
 .badge-ord{background:#fffbeb;color:#d97706;}
-
 .col-cards{padding:7px;display:flex;flex-direction:column;gap:6px;flex:1;}
 .ord-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:7px;padding:8px;align-items:start;}
 
 /* ── STATUS STRIP ── */
-#status-strip{grid-column:1/-1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.ss-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.7em;font-weight:700;letter-spacing:.3px;}
-.ss-ready{background:#dcfce7;color:#15803d;}
-.ss-taken{background:#ede9fe;color:#6d28d9;}
-.ss-new  {background:#fef3c7;color:#b45309;}
-.ss-urg  {background:#fee2e2;color:#b91c1c;}
+#status-strip{grid-column:1/-1;display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-height:6px;}
+.ss-pill{display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;font-size:0.68em;font-weight:700;}
+.ss-ready{background:#dcfce7;color:#15803d;}.ss-taken{background:#ede9fe;color:#6d28d9;}
+.ss-new  {background:#fef3c7;color:#b45309;}.ss-urg  {background:#fee2e2;color:#b91c1c;}
 
 /* ── EMPTY ── */
 .empty-state{padding:36px 16px;text-align:center;color:#ccc;display:flex;flex-direction:column;align-items:center;gap:8px;}
@@ -74,7 +71,7 @@ header{position:sticky;top:0;z-index:200;background:#111;height:50px;padding:0 1
 /* ── CARD ── */
 @keyframes slideIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 @keyframes cardOut{to{opacity:0;transform:scale(.95)}}
-@keyframes readyPulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}50%{box-shadow:0 0 0 6px rgba(22,163,74,.18)}}
+@keyframes readyPulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}50%{box-shadow:0 0 0 6px rgba(22,163,74,.16)}}
 
 .kds-card{background:#fff;border-radius:11px;border:1px solid #e8e8e8;border-left:3px solid #ddd;display:flex;flex-direction:column;animation:slideIn .18s ease-out;box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative;}
 .kds-card.card-out{animation:cardOut .2s ease-out forwards;}
@@ -84,126 +81,141 @@ header{position:sticky;top:0;z-index:200;background:#111;height:50px;padding:0 1
 .s-req  {border-left-color:#ea580c;}
 .s-urg  {border-left-color:#dc2626;}
 
-/* ── EDIT BUTTON (pencil) ── */
-.card-edit{
-  position:absolute;top:8px;right:8px;
-  width:26px;height:26px;border-radius:50%;
-  background:#f5f5f5;border:1px solid #e8e8e8;
-  color:#bbb;font-size:.7em;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .12s;z-index:5;
-}
-.card-edit:hover{background:#ebebeb;color:#555;border-color:#ccc;}
+/* ── CARD ICON BUTTONS (edit + note) ── */
+.card-btns-stack{position:absolute;top:7px;right:7px;display:flex;flex-direction:column;gap:3px;z-index:5;}
+.cib{width:24px;height:24px;border-radius:6px;border:1px solid #e8e8e8;background:#f8f8f8;color:#ccc;font-size:.68em;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.cib:hover{background:#ebebeb;color:#555;border-color:#ccc;}
+.cib-note.has-sn{background:#eff6ff;border-color:#bfdbfe;color:#3b82f6;}
 
-/* ── CARD CLICK AREA ── */
+/* ── CARD CLICK ── */
 .card-click{cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,.03);}
-.card-click:active{opacity:.92;}
+.card-click:active{opacity:.9;}
 
 /* ── CARD TOP ── */
 .card-top{padding:8px 36px 4px 10px;display:flex;align-items:flex-start;justify-content:space-between;}
 .card-top-l{display:flex;flex-direction:column;gap:1px;}
 .card-badge{display:inline-flex;align-items:center;font-size:0.58em;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:2px 6px;border-radius:20px;width:fit-content;}
-.cb-new  {background:#fef3c7;color:#b45309;}
-.cb-taken{background:#ede9fe;color:#6d28d9;}
-.cb-ready{background:#dcfce7;color:#15803d;}
-.cb-req  {background:#ffedd5;color:#c2410c;}
+.cb-new  {background:#fef3c7;color:#b45309;}.cb-taken{background:#ede9fe;color:#6d28d9;}
+.cb-ready{background:#dcfce7;color:#15803d;}.cb-req  {background:#ffedd5;color:#c2410c;}
 .cb-urg  {background:#fee2e2;color:#b91c1c;}
 .card-tnum{font-size:2.2em;font-weight:800;line-height:1;letter-spacing:-0.04em;color:#111;}
 .card-top-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-top:2px;}
 .card-timer{font-size:0.67em;font-weight:600;color:#ccc;font-variant-numeric:tabular-nums;}
 .card-timer.t-warn{color:#d97706;}.card-timer.t-urg{color:#dc2626;font-weight:700;}
-.card-count{display:inline-flex;align-items:center;gap:3px;background:#111;color:#fff;font-size:0.62em;font-weight:700;padding:2px 6px;border-radius:20px;}
+.card-count{display:inline-flex;align-items:center;gap:3px;background:#111;color:#fff;font-size:0.61em;font-weight:700;padding:2px 6px;border-radius:20px;}
 
 /* ── CARD BODY ── */
 .card-body{padding:0 10px 8px;display:flex;flex-direction:column;gap:5px;}
 .card-div{border:none;border-top:1px solid #f2f2f2;margin:3px 0 2px;}
 .card-items{list-style:none;display:flex;flex-direction:column;gap:2px;}
 .card-items li{display:flex;align-items:baseline;gap:5px;font-size:0.8em;}
-.i-qty{font-weight:700;min-width:20px;color:#bbb;}
-.i-name{color:#222;flex:1;line-height:1.3;}
-.i-more{display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-size:0.72em;font-weight:700;padding:3px 8px;border-radius:7px;margin-top:1px;}
-.card-note{display:flex;align-items:flex-start;gap:5px;padding:6px 8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:7px;font-size:0.76em;font-weight:600;color:#92400e;line-height:1.4;}
-.card-note i{color:#f59e0b;flex-shrink:0;margin-top:1px;font-size:.85em;}
+.i-qty{font-weight:700;min-width:20px;color:#bbb;}.i-name{color:#222;flex:1;line-height:1.3;}
+.i-more{display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-size:0.71em;font-weight:700;padding:3px 8px;border-radius:7px;margin-top:1px;}
+.card-note{display:flex;align-items:flex-start;gap:5px;padding:6px 8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:7px;font-size:0.75em;font-weight:600;color:#92400e;line-height:1.4;}
+.card-note i{color:#f59e0b;flex-shrink:0;margin-top:1px;font-size:.82em;}
+.card-staff-note{display:flex;align-items:flex-start;gap:5px;padding:6px 8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;font-size:0.75em;font-weight:600;color:#1e40af;line-height:1.4;}
+.card-staff-note i{color:#3b82f6;flex-shrink:0;margin-top:1px;font-size:.82em;}
 
-/* ── STAFF REQUEST ── */
+/* ── STAFF REQUEST ROW ── */
 .req-row{display:flex;align-items:center;gap:8px;padding:7px 9px;background:#fff7f0;border-radius:8px;font-size:0.84em;font-weight:600;color:#c2410c;}
-.req-row i{font-size:.95em;width:16px;text-align:center;color:#ea580c;}
+.req-row i{font-size:.92em;width:16px;text-align:center;color:#ea580c;}
 
 /* ── ACTION BUTTON ── */
 .card-btn{width:100%;padding:10px;border:none;border-top:1px solid #f0f0f0;border-radius:0 0 10px 10px;font-family:inherit;font-size:0.77em;font-weight:700;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;background:#fafafa;color:#aaa;transition:filter .1s;}
 .card-btn:hover{filter:brightness(.94);}
-.card-btn:active{filter:brightness(.88);}
 .btn-new  {color:#b45309;}.btn-new:hover{background:#fffbeb;}
 .btn-taken{color:#6d28d9;}.btn-taken:hover{background:#f5f3ff;}
 .btn-ready{background:#16a34a;color:#fff;border-top-color:transparent;}
 .btn-ready:hover{background:#15803d;}
 .btn-req  {color:#c2410c;}.btn-req:hover{background:#fff7f0;}
 
-/* Done overlay */
+/* Done */
 .done-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;gap:4px;text-align:center;}
 .done-wrap i{font-size:1.9em;color:#16a34a;}.done-wrap strong{color:#16a34a;font-size:.84em;}.done-wrap small{color:#bbb;font-size:0.7em;}
 
 /* ─────────── POPUP BASE ─────────── */
 .popup-wrap{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.48);opacity:0;pointer-events:none;transition:opacity .18s;}
 .popup-wrap.open{opacity:1;pointer-events:auto;}
-.popup-box{background:#fff;border-radius:18px;width:min(460px,93vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.22);transform:scale(.95) translateY(10px);transition:transform .22s cubic-bezier(.33,1,.68,1);overflow:hidden;}
+.popup-box{background:#fff;border-radius:18px;width:min(440px,93vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.22);transform:scale(.95) translateY(10px);transition:transform .22s cubic-bezier(.33,1,.68,1);overflow:hidden;}
 .popup-wrap.open .popup-box{transform:scale(1) translateY(0);}
 
 .pp-head{padding:14px 16px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;}
 .pp-title{display:flex;flex-direction:column;gap:2px;}
 .pp-badge{font-size:0.6em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:20px;width:fit-content;}
-.pp-tnum{font-size:2.6em;font-weight:800;line-height:1;letter-spacing:-0.04em;color:#111;}
+.pp-tnum{font-size:2.4em;font-weight:800;line-height:1;letter-spacing:-0.04em;color:#111;}
 .pp-tlbl{font-size:0.56em;font-weight:600;color:#ccc;letter-spacing:.5px;text-transform:uppercase;}
 .pp-meta{font-size:0.7em;color:#aaa;margin-top:1px;}
-.pp-close{width:30px;height:30px;border:none;background:#f4f4f4;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#777;font-size:.9em;flex-shrink:0;}
+.pp-close{width:30px;height:30px;border:none;background:#f4f4f4;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#777;font-size:.88em;flex-shrink:0;}
 .pp-close:hover{background:#ebebeb;}
 
 .pp-body{padding:12px 16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;}
 .pp-sec{font-size:0.62em;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:4px;}
 .pp-items{list-style:none;display:flex;flex-direction:column;}
-.pp-items li{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:0.93em;}
+.pp-items li{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:0.92em;}
 .pp-items li:last-child{border-bottom:none;}
 .pp-qty{font-weight:800;min-width:28px;color:#333;font-size:1.05em;}
 .pp-name{flex:1;color:#1a1a1a;line-height:1.3;}
 .pp-code{color:#ddd;font-size:0.75em;}
-.pp-note{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;font-size:0.88em;font-weight:600;color:#92400e;line-height:1.5;}
-.pp-note i{color:#f59e0b;flex-shrink:0;margin-top:2px;}
-
-.pp-foot{padding:10px 16px 14px;border-top:1px solid #f0f0f0;flex-shrink:0;}
+.pp-note-box{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:10px;font-size:0.88em;font-weight:600;line-height:1.5;}
+.pp-note-client{background:#fffbeb;border:1px solid #fcd34d;color:#92400e;}
+.pp-note-client i{color:#f59e0b;flex-shrink:0;margin-top:2px;}
+.pp-note-staff{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;}
+.pp-note-staff i{color:#3b82f6;flex-shrink:0;margin-top:2px;}
+.pp-foot{padding:10px 16px 14px;border-top:1px solid #f0f0f0;flex-shrink:0;display:flex;flex-direction:column;gap:8px;}
 .pp-btn{width:100%;padding:13px;border:none;border-radius:12px;font-family:inherit;font-size:0.88em;font-weight:700;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:filter .12s;}
 .pp-btn:hover{filter:brightness(.93);}
-.ppbtn-new  {background:#fef3c7;color:#b45309;}
-.ppbtn-taken{background:#ede9fe;color:#5b21b6;}
-.ppbtn-ready{background:#16a34a;color:#fff;}
-.ppbtn-req  {background:#ffedd5;color:#c2410c;}
+.ppbtn-new  {background:#fef3c7;color:#b45309;}.ppbtn-taken{background:#ede9fe;color:#5b21b6;}
+.ppbtn-ready{background:#16a34a;color:#fff;}.ppbtn-req  {background:#ffedd5;color:#c2410c;}
 .ppbtn-done {background:#f5f5f5;color:#aaa;cursor:default;}
-
-/* ── STORIA ── */
-.hist-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .1s;border-radius:6px;padding-left:4px;}
-.hist-item:hover{background:#fafafa;}
-.hist-item:last-child{border-bottom:none;}
-.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.hd-ord{background:#16a34a;}.hd-req{background:#ea580c;}
-.hist-main{flex:1;}.hist-table{font-weight:700;font-size:0.88em;color:#1a1a1a;}.hist-desc{font-size:0.76em;color:#aaa;margin-top:1px;}
-.hist-time{font-size:0.7em;color:#ccc;font-variant-numeric:tabular-nums;flex-shrink:0;}
-.hist-empty{text-align:center;color:#ccc;padding:28px;font-size:0.84em;}
+.ppbtn-save {background:#111;color:#fff;}
+.ppbtn-save:hover{background:#333;}
 
 /* ── EDIT POPUP ── */
+.ep-choice{width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:#f8f8f8;border:1px solid #e8e8e8;border-radius:12px;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s;}
+.ep-choice:hover{background:#f0f0f0;border-color:#d0d0d0;}
+.ep-choice-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1em;flex-shrink:0;}
+.ep-icon-cucina{background:#fff3eb;color:#ea580c;}
+.ep-icon-tavolo{background:#eff6ff;color:#2563eb;}
+.ep-choice-text{flex:1;}
+.ep-choice-text strong{display:block;font-size:0.92em;font-weight:700;color:#1a1a1a;}
+.ep-choice-text span{font-size:0.78em;color:#aaa;margin-top:1px;display:block;}
+.ep-chevron{color:#ccc;font-size:.85em;}
+.ep-back{display:flex;align-items:center;gap:6px;font-size:0.78em;font-weight:600;color:#aaa;background:none;border:none;cursor:pointer;padding:0 0 4px;font-family:inherit;}
+.ep-back:hover{color:#555;}
 .edit-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5;}
 .edit-item:last-child{border-bottom:none;}
 .edit-item-name{flex:1;font-size:0.88em;color:#222;line-height:1.3;}
 .edit-item-ctrls{display:flex;align-items:center;gap:4px;flex-shrink:0;}
-.edit-qty-btn{width:26px;height:26px;border:1px solid #e0e0e0;background:#f8f8f8;border-radius:6px;font-size:1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#444;line-height:1;}
-.edit-qty-btn:hover{background:#ebebeb;}
-.edit-qty-val{width:28px;text-align:center;font-weight:700;font-size:0.9em;color:#222;}
-.edit-del{width:26px;height:26px;border:none;background:none;color:#ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85em;}
-.edit-del:hover{color:#ef4444;}
+.eqb{width:26px;height:26px;border:1px solid #e0e0e0;background:#f8f8f8;border-radius:6px;font-size:.95em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#444;}
+.eqb:hover{background:#ebebeb;}
+.eqv{width:26px;text-align:center;font-weight:700;font-size:0.88em;color:#222;}
+.edel{width:26px;height:26px;border:none;background:none;color:#ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.82em;}
+.edel:hover{color:#ef4444;}
 .edit-field label{display:block;font-size:0.62em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#bbb;margin-bottom:5px;}
 .edit-field input,.edit-field textarea{width:100%;padding:9px 11px;border:1px solid #e0e0e0;border-radius:9px;font-family:inherit;font-size:0.88em;color:#222;outline:none;resize:vertical;}
 .edit-field input:focus,.edit-field textarea:focus{border-color:#a78bfa;}
 .edit-field textarea{min-height:60px;}
-.pp-btn-save{background:#111;color:#fff;}
-.pp-btn-save:hover{background:#333;}
+
+/* ── STORIA ── */
+.hist-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f5f5f5;cursor:pointer;border-radius:6px;}
+.hist-item:hover{background:#fafafa;}
+.hist-item:last-child{border-bottom:none;}
+.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.hd-ord{background:#16a34a;}.hd-req{background:#ea580c;}
+.hist-main{flex:1;}.hist-table{font-weight:700;font-size:0.88em;color:#1a1a1a;display:flex;align-items:center;gap:6px;}
+.hist-note-icon{color:#f59e0b;font-size:.78em;}
+.hist-desc{font-size:0.76em;color:#aaa;margin-top:1px;}
+.hist-time{font-size:0.7em;color:#ccc;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.hist-empty{text-align:center;color:#ccc;padding:28px;font-size:0.84em;}
+
+/* ── NOTE STAFF POPUP ── */
+#note-popup .popup-box{max-height:50vh;}
+#np-text{width:100%;min-height:90px;padding:10px 12px;border:1px solid #e0e0e0;border-radius:10px;font-family:inherit;font-size:0.9em;resize:vertical;outline:none;}
+#np-text:focus{border-color:#93c5fd;}
+.ppbtn-note{background:#eff6ff;color:#1d4ed8;}
+.ppbtn-note:hover{background:#dbeafe;}
+.ppbtn-del-note{background:#fff1f2;color:#e11d48;font-size:0.8em;padding:10px;}
+.ppbtn-del-note:hover{background:#ffe4e6;}
 </style>
 </head>
 <body>
@@ -247,14 +259,13 @@ header{position:sticky;top:0;z-index:200;background:#111;height:50px;padding:0 1
       <div class="empty-state" id="empty-req"><i class="fas fa-bell-slash"></i><p>Nessuna richiesta</p></div>
     </div>
   </div>
-
   <div class="col-ord mob-on" id="col-ord">
     <div class="col-hd" style="background:#ebebeb;border-bottom-color:#ddd;">
       <div class="col-hd-l"><i class="fas fa-utensils" style="color:#d97706;font-size:.78em;"></i><h2>Ordini cucina</h2></div>
       <span class="col-badge badge-ord" id="badge-ord">0</span>
     </div>
     <div class="ord-grid" id="ord-container">
-      <div id="status-strip" style="grid-column:1/-1;display:flex;align-items:center;gap:5px;flex-wrap:wrap;"></div>
+      <div id="status-strip" style="grid-column:1/-1;display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-height:4px;"></div>
       <div class="empty-state" id="empty-ord" style="grid-column:1/-1"><i class="fas fa-circle-check"></i><p>Nessun ordine</p></div>
     </div>
   </div>
@@ -273,23 +284,49 @@ header{position:sticky;top:0;z-index:200;background:#111;height:50px;padding:0 1
       <button class="pp-close" onclick="closePopup('detail-popup')"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="pp-body" id="pp-body"></div>
-    <div class="pp-foot"><button class="pp-btn" id="pp-btn"></button></div>
+    <div class="pp-foot" id="pp-foot"></div>
   </div>
 </div>
 
-<!-- ── POPUP MODIFICA ── -->
+<!-- ── POPUP MODIFICA (2 step) ── -->
 <div class="popup-wrap" id="edit-popup" onclick="closePopup('edit-popup')">
   <div class="popup-box" onclick="event.stopPropagation()">
     <div class="pp-head">
       <div class="pp-title">
-        <span style="font-size:0.6em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#aaa;">MODIFICA ORDINE</span>
+        <span style="font-size:0.6em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#aaa;">MODIFICA</span>
         <span class="pp-tlbl" style="margin-top:4px;">Tavolo</span>
         <span class="pp-tnum" id="ep-tnum" style="font-size:2em;"></span>
       </div>
       <button class="pp-close" onclick="closePopup('edit-popup')"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="pp-body" id="ep-body"></div>
-    <div class="pp-foot"><button class="pp-btn pp-btn-save" onclick="saveEdit()"><i class="fas fa-floppy-disk"></i> Salva modifiche</button></div>
+    <div class="pp-foot" id="ep-foot" style="display:none;">
+      <button class="pp-btn ppbtn-save" onclick="saveEdit()"><i class="fas fa-floppy-disk"></i> Salva modifiche</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── POPUP NOTA STAFF ── -->
+<div class="popup-wrap" id="note-popup" onclick="closePopup('note-popup')">
+  <div class="popup-box" onclick="event.stopPropagation()">
+    <div class="pp-head">
+      <div class="pp-title">
+        <span style="font-size:0.6em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#3b82f6;">NOTA INTERNA STAFF</span>
+        <span class="pp-tlbl" style="margin-top:4px;">Tavolo</span>
+        <span class="pp-tnum" id="np-tnum" style="font-size:2em;"></span>
+      </div>
+      <button class="pp-close" onclick="closePopup('note-popup')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="pp-body">
+      <div>
+        <div class="pp-sec">Nota visibile solo allo staff</div>
+        <textarea id="np-text" placeholder="Es: tavolo VIP, cliente allergia soia, priorità alta..."></textarea>
+      </div>
+    </div>
+    <div class="pp-foot">
+      <button class="pp-btn ppbtn-note" onclick="saveStaffNote()"><i class="fas fa-floppy-disk"></i> Salva nota</button>
+      <button class="pp-btn ppbtn-del-note" id="np-del-btn" onclick="deleteStaffNote()" style="display:none;"><i class="fas fa-trash"></i> Rimuovi nota</button>
+    </div>
   </div>
 </div>
 
@@ -299,7 +336,7 @@ header{position:sticky;top:0;z-index:200;background:#111;height:50px;padding:0 1
     <div class="pp-head">
       <div class="pp-title">
         <span style="font-size:0.6em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#aaa;">STORICO TURNO</span>
-        <span style="font-size:1.6em;font-weight:800;color:#111;margin-top:2px;">Completati</span>
+        <span style="font-size:1.5em;font-weight:800;color:#111;margin-top:2px;">Completati</span>
       </div>
       <button class="pp-close" onclick="closePopup('hist-popup')"><i class="fas fa-xmark"></i></button>
     </div>
@@ -318,20 +355,26 @@ const ordData   = new Map();
 const animating = new Set();
 const histLog   = [];
 let   editState = null;
+let   editStep  = 'choose'; // 'choose' | 'cucina' | 'tavolo'
+let   noteOrdId = null;
+
+// ── Staff notes in localStorage ─────────────────────────────────────────────
+const SN_KEY = id => `jun_sn_${id}`;
+function getStaffNote(id){ return localStorage.getItem(SN_KEY(id))||''; }
+function setStaffNote(id,txt){ txt ? localStorage.setItem(SN_KEY(id),txt) : localStorage.removeItem(SN_KEY(id)); }
 
 // ── Mobile tabs ─────────────────────────────────────────────────────────────
-function mobTab(which, btn) {
-  document.querySelectorAll('.mt-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.getElementById('col-req').classList.toggle('mob-on', which==='req');
-  document.getElementById('col-ord').classList.toggle('mob-on', which==='ord');
+function mobTab(which,btn){
+  document.querySelectorAll('.mt-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.getElementById('col-req').classList.toggle('mob-on',which==='req');
+  document.getElementById('col-ord').classList.toggle('mob-on',which==='ord');
 }
 
-// ── Clock ────────────────────────────────────────────────────────────────────
-function tick(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
+// ── Clock ─────────────────────────────────────────────────────────────────────
+function tick(){ document.getElementById('clock').textContent=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
 tick(); setInterval(tick,10000);
 
-// ── Audio ────────────────────────────────────────────────────────────────────
+// ── Audio ─────────────────────────────────────────────────────────────────────
 function beep(){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -345,7 +388,7 @@ function beep(){
   }catch(_){}
 }
 
-// ── Timer ────────────────────────────────────────────────────────────────────
+// ── Timer ─────────────────────────────────────────────────────────────────────
 function elMin(ts){ return Math.floor((Date.now()-new Date(ts))/60000); }
 function fmtMin(m){ return m<1?'<1 min':`${m} min`; }
 function timerCls(m,st){ if(st==='ready') return m>=5?'t-urg':'t-warn'; return m>=10?'t-urg':m>=5?'t-warn':''; }
@@ -367,7 +410,7 @@ setInterval(()=>{
   });
 },60000);
 
-// ── Parse items ──────────────────────────────────────────────────────────────
+// ── Parse items ───────────────────────────────────────────────────────────────
 function parseItems(raw){
   try{return JSON.parse(raw);}catch{
     return String(raw||'').split(',').filter(Boolean).map(s=>{
@@ -378,9 +421,7 @@ function parseItems(raw){
 }
 
 // ── Status config ─────────────────────────────────────────────────────────────
-// CYCLE: pending → preparing (= "preso in carico") → ready → served
-const CYCLE = ['pending','preparing','ready'];
-
+const CYCLE=['pending','preparing','ready'];
 const STAFF={
   explanation:{icon:'fa-circle-info',label:'Spiegazione piatti'},
   drinks:     {icon:'fa-mug-saucer', label:'Ordine bevande'},
@@ -388,31 +429,28 @@ const STAFF={
   call:       {icon:'fa-bell',       label:'Chiamata cameriere'},
   other:      {icon:'fa-comment-dots',label:'Altra richiesta'},
 };
-
-function statusInfo(st, isUrg) {
-  if(isUrg)         return {sClass:'s-urg',  bCls:'cb-urg',  bTxt:'ATTESA',          btnCls:'btn-new',  btnTxt:'<i class="fas fa-fire-burner"></i> Preso in carico'};
-  if(st==='pending')return {sClass:'s-new',  bCls:'cb-new',  bTxt:'NUOVO',           btnCls:'btn-new',  btnTxt:'<i class="fas fa-hand"></i> Preso in carico'};
-  if(st==='preparing')return{sClass:'s-taken',bCls:'cb-taken',bTxt:'PRESO IN CARICO',btnCls:'btn-taken',btnTxt:'<i class="fas fa-bell-concierge"></i> Pronto'};
-  return               {sClass:'s-ready',bCls:'cb-ready',bTxt:'PRONTO',         btnCls:'btn-ready',btnTxt:'<i class="fas fa-check"></i> Servito'};
+function sInfo(st,isUrg){
+  if(isUrg)           return{sClass:'s-urg',  bCls:'cb-urg',  bTxt:'ATTESA',          btnCls:'btn-new',  btnTxt:'<i class="fas fa-hand"></i> Preso in carico'};
+  if(st==='pending')  return{sClass:'s-new',  bCls:'cb-new',  bTxt:'NUOVO',           btnCls:'btn-new',  btnTxt:'<i class="fas fa-hand"></i> Preso in carico'};
+  if(st==='preparing')return{sClass:'s-taken',bCls:'cb-taken',bTxt:'PRESO IN CARICO',  btnCls:'btn-taken',btnTxt:'<i class="fas fa-bell-concierge"></i> Pronto'};
+  return               {sClass:'s-ready',bCls:'cb-ready',bTxt:'PRONTO',              btnCls:'btn-ready',btnTxt:'<i class="fas fa-check"></i> Servito'};
 }
 
 // ── Popup helpers ─────────────────────────────────────────────────────────────
 function closePopup(id){ document.getElementById(id).classList.remove('open'); }
 
-function openDetailPopup(ordId, isHistEntry) {
-  const o = isHistEntry
-    ? histLog.find(h=>h.orderId===String(ordId))
-    : ordData.get(String(ordId));
+// ── Detail popup ──────────────────────────────────────────────────────────────
+function openDetailPopup(ordId, histEntry){
+  const isHist=!!histEntry;
+  const o=isHist ? histEntry : ordData.get(String(ordId));
   if(!o) return;
 
-  const isHist = !!isHistEntry;
   const items  = isHist ? (o.items||[]) : parseItems(o.order_details);
   const st     = isHist ? 'served' : o.status;
   const min    = isHist ? null : elMin(o.created_at);
   const isUrg  = !isHist && st==='pending' && min>=10;
-  const info   = isHist
-    ? {bCls:'cb-ready',bTxt:'COMPLETATO'}
-    : statusInfo(st, isUrg);
+  const info   = isHist ? {bCls:'cb-ready',bTxt:'COMPLETATO'} : sInfo(st,isUrg);
+  const sNote  = isHist ? (o.staffNote||'') : getStaffNote(String(ordId));
 
   document.getElementById('pp-badge').className='pp-badge '+info.bCls;
   document.getElementById('pp-badge').textContent=info.bTxt;
@@ -420,114 +458,168 @@ function openDetailPopup(ordId, isHistEntry) {
   document.getElementById('pp-meta').textContent=
     isHist ? `Servito alle ${o.time}` : `${items.length} piatt${items.length===1?'o':'i'} · ${fmtMin(min)}`;
 
-  const itemsHtml = items.map(i=>
-    `<li><span class="pp-qty">×${i.qty}</span><span class="pp-name">${i.name}</span>${i.code?`<span class="pp-code">#${i.code}</span>`:''}</li>`
-  ).join('');
-  const noteHtml = (isHist?o.notes:o.customer_notes)
-    ? `<div class="pp-note"><i class="fas fa-exclamation-triangle"></i>${isHist?o.notes:o.customer_notes}</div>` : '';
+  const itemsHtml=items.map(i=>`<li><span class="pp-qty">×${i.qty}</span><span class="pp-name">${i.name}</span>${i.code?`<span class="pp-code">#${i.code}</span>`:''}</li>`).join('');
+  const clientNote=isHist?o.customerNote:o.customer_notes;
+  const noteHtml=clientNote?`<div class="pp-note-box pp-note-client"><i class="fas fa-exclamation-triangle"></i>${clientNote}</div>`:'';
+  const sNoteHtml=sNote?`<div class="pp-note-box pp-note-staff"><i class="fas fa-user-shield"></i><span>Staff — ${sNote}</span></div>`:'';
 
   document.getElementById('pp-body').innerHTML=`
     <div><div class="pp-sec">Piatti ordinati</div><ul class="pp-items">${itemsHtml}</ul></div>
-    ${noteHtml}`;
+    ${noteHtml}${sNoteHtml}`;
 
-  const btn = document.getElementById('pp-btn');
+  const foot=document.getElementById('pp-foot');
   if(isHist){
-    btn.className='pp-btn ppbtn-done';btn.innerHTML='<i class="fas fa-circle-check"></i> Completato';
-    btn.onclick=null;
+    foot.innerHTML=`<button class="pp-btn ppbtn-done"><i class="fas fa-circle-check"></i> Completato</button>`;
   } else {
-    btn.className='pp-btn ppbtn-'+( st==='pending'?'new':st==='preparing'?'taken':'ready');
-    btn.innerHTML=info.btnTxt;
-    btn.onclick=()=>{ closePopup('detail-popup'); triggerAction(ordId,st); };
+    const ppCls='ppbtn-'+(st==='pending'?'new':st==='preparing'?'taken':'ready');
+    foot.innerHTML=`<button class="pp-btn ${ppCls}" id="pp-action-btn">${info.btnTxt}</button>`;
+    document.getElementById('pp-action-btn').addEventListener('click',()=>{ closePopup('detail-popup'); triggerAction(ordId,st); });
   }
-
   document.getElementById('detail-popup').classList.add('open');
 }
 
-function openStaffPopup(ordId) {
+function openStaffPopup(ordId){
   const o=reqData.get(String(ordId));if(!o) return;
-  const type=o.waiter_request||'call';
-  const info=STAFF[type]||STAFF.other;
+  const type=o.waiter_request||'call';const info=STAFF[type]||STAFF.other;
   document.getElementById('pp-badge').className='pp-badge cb-req';
   document.getElementById('pp-badge').textContent='RICHIESTA';
   document.getElementById('pp-tnum').textContent=o.table_number;
   document.getElementById('pp-meta').textContent=fmtMin(elMin(o.created_at))+' fa';
   document.getElementById('pp-body').innerHTML=`
-    <div>
-      <div class="pp-sec">Tipo richiesta</div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px;background:#fff7f0;border-radius:12px;font-size:1em;font-weight:600;color:#c2410c;margin-top:4px;">
-        <i class="fas ${info.icon}" style="font-size:1.3em;color:#ea580c;width:22px;text-align:center;"></i>${info.label}
-      </div>
-    </div>`;
-  const btn=document.getElementById('pp-btn');
-  btn.className='pp-btn ppbtn-req';btn.innerHTML='<i class="fas fa-check"></i> Gestita';
-  btn.onclick=()=>{ closePopup('detail-popup'); dismissStaffById(String(ordId)); };
+    <div><div class="pp-sec">Tipo richiesta</div>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px;background:#fff7f0;border-radius:12px;font-size:1em;font-weight:600;color:#c2410c;margin-top:4px;">
+      <i class="fas ${info.icon}" style="font-size:1.3em;color:#ea580c;width:22px;text-align:center;"></i>${info.label}
+    </div></div>`;
+  const foot=document.getElementById('pp-foot');
+  foot.innerHTML=`<button class="pp-btn ppbtn-req" id="pp-action-btn"><i class="fas fa-check"></i> Gestita</button>`;
+  document.getElementById('pp-action-btn').addEventListener('click',()=>{ closePopup('detail-popup'); dismissStaffById(String(ordId)); });
   document.getElementById('detail-popup').classList.add('open');
 }
 
-// ── Edit popup ────────────────────────────────────────────────────────────────
-function openEditPopup(ordId) {
+// ── Edit popup (2-step) ───────────────────────────────────────────────────────
+function openEditPopup(ordId){
   const o=ordData.get(String(ordId));if(!o) return;
-  editState={ orderId:String(ordId), tableNum:o.table_number, items:JSON.parse(JSON.stringify(parseItems(o.order_details))), notes:o.customer_notes||'' };
+  editState={orderId:String(ordId),tableNum:o.table_number,items:JSON.parse(JSON.stringify(parseItems(o.order_details))),notes:o.customer_notes||''};
   document.getElementById('ep-tnum').textContent=editState.tableNum;
-  renderEditBody();
+  editStep='choose';
+  renderEpBody();
   document.getElementById('edit-popup').classList.add('open');
 }
 
-function renderEditBody() {
-  const itemsHtml = editState.items.map((item,idx)=>`
-    <div class="edit-item">
-      <span class="edit-item-name">${item.name}${item.code?` <span style="color:#ccc;font-size:.8em;">#${item.code}</span>`:''}</span>
-      <div class="edit-item-ctrls">
-        <button class="edit-qty-btn" onclick="editQty(${idx},-1)">−</button>
-        <span class="edit-qty-val">${item.qty}</span>
-        <button class="edit-qty-btn" onclick="editQty(${idx},1)">+</button>
-        <button class="edit-del" onclick="editDel(${idx})" title="Rimuovi"><i class="fas fa-trash"></i></button>
-      </div>
-    </div>`).join('');
-
-  document.getElementById('ep-body').innerHTML=`
-    <div class="edit-field">
-      <label>Numero tavolo</label>
-      <input type="number" id="ep-table" value="${editState.tableNum}" min="1" max="99" oninput="editState.tableNum=this.value">
-    </div>
-    <div>
-      <div class="pp-sec" style="margin-bottom:6px;">Piatti</div>
-      ${itemsHtml.length?itemsHtml:'<p style="font-size:0.82em;color:#ccc;text-align:center;padding:12px;">Tutti i piatti sono stati rimossi</p>'}
-    </div>
-    <div class="edit-field">
-      <label>Note cliente</label>
-      <textarea id="ep-notes" placeholder="Nessuna nota...">${editState.notes}</textarea>
-    </div>`;
+function epGoTo(step){
+  editStep=step;
+  if(step!=='choose'){
+    editState.tableNum=document.getElementById('ep-table')?.value||editState.tableNum;
+    editState.notes=document.getElementById('ep-notes')?.value||editState.notes;
+  }
+  renderEpBody();
 }
 
-function editQty(idx,d){ editState.items[idx].qty=Math.max(1,editState.items[idx].qty+d); renderEditBody(); }
-function editDel(idx){ editState.items.splice(idx,1); renderEditBody(); }
+function renderEpBody(){
+  const body=document.getElementById('ep-body');
+  const foot=document.getElementById('ep-foot');
+  foot.style.display=editStep==='choose'?'none':'';
+
+  if(editStep==='choose'){
+    body.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="ep-choice" onclick="epGoTo('cucina')">
+          <div class="ep-choice-icon ep-icon-cucina"><i class="fas fa-utensils"></i></div>
+          <div class="ep-choice-text">
+            <strong>Piatti e quantità</strong>
+            <span>Correggi gli ordini della cucina</span>
+          </div>
+          <i class="fas fa-chevron-right ep-chevron"></i>
+        </button>
+        <button class="ep-choice" onclick="epGoTo('tavolo')">
+          <div class="ep-choice-icon ep-icon-tavolo"><i class="fas fa-user"></i></div>
+          <div class="ep-choice-text">
+            <strong>Info tavolo / cliente</strong>
+            <span>Numero tavolo e note del cliente</span>
+          </div>
+          <i class="fas fa-chevron-right ep-chevron"></i>
+        </button>
+      </div>`;
+  } else if(editStep==='cucina'){
+    const ih=editState.items.map((it,idx)=>`
+      <div class="edit-item">
+        <span class="edit-item-name">${it.name}${it.code?` <span style="color:#ccc;font-size:.8em;">#${it.code}</span>`:''}</span>
+        <div class="edit-item-ctrls">
+          <button class="eqb" onclick="editQty(${idx},-1)">−</button>
+          <span class="eqv">${it.qty}</span>
+          <button class="eqb" onclick="editQty(${idx},1)">+</button>
+          <button class="edel" onclick="editDel(${idx})"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`).join('');
+    body.innerHTML=`
+      <button class="ep-back" onclick="epGoTo('choose')"><i class="fas fa-chevron-left"></i> Indietro</button>
+      <div class="pp-sec" style="margin-bottom:6px;">Piatti</div>
+      ${ih||'<p style="color:#ccc;text-align:center;padding:14px;font-size:.84em;">Nessun piatto rimasto</p>'}`;
+  } else {
+    body.innerHTML=`
+      <button class="ep-back" onclick="epGoTo('choose')"><i class="fas fa-chevron-left"></i> Indietro</button>
+      <div class="edit-field"><label>Numero tavolo</label>
+        <input type="number" id="ep-table" value="${editState.tableNum}" min="1" max="99">
+      </div>
+      <div class="edit-field"><label>Note cliente</label>
+        <textarea id="ep-notes" placeholder="Nessuna nota...">${editState.notes}</textarea>
+      </div>`;
+  }
+}
+
+function editQty(idx,d){ editState.items[idx].qty=Math.max(1,editState.items[idx].qty+d); renderEpBody(); }
+function editDel(idx){ editState.items.splice(idx,1); renderEpBody(); }
 
 async function saveEdit(){
   if(!editState) return;
-  const tableNum = parseInt(document.getElementById('ep-table').value)||editState.tableNum;
-  const notes    = document.getElementById('ep-notes').value.trim()||null;
-  const{error}  = await client.from('orders').update({
-    table_number:tableNum, order_details:JSON.stringify(editState.items), customer_notes:notes
-  }).eq('order_id',editState.orderId);
+  const tableNum=parseInt(document.getElementById('ep-table')?.value||editState.tableNum)||editState.tableNum;
+  const notes=document.getElementById('ep-notes')?.value.trim()||null;
+  const{error}=await client.from('orders').update({table_number:tableNum,order_details:JSON.stringify(editState.items),customer_notes:notes}).eq('order_id',editState.orderId);
   if(!error){
     const o=ordData.get(editState.orderId);
     if(o) ordData.set(editState.orderId,{...o,table_number:tableNum,order_details:JSON.stringify(editState.items),customer_notes:notes});
     closePopup('edit-popup');
     renderOrders();
-  } else { alert('Errore salvataggio: '+error.message); }
+  } else alert('Errore: '+error.message);
+}
+
+// ── Note staff popup ──────────────────────────────────────────────────────────
+function openNotePopup(ordId){
+  noteOrdId=String(ordId);
+  const o=ordData.get(noteOrdId);
+  document.getElementById('np-tnum').textContent=o?.table_number||'?';
+  const existing=getStaffNote(noteOrdId);
+  document.getElementById('np-text').value=existing;
+  document.getElementById('np-del-btn').style.display=existing?'':'none';
+  document.getElementById('note-popup').classList.add('open');
+}
+
+function saveStaffNote(){
+  if(!noteOrdId) return;
+  const txt=document.getElementById('np-text').value.trim();
+  setStaffNote(noteOrdId,txt);
+  closePopup('note-popup');
+  renderOrders();
+}
+
+function deleteStaffNote(){
+  if(!noteOrdId) return;
+  setStaffNote(noteOrdId,'');
+  closePopup('note-popup');
+  renderOrders();
 }
 
 // ── History popup ─────────────────────────────────────────────────────────────
 function openHist(){
   const body=document.getElementById('hist-body');
-  if(!histLog.length){ body.innerHTML=`<p class="hist-empty"><i class="fas fa-clock" style="display:block;font-size:1.6em;margin-bottom:8px;opacity:.2;"></i>Nessun completato ancora</p>`; }
-  else {
+  if(!histLog.length){
+    body.innerHTML=`<p class="hist-empty"><i class="fas fa-clock" style="display:block;font-size:1.6em;margin-bottom:8px;opacity:.2;"></i>Nessun completato ancora</p>`;
+  } else {
     body.innerHTML=`<div>${[...histLog].reverse().map(h=>`
       <div class="hist-item" onclick="openHistDetail('${h.orderId}')">
         <div class="hist-dot hd-${h.type}"></div>
         <div class="hist-main">
-          <div class="hist-table">Tavolo ${h.table}</div>
+          <div class="hist-table">Tavolo ${h.table}${h.customerNote?'<i class="fas fa-note-sticky hist-note-icon" title="Ha note cliente"></i>':''}</div>
           <div class="hist-desc">${h.desc}</div>
         </div>
         <div class="hist-time">${h.time}</div>
@@ -537,42 +629,43 @@ function openHist(){
 }
 
 function openHistDetail(ordId){
+  const entry=histLog.find(h=>h.orderId===String(ordId));
+  if(!entry) return;
   closePopup('hist-popup');
-  setTimeout(()=>openDetailPopup(ordId,true),180);
+  setTimeout(()=>openDetailPopup(ordId,entry),180);
 }
 
-function addHist(type,table,desc,orderId,items,notes){
-  histLog.push({type,table,desc,orderId:String(orderId),items,notes,time:new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})});
+function addHist(type,table,desc,ordId,items,customerNote,staffNote){
+  histLog.push({type,table,desc,orderId:String(ordId),items,customerNote:customerNote||null,staffNote:staffNote||null,time:new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})});
   if(histLog.length>60) histLog.shift();
-  const b=document.getElementById('hist-badge');
-  b.textContent=histLog.length;b.classList.add('on');
+  const b=document.getElementById('hist-badge');b.textContent=histLog.length;b.classList.add('on');
 }
 
 // ── Supabase ops ──────────────────────────────────────────────────────────────
 async function advance(id,cur){
-  const idx=CYCLE.indexOf(cur);
-  const next=idx>=CYCLE.length-1?'served':CYCLE[idx+1];
+  const idx=CYCLE.indexOf(cur);const next=idx>=CYCLE.length-1?'served':CYCLE[idx+1];
   const{error}=await client.from('orders').update({status:next}).eq('order_id',id);
   if(error) console.warn('advance:',error.message);
 }
 
 async function dismissStaffById(id){
   const o=reqData.get(id);
-  if(o) addHist('req',o.table_number,STAFF[o.waiter_request||'call']?.label||'Richiesta',o.order_id,[],null);
+  if(o) addHist('req',o.table_number,STAFF[o.waiter_request||'call']?.label||'Richiesta',o.order_id,[],null,null);
   animating.add(id);reqData.delete(id);
   const card=document.querySelector(`.kds-card[data-id="${id}"]`);
-  if(card){card.classList.add('card-out');setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},250);}
+  if(card){card.classList.add('card-out');setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},240);}
   else animating.delete(id);
   updateStats();
   await client.from('orders').update({status:'handled'}).eq('order_id',id);
 }
 
 function triggerAction(orderId,st){
-  const id=String(orderId);
-  const o=ordData.get(id);
+  const id=String(orderId);const o=ordData.get(id);
   if(st==='ready'){
     const items=o?parseItems(o.order_details):[];
-    addHist('ord',o?.table_number||'?',`${items.length} piatt${items.length===1?'o':'i'}`,id,items,o?.customer_notes||null);
+    const sNote=getStaffNote(id);
+    addHist('ord',o?.table_number||'?',`${items.length} piatt${items.length===1?'o':'i'}`,id,items,o?.customer_notes||null,sNote||null);
+    setStaffNote(id,'');
     const card=document.querySelector(`.kds-card[data-id="${id}"]`);
     if(card){
       animating.add(id);ordData.delete(id);
@@ -580,7 +673,7 @@ function triggerAction(orderId,st){
       const btn=card.querySelector('.card-btn');if(btn)btn.remove();
       updateStats();
       setTimeout(()=>{card.classList.add('card-out');setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},240);},1300);
-    } else {ordData.delete(id);updateStats();}
+    } else{ordData.delete(id);updateStats();}
     advance(id,st);
   } else {
     const nst=st==='pending'?'preparing':'ready';
@@ -589,26 +682,27 @@ function triggerAction(orderId,st){
   }
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-function ordSortKey(o){ const w=o.status==='ready'?0:o.status==='preparing'?1:2; return w*1e13+new Date(o.created_at).getTime(); }
-
+// ── Build order card ───────────────────────────────────────────────────────────
 const MAX_P=3;
-
 function buildOrderCard(o){
   const items=parseItems(o.order_details);
-  const st=o.status, min=elMin(o.created_at), isUrg=st==='pending'&&min>=10;
-  const{sClass,bCls,bTxt,btnCls,btnTxt}=statusInfo(st,isUrg);
-  const preview=items.slice(0,MAX_P), extra=items.length-MAX_P;
+  const st=o.status,min=elMin(o.created_at),isUrg=st==='pending'&&min>=10;
+  const{sClass,bCls,bTxt,btnCls,btnTxt}=sInfo(st,isUrg);
+  const sNote=getStaffNote(String(o.order_id));
+  const preview=items.slice(0,MAX_P),extra=items.length-MAX_P;
 
   const itemsHtml=preview.map(i=>`<li><span class="i-qty">×${i.qty}</span><span class="i-name">${i.name}</span></li>`).join('');
   const moreHtml=extra>0?`<div class="i-more"><i class="fas fa-list" style="font-size:.7em;"></i> +${extra} altri</div>`:'';
   const noteHtml=o.customer_notes?`<div class="card-note"><i class="fas fa-exclamation-triangle"></i>${o.customer_notes}</div>`:'';
+  const sNoteHtml=sNote?`<div class="card-staff-note"><i class="fas fa-user-shield"></i>${sNote}</div>`:'';
 
   const card=document.createElement('div');
-  card.className=`kds-card ${sClass}`;
-  card.dataset.id=String(o.order_id);
+  card.className=`kds-card ${sClass}`;card.dataset.id=String(o.order_id);
   card.innerHTML=`
-    <button class="card-edit" title="Modifica ordine" onclick="event.stopPropagation();openEditPopup('${o.order_id}')"><i class="fas fa-pen"></i></button>
+    <div class="card-btns-stack">
+      <button class="cib cib-edit" title="Modifica ordine" data-oid="${o.order_id}"><i class="fas fa-pen"></i></button>
+      <button class="cib cib-note ${sNote?'has-sn':''}" title="Nota staff" data-oid="${o.order_id}"><i class="fas fa-note-sticky"></i></button>
+    </div>
     <div class="card-click card-top">
       <div class="card-top-l">
         <span class="card-badge ${bCls}">${bTxt}</span>
@@ -616,71 +710,58 @@ function buildOrderCard(o){
       </div>
       <div class="card-top-r">
         <div class="card-timer ${timerCls(min,st)}" data-ts="${o.created_at}" data-st="${st}">${fmtMin(min)}</div>
-        <span class="card-count"><i class="fas fa-utensils" style="font-size:.65em;"></i>${items.length}</span>
+        <span class="card-count"><i class="fas fa-utensils" style="font-size:.62em;"></i>${items.length}</span>
       </div>
     </div>
     <div class="card-click card-body">
       <hr class="card-div">
       <ul class="card-items">${itemsHtml}</ul>
-      ${moreHtml}${noteHtml}
+      ${moreHtml}${noteHtml}${sNoteHtml}
     </div>
     <button class="card-btn ${btnCls}">${btnTxt}</button>`;
 
-  card.querySelectorAll('.card-click').forEach(el=>el.addEventListener('click',()=>openDetailPopup(o.order_id,false)));
+  card.querySelectorAll('.card-click').forEach(el=>el.addEventListener('click',()=>openDetailPopup(o.order_id,null)));
+  card.querySelector('.cib-edit').addEventListener('click',e=>{e.stopPropagation();openEditPopup(o.order_id);});
+  card.querySelector('.cib-note').addEventListener('click',e=>{e.stopPropagation();openNotePopup(o.order_id);});
   card.querySelector('.card-btn').addEventListener('click',e=>{e.stopPropagation();triggerAction(o.order_id,st);});
   return card;
 }
 
+// ── Build staff card ───────────────────────────────────────────────────────────
 function buildStaffCard(o){
-  const type=o.waiter_request||'call';
-  const info=STAFF[type]||STAFF.other;
-  const min=elMin(o.created_at);
+  const type=o.waiter_request||'call';const info=STAFF[type]||STAFF.other;const min=elMin(o.created_at);
   const card=document.createElement('div');
   card.className='kds-card s-req';card.dataset.id=String(o.order_id);
   card.innerHTML=`
     <div class="card-click card-top">
-      <div class="card-top-l">
-        <span class="card-badge cb-req">RICHIESTA</span>
-        <span class="card-tnum">${o.table_number}</span>
-      </div>
-      <div class="card-top-r">
-        <div class="card-timer" data-ts="${o.created_at}">${fmtMin(min)}</div>
-      </div>
+      <div class="card-top-l"><span class="card-badge cb-req">RICHIESTA</span><span class="card-tnum">${o.table_number}</span></div>
+      <div class="card-top-r"><div class="card-timer" data-ts="${o.created_at}">${fmtMin(min)}</div></div>
     </div>
-    <div class="card-click card-body">
-      <hr class="card-div">
-      <div class="req-row"><i class="fas ${info.icon}"></i>${info.label}</div>
-    </div>
+    <div class="card-click card-body"><hr class="card-div"><div class="req-row"><i class="fas ${info.icon}"></i>${info.label}</div></div>
     <button class="card-btn btn-req"><i class="fas fa-check"></i> Gestita</button>`;
   card.querySelectorAll('.card-click').forEach(el=>el.addEventListener('click',()=>openStaffPopup(o.order_id)));
   card.querySelector('.card-btn').addEventListener('click',e=>{e.stopPropagation();dismissStaffById(String(o.order_id));});
   return card;
 }
 
+// ── Render ─────────────────────────────────────────────────────────────────────
+function ordSortKey(o){ const w=o.status==='ready'?0:o.status==='preparing'?1:2; return w*1e13+new Date(o.created_at).getTime(); }
+
 function renderStatusStrip(){
   let nR=0,nT=0,nN=0,nU=0;
-  ordData.forEach(o=>{
-    const m=elMin(o.created_at);
-    if(o.status==='ready')nR++;
-    else if(o.status==='preparing')nT++;
-    else if(m>=10)nU++;
-    else nN++;
-  });
-  const strip=document.getElementById('status-strip');
-  strip.innerHTML=[
-    nR?`<span class="ss-pill ss-ready"><i class="fas fa-check" style="font-size:.75em;"></i> Pronti ${nR}</span>`:'',
-    nT?`<span class="ss-pill ss-taken"><i class="fas fa-hand" style="font-size:.75em;"></i> In carico ${nT}</span>`:'',
-    nN?`<span class="ss-pill ss-new"><i class="fas fa-sparkles" style="font-size:.75em;"></i> Nuovi ${nN}</span>`:'',
-    nU?`<span class="ss-pill ss-urg"><i class="fas fa-triangle-exclamation" style="font-size:.75em;"></i> Attesa ${nU}</span>`:'',
+  ordData.forEach(o=>{ const m=elMin(o.created_at); if(o.status==='ready')nR++;else if(o.status==='preparing')nT++;else if(m>=10)nU++;else nN++; });
+  document.getElementById('status-strip').innerHTML=[
+    nR?`<span class="ss-pill ss-ready"><i class="fas fa-check" style="font-size:.72em;"></i> Pronti ${nR}</span>`:'',
+    nT?`<span class="ss-pill ss-taken"><i class="fas fa-hand" style="font-size:.72em;"></i> In carico ${nT}</span>`:'',
+    nN?`<span class="ss-pill ss-new"><i class="fas fa-circle-dot" style="font-size:.72em;"></i> Nuovi ${nN}</span>`:'',
+    nU?`<span class="ss-pill ss-urg"><i class="fas fa-triangle-exclamation" style="font-size:.72em;"></i> Attesa ${nU}</span>`:'',
   ].join('');
 }
 
 function renderOrders(){
   const cont=document.getElementById('ord-container'),empty=document.getElementById('empty-ord');
   cont.querySelectorAll('.kds-card').forEach(el=>{if(!animating.has(el.dataset.id))el.remove();});
-  [...ordData.values()].sort((a,b)=>ordSortKey(a)-ordSortKey(b)).forEach(o=>{
-    if(!animating.has(String(o.order_id)))cont.appendChild(buildOrderCard(o));
-  });
+  [...ordData.values()].sort((a,b)=>ordSortKey(a)-ordSortKey(b)).forEach(o=>{if(!animating.has(String(o.order_id)))cont.appendChild(buildOrderCard(o));});
   empty.style.display=ordData.size===0&&!cont.querySelector('.kds-card')?'flex':'none';
   renderStatusStrip();updateStats();
 }
@@ -688,9 +769,7 @@ function renderOrders(){
 function renderRequests(){
   const cont=document.getElementById('req-container'),empty=document.getElementById('empty-req');
   cont.querySelectorAll('.kds-card').forEach(el=>{if(!animating.has(el.dataset.id))el.remove();});
-  [...reqData.values()].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).forEach(o=>{
-    if(!animating.has(String(o.order_id)))cont.appendChild(buildStaffCard(o));
-  });
+  [...reqData.values()].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).forEach(o=>{if(!animating.has(String(o.order_id)))cont.appendChild(buildStaffCard(o));});
   empty.style.display=reqData.size===0&&!cont.querySelector('.kds-card')?'flex':'none';
   updateStats();
 }
@@ -705,13 +784,11 @@ function updateStats(){
   const nO=ordData.size,nR=[...ordData.values()].filter(o=>o.status==='ready').length,nS=reqData.size;
   ['hb-ord','tb-o'].forEach(id=>document.getElementById(id).textContent=nO);
   ['hb-req','tb-s'].forEach(id=>document.getElementById(id).textContent=nS);
-  document.getElementById('tb-r').textContent=nR;
-  document.getElementById('badge-ord').textContent=nO;
-  document.getElementById('badge-req').textContent=nS;
+  document.getElementById('tb-r').textContent=nR;document.getElementById('badge-ord').textContent=nO;document.getElementById('badge-req').textContent=nS;
   document.getElementById('tb-time').textContent='Aggiornato '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ── Load + realtime ───────────────────────────────────────────────────────────
+// ── Load + realtime ────────────────────────────────────────────────────────────
 async function loadInitialOrders(){
   const{data,error}=await client.from('orders').select('*').not('status','in','("served","handled")').order('created_at',{ascending:true});
   if(error){console.error(error);return;}
@@ -722,46 +799,29 @@ async function loadInitialOrders(){
 client.channel('kds-rt')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},({new:o})=>{
     beep();const id=String(o.order_id);
-    if(o.waiter_request){reqData.set(id,o);renderRequests();}
-    else{ordData.set(id,o);renderOrders();}
+    if(o.waiter_request){reqData.set(id,o);renderRequests();}else{ordData.set(id,o);renderOrders();}
   })
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders'},({new:o})=>{
     const id=String(o.order_id);
     if(o.status==='served'||o.status==='handled'){
       ordData.delete(id);reqData.delete(id);
-      if(!animating.has(id)){
-        const el=document.querySelector(`.kds-card[data-id="${id}"]`);
-        if(el){el.classList.add('card-out');setTimeout(()=>{el.remove();updateEmpty();updateStats();renderStatusStrip();},240);}
-      }
+      if(!animating.has(id)){const el=document.querySelector(`.kds-card[data-id="${id}"]`);if(el){el.classList.add('card-out');setTimeout(()=>{el.remove();updateEmpty();updateStats();renderStatusStrip();},240);}}
     } else if(o.waiter_request){reqData.set(id,o);renderRequests();}
     else{ordData.set(id,o);renderOrders();}
   })
   .subscribe();
 
-// ── Demo ──────────────────────────────────────────────────────────────────────
+// ── Demo ───────────────────────────────────────────────────────────────────────
 function loadDemo(){
-  const btn=document.getElementById('demo-btn');
-  btn.disabled=true;btn.innerHTML='<i class="fas fa-check"></i> Demo';
+  const btn=document.getElementById('demo-btn');btn.disabled=true;btn.innerHTML='<i class="fas fa-check"></i> Demo';
   const now=Date.now();
-  [
-    {order_id:'demo-1',table_number:3,status:'pending',
-     created_at:new Date(now-2*60000).toISOString(),waiter_request:null,
-     customer_notes:'Senza wasabi — allergia sesamo',
-     order_details:JSON.stringify([{qty:2,name:'Nigiri Salmone',code:'101'},{qty:1,name:'Tacos JUN Selection',code:'201'},{qty:3,name:'Uramaki Spicy Crunch',code:'301'},{qty:2,name:'Gyoza Pollo',code:'401'},{qty:1,name:'Miso Soup',code:'501'},{qty:4,name:'Edamame',code:'601'}])},
-    {order_id:'demo-2',table_number:7,status:'preparing',
-     created_at:new Date(now-9*60000).toISOString(),waiter_request:null,customer_notes:null,
-     order_details:JSON.stringify([{qty:4,name:'Sashimi Tonno Premium',code:'150'},{qty:2,name:'Chirashi Bowl',code:'160'},{qty:1,name:'JUN Selection',code:'001'}])},
-    {order_id:'demo-3',table_number:12,status:'ready',
-     created_at:new Date(now-14*60000).toISOString(),waiter_request:null,
-     customer_notes:'Tavolo compleanno — portare candeline',
-     order_details:JSON.stringify([{qty:2,name:'JUN Selection',code:'001'},{qty:3,name:'Dim Sum Gamberetti',code:'601'},{qty:2,name:'Tataki Salmone',code:'701'}])},
-    {order_id:'demo-4',table_number:5,status:'pending',
-     created_at:new Date(now-13*60000).toISOString(),waiter_request:null,customer_notes:null,
-     order_details:JSON.stringify([{qty:6,name:'Hosomaki Salmone',code:'801'},{qty:2,name:'Edamame',code:'901'},{qty:3,name:'Nigiri Tonno',code:'102'},{qty:2,name:'Gunkan Ikura',code:'301'},{qty:1,name:'Tacos JUN',code:'201'}])},
+  [{order_id:'demo-1',table_number:3,status:'pending',created_at:new Date(now-2*60000).toISOString(),waiter_request:null,customer_notes:'Senza wasabi — allergia sesamo',order_details:JSON.stringify([{qty:2,name:'Nigiri Salmone',code:'101'},{qty:1,name:'Tacos JUN Selection',code:'201'},{qty:3,name:'Uramaki Spicy Crunch',code:'301'},{qty:2,name:'Gyoza Pollo',code:'401'},{qty:1,name:'Miso Soup',code:'501'},{qty:4,name:'Edamame',code:'601'}])},
+   {order_id:'demo-2',table_number:7,status:'preparing',created_at:new Date(now-9*60000).toISOString(),waiter_request:null,customer_notes:null,order_details:JSON.stringify([{qty:4,name:'Sashimi Tonno Premium',code:'150'},{qty:2,name:'Chirashi Bowl',code:'160'},{qty:1,name:'JUN Selection',code:'001'}])},
+   {order_id:'demo-3',table_number:12,status:'ready',created_at:new Date(now-14*60000).toISOString(),waiter_request:null,customer_notes:'Tavolo compleanno — candeline',order_details:JSON.stringify([{qty:2,name:'JUN Selection',code:'001'},{qty:3,name:'Dim Sum',code:'601'},{qty:2,name:'Tataki Salmone',code:'701'}])},
+   {order_id:'demo-4',table_number:5,status:'pending',created_at:new Date(now-13*60000).toISOString(),waiter_request:null,customer_notes:null,order_details:JSON.stringify([{qty:6,name:'Hosomaki Salmone',code:'801'},{qty:2,name:'Edamame',code:'901'},{qty:3,name:'Nigiri Tonno',code:'102'},{qty:2,name:'Gunkan Ikura',code:'301'},{qty:1,name:'Tacos JUN',code:'201'}])},
   ].forEach(o=>ordData.set(o.order_id,o));
-  [
-    {order_id:'demo-w1',table_number:9,status:'pending',created_at:new Date(now-60000).toISOString(),waiter_request:'bill',customer_notes:null,order_details:'[]'},
-    {order_id:'demo-w2',table_number:4,status:'pending',created_at:new Date(now-3*60000).toISOString(),waiter_request:'drinks',customer_notes:null,order_details:'[]'},
+  [{order_id:'demo-w1',table_number:9,status:'pending',created_at:new Date(now-60000).toISOString(),waiter_request:'bill',customer_notes:null,order_details:'[]'},
+   {order_id:'demo-w2',table_number:4,status:'pending',created_at:new Date(now-3*60000).toISOString(),waiter_request:'drinks',customer_notes:null,order_details:'[]'},
   ].forEach(o=>reqData.set(o.order_id,o));
   renderOrders();renderRequests();
 }
