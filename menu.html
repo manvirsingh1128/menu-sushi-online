@@ -746,6 +746,69 @@
             #sticky-header { padding: 0 14px; }
         }
 
+        /* ── ONBOARDING ── */
+        #onboarding {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #0f0f0f;
+            display: flex; align-items: center; justify-content: center;
+            padding: 40px 24px; overflow-y: auto;
+        }
+        #ob-content {
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 400px;
+        }
+        #ob-logo { height: 52px; object-fit: contain; margin-bottom: 6px; }
+        #ob-city {
+            color: rgba(255,255,255,0.35); font-size: 0.7em;
+            letter-spacing: 0.22em; text-transform: uppercase; margin: 0 0 36px;
+        }
+        #ob-headline {
+            color: #fff; font-size: 2em; font-weight: 800;
+            letter-spacing: -0.04em; margin: 0 0 6px; text-align: center;
+        }
+        #ob-sub {
+            color: rgba(255,255,255,0.45); font-size: 0.88em; margin: 0 0 28px;
+            text-align: center; line-height: 1.5;
+        }
+        #ob-card {
+            background: rgba(255,255,255,0.06); border-radius: 24px;
+            padding: 28px 22px; width: 100%;
+            display: flex; flex-direction: column; gap: 24px; margin-bottom: 16px;
+        }
+        .ob-field { display: flex; flex-direction: column; gap: 10px; }
+        .ob-label {
+            color: rgba(255,255,255,0.5); font-size: 0.78em; font-weight: 600;
+            letter-spacing: 0.04em; margin: 0;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .ob-label i { font-size: 0.95em; }
+        .ob-stepper {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.07); border-radius: 18px; padding: 8px;
+        }
+        .ob-step-btn {
+            width: 58px; height: 58px; border-radius: 14px; border: none;
+            background: rgba(255,255,255,0.11); color: #fff;
+            font-size: 1.7em; font-weight: 300; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.12s; touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ob-step-btn:active { background: rgba(255,255,255,0.25); }
+        .ob-step-num {
+            font-size: 2.4em; font-weight: 800; color: #fff;
+            min-width: 56px; text-align: center; letter-spacing: -0.04em;
+        }
+        #ob-enter {
+            width: 100%; padding: 19px; background: #fff; color: #111;
+            border: none; border-radius: 18px;
+            font-size: 1.05em; font-weight: 700; cursor: pointer;
+            font-family: inherit; touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.15s;
+        }
+        #ob-enter:active { opacity: 0.85; }
+
         /* ── PICCOLI TELEFONI 360px- ── */
         @media (max-width: 360px) {
             .dish-name { font-size: 0.95em; }
@@ -762,6 +825,35 @@
     </style>
 </head>
 <body>
+
+    <!-- ONBOARDING -->
+    <div id="onboarding">
+        <div id="ob-content">
+            <img id="ob-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
+            <p id="ob-city">Bolgare</p>
+            <h1 id="ob-headline">Benvenuto!</h1>
+            <p id="ob-sub">Inserisci il numero del tuo tavolo<br>e quante persone siete</p>
+            <div id="ob-card">
+                <div class="ob-field">
+                    <p class="ob-label"><i class="fas fa-chair"></i> Numero tavolo</p>
+                    <div class="ob-stepper">
+                        <button class="ob-step-btn" id="ob-table-minus">−</button>
+                        <span class="ob-step-num" id="ob-table-num">1</span>
+                        <button class="ob-step-btn" id="ob-table-plus">+</button>
+                    </div>
+                </div>
+                <div class="ob-field">
+                    <p class="ob-label"><i class="fas fa-users"></i> Quante persone siete?</p>
+                    <div class="ob-stepper">
+                        <button class="ob-step-btn" id="ob-people-minus">−</button>
+                        <span class="ob-step-num" id="ob-people-num">2</span>
+                        <button class="ob-step-btn" id="ob-people-plus">+</button>
+                    </div>
+                </div>
+            </div>
+            <button id="ob-enter">Entra nel menu &nbsp;→</button>
+        </div>
+    </div>
 
     <div id="sticky-header">
         <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant Logo" class="logo">
@@ -1969,7 +2061,8 @@
         }
 
         const cart = {};
-        let tableSize = 1;
+        let tableSize = 2;
+        let tableNumber = 1;
 
         const isWeekend = () => { const d = new Date().getDay(); return d === 0 || d === 6; };
         function getTabLabel(cat) {
@@ -2567,9 +2660,60 @@
             }, { once: true });
         }
 
+        // ── ONBOARDING ──
+        let _obPeople = 2;
+        let _obTable  = 1;
+
+        function _obUpdate() {
+            document.getElementById('ob-people-num').textContent = _obPeople;
+            document.getElementById('ob-table-num').textContent  = _obTable;
+        }
+
+        function _obStartMenu() {
+            tableSize   = _obPeople;
+            tableNumber = _obTable;
+            sessionStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
+            document.getElementById('people-label').textContent = tableSize;
+            const ob = document.getElementById('onboarding');
+            ob.style.transition = 'opacity 0.35s';
+            ob.style.opacity = '0';
+            setTimeout(() => {
+                ob.style.display = 'none';
+                renderMenu();
+                initScrollSpy();
+            }, 350);
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
-            renderMenu();
-            initScrollSpy();
+            // controlla sessione onboarding
+            const saved = sessionStorage.getItem('jun_ob');
+            if (saved) {
+                const d = JSON.parse(saved);
+                tableSize   = d.people || 2;
+                tableNumber = d.table  || 1;
+                document.getElementById('people-label').textContent = tableSize;
+                document.getElementById('onboarding').style.display = 'none';
+                renderMenu();
+                initScrollSpy();
+            }
+            // else: onboarding già visibile, menu si carica dopo confirm
+
+            // stepper persone
+            document.getElementById('ob-people-minus').addEventListener('click', () => {
+                if (_obPeople > 1) { _obPeople--; _obUpdate(); }
+            });
+            document.getElementById('ob-people-plus').addEventListener('click', () => {
+                if (_obPeople < 12) { _obPeople++; _obUpdate(); }
+            });
+            // stepper tavolo
+            document.getElementById('ob-table-minus').addEventListener('click', () => {
+                if (_obTable > 1) { _obTable--; _obUpdate(); }
+            });
+            document.getElementById('ob-table-plus').addEventListener('click', () => {
+                if (_obTable < 99) { _obTable++; _obUpdate(); }
+            });
+            document.getElementById('ob-enter').addEventListener('click', _obStartMenu);
+
             document.getElementById('di-overlay').addEventListener('click', e => {
                 if (e.target === document.getElementById('di-overlay')) closeDishOverlay();
             });
