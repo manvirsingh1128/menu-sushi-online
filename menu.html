@@ -2787,29 +2787,38 @@
             tableNumber = _obTable;
             sessionStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
             document.getElementById('people-label').textContent = tableSize;
+
+            // nascondi onboarding subito
+            document.getElementById('onboarding').style.display = 'none';
+
+            // mostra splash (animazioni ripartono da zero)
+            document.getElementById('splash').style.display = 'flex';
+
+            // render menu in background durante splash
             renderMenu();
             restoreCartUI();
-            const ob = document.getElementById('onboarding');
-            ob.style.transition = 'opacity 0.35s';
-            ob.style.opacity = '0';
-            setTimeout(() => { ob.style.display = 'none'; }, 350);
+            initScrollSpy();
+
+            // dismiss splash dopo animazione
+            setTimeout(() => _dismissSplash(), 2900);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // render menu in background durante lo splash
             const saved = sessionStorage.getItem('jun_ob');
             if (saved) {
+                // sessione esistente: splash subito, menu in background
                 const d = JSON.parse(saved);
                 tableSize   = d.people || 1;
                 tableNumber = d.table  || 1;
                 document.getElementById('people-label').textContent = tableSize;
                 document.getElementById('onboarding').style.display = 'none';
+                renderMenu();
+                initScrollSpy();
+                setTimeout(() => _dismissSplash(), 2900);
+            } else {
+                // prima volta: nascondi splash, mostra onboarding
+                document.getElementById('splash').style.display = 'none';
             }
-            renderMenu();
-            initScrollSpy();
-
-            // splash: barra finisce a ~2.8s, poi dismiss
-            setTimeout(() => _dismissSplash(), 2900);
 
             // stepper persone
             document.getElementById('ob-people-minus').addEventListener('click', () => {
