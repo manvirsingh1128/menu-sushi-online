@@ -3061,6 +3061,54 @@
             }
         }
 
+        // ── FUNZIONI GLOBALI QR SCREEN (chiamate da onclick inline, fuori da DOMContentLoaded) ──
+
+        window._qrCallWaiter = function() {
+            const el = document.getElementById('qr-waiter-overlay');
+            el.style.display = 'flex';
+            setTimeout(() => { el.style.display = 'none'; }, 2800);
+        };
+
+        window._qrStaffAccess = function() {
+            document.getElementById('qr-staff-pw').value = '';
+            document.getElementById('qr-staff-pw-error').style.display = 'none';
+            document.getElementById('qr-staff-step1').style.display = 'block';
+            document.getElementById('qr-staff-step2').style.display = 'none';
+            document.getElementById('qr-staff-overlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('qr-staff-pw').focus(), 80);
+        };
+
+        window._qrStaffPwCheck = function() {
+            const pw = document.getElementById('qr-staff-pw');
+            if (pw.value === ADMIN_PW) {
+                document.getElementById('qr-staff-step1').style.display = 'none';
+                document.getElementById('qr-staff-step2').style.display = 'block';
+                document.getElementById('qr-staff-table').value = '';
+                setTimeout(() => document.getElementById('qr-staff-table').focus(), 80);
+            } else {
+                document.getElementById('qr-staff-pw-error').style.display = 'block';
+                pw.style.borderColor = '#ff6b6b';
+                setTimeout(() => { pw.style.borderColor = 'rgba(255,255,255,0.12)'; }, 1200);
+                pw.value = '';
+                pw.focus();
+            }
+        };
+
+        window._qrStaffEnter = function() {
+            const t = parseInt(document.getElementById('qr-staff-table').value, 10);
+            const inp = document.getElementById('qr-staff-table');
+            if (!t || t < 1 || t > 99) {
+                inp.style.borderColor = '#ff6b6b';
+                setTimeout(() => { inp.style.borderColor = 'rgba(255,255,255,0.12)'; }, 1200);
+                return;
+            }
+            stopQRScanner();
+            const url = new URL(window.location.href);
+            url.searchParams.set('k', VALID_CODE);
+            url.searchParams.set('t', String(t));
+            window.location.href = url.toString();
+        };
+
         function _handleQRData(data) {
             let k = null, t = null;
             try {
@@ -3093,10 +3141,15 @@
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);"></div>
 
         <!-- Contenuto sopra -->
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;padding:env(safe-area-inset-top,40px) 40px env(safe-area-inset-bottom,40px);">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:env(safe-area-inset-top,40px) 40px env(safe-area-inset-bottom,40px);">
 
-            <!-- Logo grande e ben visibile -->
+            <!-- Logo -->
             <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant" style="height:48px;object-fit:contain;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.6));">
+
+            <!-- Pulsante accesso staff (piccolo, discreto) -->
+            <button onclick="_qrStaffAccess()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:8px 18px;border-radius:20px;font-size:0.78em;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
+                <i class="fas fa-key" style="font-size:0.85em;"></i> Accesso staff
+            </button>
 
             <!-- Frame scansione -->
             <div style="position:relative;width:230px;height:230px;flex-shrink:0;">
@@ -3107,8 +3160,48 @@
                 <div style="position:absolute;left:6px;right:6px;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.9),transparent);animation:qrScanLine 2s ease-in-out infinite;top:4px;"></div>
             </div>
 
-            <!-- Testo più in alto (sotto il frame, non in fondo) e più visibile -->
+            <!-- Testo -->
             <p style="color:#fff;font-size:1.05em;text-align:center;line-height:1.6;margin:0;max-width:240px;font-weight:500;text-shadow:0 1px 8px rgba(0,0,0,0.7);">Scansiona il QR code al tuo tavolo per ordinare.</p>
+
+            <!-- Pulsante chiama cameriere -->
+            <button onclick="_qrCallWaiter()" style="background:#fff;color:#111;border:none;padding:14px 32px;border-radius:14px;font-size:0.95em;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                <i class="fas fa-bell"></i> Chiama il cameriere
+            </button>
+        </div>
+    </div>
+
+    <!-- STAFF ACCESSO MANUALE (dalla schermata QR) -->
+    <div id="qr-staff-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:100000;justify-content:center;align-items:center;">
+        <div style="background:#1a1a1a;border-radius:20px;width:88%;max-width:300px;padding:28px 24px 24px;box-shadow:0 24px 64px rgba(0,0,0,0.6);">
+            <!-- Step 1: password -->
+            <div id="qr-staff-step1">
+                <h3 style="color:#fff;font-size:1.1em;font-weight:700;margin:0 0 6px;letter-spacing:-0.02em;">Accesso staff</h3>
+                <p style="color:rgba(255,255,255,0.38);font-size:0.8em;margin:0 0 18px;">Inserisci la password per entrare manualmente.</p>
+                <input id="qr-staff-pw" type="password" autocomplete="off" placeholder="Password" onkeydown="if(event.key==='Enter')_qrStaffPwCheck()" style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-size:1em;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:8px;">
+                <p id="qr-staff-pw-error" style="color:#ff6b6b;font-size:0.8em;margin:0 0 14px;display:none;">Password errata</p>
+                <div style="display:flex;gap:10px;">
+                    <button onclick="document.getElementById('qr-staff-overlay').style.display='none'" style="flex:1;padding:14px;background:rgba(255,255,255,0.08);color:#fff;border:none;border-radius:12px;font-size:0.9em;font-weight:600;cursor:pointer;font-family:inherit;">Annulla</button>
+                    <button onclick="_qrStaffPwCheck()" style="flex:1;padding:14px;background:#fff;color:#111;border:none;border-radius:12px;font-size:0.9em;font-weight:600;cursor:pointer;font-family:inherit;">Continua</button>
+                </div>
+            </div>
+            <!-- Step 2: numero tavolo -->
+            <div id="qr-staff-step2" style="display:none;">
+                <h3 style="color:#fff;font-size:1.1em;font-weight:700;margin:0 0 6px;letter-spacing:-0.02em;">Numero tavolo</h3>
+                <p style="color:rgba(255,255,255,0.38);font-size:0.8em;margin:0 0 18px;">Inserisci il numero del tavolo del cliente.</p>
+                <input id="qr-staff-table" type="number" min="1" max="99" placeholder="Es. 5" onkeydown="if(event.key==='Enter')_qrStaffEnter()" style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-size:1.3em;font-weight:700;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:16px;text-align:center;">
+                <button onclick="_qrStaffEnter()" style="width:100%;padding:14px;background:#fff;color:#111;border:none;border-radius:12px;font-size:0.95em;font-weight:700;cursor:pointer;font-family:inherit;">Entra nel menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFERMA CHIAMATA CAMERIERE (dalla schermata QR) -->
+    <div id="qr-waiter-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100000;justify-content:center;align-items:center;">
+        <div style="background:#fff;border-radius:24px;width:88%;max-width:300px;padding:36px 28px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.4);">
+            <div style="width:60px;height:60px;background:#111;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <i class="fas fa-bell" style="color:#fff;font-size:1.4em;"></i>
+            </div>
+            <p style="font-size:1.2em;font-weight:800;color:#111;margin:0 0 6px;letter-spacing:-0.03em;">Richiesta inviata!</p>
+            <p style="font-size:0.9em;color:#888;margin:0;">Un cameriere arriverà al tuo tavolo.</p>
         </div>
     </div>
 
