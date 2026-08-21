@@ -9,123 +9,83 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:'DM Sans',-apple-system,sans-serif;}
-body{background:#f2f2f2;color:#1a1a1a;overflow-x:hidden;}
+body{background:#f0f0f0;color:#1a1a1a;overflow-x:hidden;}
 
 /* ── HEADER ── */
 header{
-  position:sticky;top:0;z-index:100;
+  position:sticky;top:0;z-index:200;
   background:#000;height:52px;padding:0 16px;
   display:flex;align-items:center;justify-content:space-between;
 }
 .h-logo{height:22px;filter:brightness(0) invert(1);}
-.h-mid{display:flex;align-items:center;gap:10px;}
+.h-mid{display:flex;align-items:center;gap:8px;}
+.h-cnt{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:0.73em;font-weight:700;}
+.h-cnt-o{background:rgba(217,119,6,.22);color:#fbbf24;}
+.h-cnt-r{background:rgba(234,88,12,.22);color:#fb923c;}
 .h-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:blink 2s ease-in-out infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.h-cnt{
-  display:flex;align-items:center;gap:5px;
-  padding:3px 10px;border-radius:20px;
-  font-size:0.74em;font-weight:700;
-}
-.h-cnt-o{background:rgba(217,119,6,.2);color:#fbbf24;}
-.h-cnt-r{background:rgba(234,88,12,.2);color:#fb923c;}
-#clock{font-size:0.95em;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+#clock{font-size:0.9em;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
 
 /* ── TOOLBAR ── */
 #toolbar{
   background:#fff;border-bottom:1px solid #e5e5e5;
-  padding:6px 16px;display:flex;align-items:center;gap:14px;
+  padding:5px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
 }
-.tb{font-size:0.76em;color:#888;}
+.tb{font-size:0.74em;color:#999;}
 .tb strong{color:#1a1a1a;font-weight:700;}
-#tb-time{font-size:0.72em;color:#bbb;}
+#tb-time{font-size:0.7em;color:#bbb;margin-left:auto;}
 #demo-btn{
-  margin-left:auto;padding:5px 13px;
-  background:#f0f0f0;border:1px solid #ddd;color:#555;
-  border-radius:20px;font-size:0.74em;font-weight:600;
-  cursor:pointer;font-family:inherit;transition:background .15s;
+  padding:4px 12px;background:#f0f0f0;border:1px solid #ddd;color:#666;
+  border-radius:20px;font-size:0.72em;font-weight:600;cursor:pointer;font-family:inherit;
 }
 #demo-btn:hover{background:#e5e5e5;}
-#demo-btn:disabled{opacity:.5;cursor:default;}
+#demo-btn:disabled{opacity:.45;cursor:default;}
 
 /* ── MOBILE TABS ── */
-#mob-tabs{
-  display:none;background:#fff;border-bottom:1px solid #e5e5e5;
-  padding:0 16px;gap:0;
-}
+#mob-tabs{display:none;background:#fff;border-bottom:1px solid #e5e5e5;padding:0 16px;}
 @media(max-width:640px){
   #mob-tabs{display:flex;}
-  .split{flex-direction:column!important;}
-  .col-req,.col-ord{width:100%!important;border:none!important;border-radius:0!important;}
-  .col-req,.col-ord{display:none;}
-  .col-req.active,.col-ord.active{display:flex;}
+  .split{flex-direction:column;}
+  .col-req,.col-ord{width:100%!important;border:none!important;display:none;}
+  .col-req.mob-on,.col-ord.mob-on{display:flex;}
 }
-.mt-btn{
-  flex:1;padding:10px;border:none;background:none;
-  font-family:inherit;font-size:0.82em;font-weight:600;
-  color:#888;cursor:pointer;border-bottom:2px solid transparent;
-  transition:all .15s;
-}
+.mt-btn{flex:1;padding:9px;border:none;background:none;font-family:inherit;font-size:0.82em;font-weight:600;color:#aaa;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
 .mt-btn.on{color:#1a1a1a;border-bottom-color:#1a1a1a;}
 
-/* ── SPLIT LAYOUT ── */
-.split{
-  display:flex;min-height:calc(100vh - 96px);
-  align-items:stretch;
-}
-.col-req{
-  width:38%;flex-shrink:0;
-  display:flex;flex-direction:column;
-  background:#fff;border-right:1px solid #e5e5e5;
-}
-.col-ord{
-  flex:1;display:flex;flex-direction:column;
-  background:#f2f2f2;
-}
+/* ── SPLIT ── */
+.split{display:flex;min-height:calc(100vh - 90px);align-items:stretch;}
+.col-req{width:36%;flex-shrink:0;display:flex;flex-direction:column;background:#fff;border-right:1px solid #e0e0e0;}
+.col-ord{flex:1;display:flex;flex-direction:column;background:#f0f0f0;}
+
 .col-hd{
-  padding:10px 14px;border-bottom:1px solid #ebebeb;
+  padding:9px 14px;border-bottom:1px solid #eee;
   display:flex;align-items:center;justify-content:space-between;
   background:#fff;position:sticky;top:52px;z-index:10;
 }
 .col-hd-l{display:flex;align-items:center;gap:7px;}
-.col-hd-l h2{font-size:0.76em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#555;}
-.col-badge{
-  padding:2px 8px;border-radius:20px;
-  font-size:0.72em;font-weight:700;
-}
+.col-hd-l h2{font-size:0.74em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#666;}
+.col-badge{padding:2px 8px;border-radius:20px;font-size:0.7em;font-weight:700;}
 .badge-req{background:#fff3eb;color:#ea580c;}
 .badge-ord{background:#fffbeb;color:#d97706;}
-.col-cards{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;}
 
-/* ── ORD GRID ── */
-.ord-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
-  gap:8px;padding:10px;align-items:start;
-}
+.col-cards{padding:8px;display:flex;flex-direction:column;gap:7px;flex:1;}
+.ord-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:7px;padding:8px;align-items:start;}
 
 /* ── EMPTY ── */
-.empty-state{
-  padding:40px 16px;text-align:center;color:#ccc;
-  display:flex;flex-direction:column;align-items:center;gap:10px;
-}
-.empty-state i{font-size:2em;opacity:.4;}
-.empty-state p{font-size:0.85em;}
+.empty-state{padding:40px 16px;text-align:center;color:#ccc;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.empty-state i{font-size:2em;opacity:.35;}
+.empty-state p{font-size:0.83em;}
 
-/* ── CARD BASE ── */
-@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+/* ── CARD ── */
+@keyframes slideIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 @keyframes cardOut{to{opacity:0;transform:scale(.96)}}
 
 .kds-card{
-  background:#fff;border-radius:12px;
-  border:1px solid #e5e5e5;
-  border-left:3px solid #ddd;
-  display:flex;flex-direction:column;
-  animation:slideIn .2s ease-out;
-  box-shadow:0 1px 4px rgba(0,0,0,.05);
+  background:#fff;border-radius:12px;border:1px solid #e8e8e8;
+  border-left:3px solid #ddd;display:flex;flex-direction:column;
+  animation:slideIn .2s ease-out;box-shadow:0 1px 4px rgba(0,0,0,.05);
 }
-.kds-card.card-out{animation:cardOut .25s ease-out forwards;}
-
-/* Status left-border colors */
+.kds-card.card-out{animation:cardOut .22s ease-out forwards;}
 .s-new  {border-left-color:#d97706;}
 .s-prep {border-left-color:#2563eb;}
 .s-ready{border-left-color:#16a34a;}
@@ -133,86 +93,121 @@ header{
 .s-urg  {border-left-color:#dc2626;}
 
 /* ── CARD TOP ── */
-.card-top{
-  padding:10px 12px 8px;
-  display:flex;align-items:flex-start;justify-content:space-between;
-}
-.card-top-l{display:flex;flex-direction:column;gap:2px;}
-.card-badge{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:0.64em;font-weight:700;letter-spacing:.8px;
-  text-transform:uppercase;padding:2px 7px;border-radius:20px;
-  width:fit-content;
-}
+.card-top{padding:9px 11px 6px;display:flex;align-items:flex-start;justify-content:space-between;cursor:pointer;}
+.card-top-l{display:flex;flex-direction:column;gap:1px;}
+.card-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.61em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 7px;border-radius:20px;width:fit-content;}
 .cb-new  {background:#fef3c7;color:#d97706;}
 .cb-prep {background:#dbeafe;color:#2563eb;}
 .cb-ready{background:#dcfce7;color:#16a34a;}
 .cb-req  {background:#ffedd5;color:#ea580c;}
 .cb-urg  {background:#fee2e2;color:#dc2626;}
-.card-tnum{
-  font-size:2.6em;font-weight:800;line-height:1;
-  letter-spacing:-0.04em;color:#1a1a1a;
-}
-.card-tlbl{font-size:0.62em;font-weight:600;color:#999;letter-spacing:.5px;text-transform:uppercase;}
-.card-top-r{text-align:right;}
-.card-timer{font-size:0.75em;font-weight:600;color:#aaa;font-variant-numeric:tabular-nums;}
+.card-tnum{font-size:2.4em;font-weight:800;line-height:1;letter-spacing:-0.04em;color:#1a1a1a;}
+.card-tlbl{font-size:0.58em;font-weight:600;color:#bbb;letter-spacing:.5px;text-transform:uppercase;}
+.card-top-r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.card-timer{font-size:0.72em;font-weight:600;color:#bbb;font-variant-numeric:tabular-nums;}
 .card-timer.t-warn{color:#d97706;}
 .card-timer.t-urg{color:#dc2626;font-weight:700;}
+.card-count{font-size:0.65em;color:#ccc;}
 
-/* ── CARD BODY ── */
-.card-body{padding:0 12px 10px;display:flex;flex-direction:column;gap:7px;}
-.card-div{border:none;border-top:1px solid #f0f0f0;margin:0;}
-.card-items{list-style:none;display:flex;flex-direction:column;gap:4px;}
-.card-items li{display:flex;align-items:baseline;gap:6px;font-size:0.85em;}
-.i-qty{font-weight:700;min-width:24px;color:#888;}
+/* ── CARD BODY (clickable) ── */
+.card-body{padding:0 11px 8px;display:flex;flex-direction:column;gap:6px;cursor:pointer;}
+.card-div{border:none;border-top:1px solid #f2f2f2;margin:0 0 2px;}
+.card-items{list-style:none;display:flex;flex-direction:column;gap:3px;}
+.card-items li{display:flex;align-items:baseline;gap:6px;font-size:0.83em;}
+.i-qty{font-weight:700;min-width:22px;color:#aaa;}
 .i-name{color:#1a1a1a;flex:1;line-height:1.3;}
-.i-code{color:#ccc;font-size:0.78em;}
-.card-note{
-  display:flex;align-items:flex-start;gap:6px;
-  padding:6px 9px;background:#f9fafb;border-radius:8px;
-  font-size:0.8em;color:#888;line-height:1.4;border-left:2px solid #e5e5e5;
+
+/* More items pill */
+.i-more{
+  font-size:0.78em;font-weight:600;color:#2563eb;
+  margin-top:2px;display:flex;align-items:center;gap:4px;
 }
-.card-note i{color:#ccc;font-size:.85em;margin-top:1px;flex-shrink:0;}
+
+/* Note — well visible */
+.card-note{
+  display:flex;align-items:flex-start;gap:7px;
+  padding:7px 9px;
+  background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;
+  font-size:0.8em;font-weight:600;color:#92400e;line-height:1.4;
+}
+.card-note i{color:#f59e0b;font-size:.9em;flex-shrink:0;margin-top:1px;}
 
 /* ── STAFF REQUEST ── */
 .req-row{
   display:flex;align-items:center;gap:9px;
   padding:8px 10px;background:#fff7f0;border-radius:9px;
-  font-size:0.9em;font-weight:600;color:#ea580c;
+  font-size:0.88em;font-weight:600;color:#ea580c;
 }
 .req-row i{font-size:1em;width:18px;text-align:center;color:#fb923c;}
 
-/* ── CARD ACTION ── */
+/* ── ACTION BUTTON ── */
 .card-btn{
-  width:100%;padding:11px;border:none;
-  border-top:1px solid #f0f0f0;
-  border-radius:0 0 11px 11px;
-  font-family:inherit;font-size:0.82em;font-weight:700;
-  text-transform:uppercase;letter-spacing:.3px;
-  cursor:pointer;background:#fafafa;
+  width:100%;padding:11px;border:none;border-top:1px solid #f0f0f0;
+  border-radius:0 0 11px 11px;font-family:inherit;font-size:0.8em;font-weight:700;
+  text-transform:uppercase;letter-spacing:.3px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;gap:7px;
-  transition:background .12s;color:#555;
+  background:#fafafa;color:#888;transition:background .12s;
 }
-.card-btn:hover{background:#f0f0f0;}
-.card-btn:active{background:#e8e8e8;}
-.btn-new  {color:#d97706;}
-.btn-new:hover{background:#fffbeb;}
-.btn-prep {color:#2563eb;}
-.btn-prep:hover{background:#eff6ff;}
-.btn-ready{background:#16a34a;color:#fff;border-top-color:transparent;}
+.card-btn:hover{filter:brightness(.95);}
+.card-btn:active{filter:brightness(.9);}
+.btn-new  {color:#d97706;} .btn-new:hover{background:#fffbeb;}
+.btn-prep {color:#2563eb;} .btn-prep:hover{background:#eff6ff;}
+.btn-ready{background:#16a34a;color:#fff;border-top-color:transparent;font-size:.85em;}
 .btn-ready:hover{background:#15803d;}
-.btn-req  {color:#ea580c;}
-.btn-req:hover{background:#fff7f0;}
+.btn-req  {color:#ea580c;} .btn-req:hover{background:#fff7f0;}
 
 /* ── DONE OVERLAY ── */
-.done-wrap{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:18px;gap:6px;text-align:center;
-}
+.done-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:6px;text-align:center;}
 .done-wrap i{font-size:2.2em;color:#16a34a;}
-.done-wrap strong{color:#16a34a;font-size:0.95em;}
-.done-wrap small{color:#bbb;font-size:0.78em;}
+.done-wrap strong{color:#16a34a;font-size:.9em;}
+.done-wrap small{color:#bbb;font-size:0.75em;}
+
+/* ─────────── DRAWER ─────────── */
+#drawer{position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;opacity:0;transition:opacity .22s;}
+#drawer.open{pointer-events:auto;opacity:1;}
+#drawer-backdrop{flex:1;background:rgba(0,0,0,.45);}
+.drawer-sheet{
+  background:#fff;border-radius:20px 20px 0 0;
+  max-height:82vh;overflow-y:auto;
+  padding:0 0 env(safe-area-inset-bottom,16px);
+  transform:translateY(100%);transition:transform .26s cubic-bezier(.32,0,.67,0);
+}
+#drawer.open .drawer-sheet{transform:translateY(0);transition-timing-function:cubic-bezier(.33,1,.68,1);}
+.dr-handle{width:36px;height:4px;border-radius:2px;background:#ddd;margin:12px auto 0;}
+.dr-head{
+  padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dr-title{display:flex;flex-direction:column;gap:2px;}
+.dr-badge{font-size:0.65em;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:20px;width:fit-content;}
+.dr-tnum{font-size:2.6em;font-weight:800;line-height:1;letter-spacing:-0.04em;color:#1a1a1a;}
+.dr-tlbl{font-size:0.6em;font-weight:600;color:#bbb;letter-spacing:.5px;text-transform:uppercase;}
+.dr-close{width:34px;height:34px;border:none;background:#f0f0f0;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;font-size:1em;}
+.dr-body{padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.dr-section-title{font-size:0.68em;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:4px;}
+.dr-items{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.dr-items li{display:flex;align-items:baseline;gap:10px;font-size:0.95em;padding:5px 0;border-bottom:1px solid #f5f5f5;}
+.dr-items li:last-child{border-bottom:none;}
+.dr-qty{font-weight:800;min-width:30px;color:#999;}
+.dr-name{flex:1;color:#1a1a1a;line-height:1.3;}
+.dr-code{color:#ddd;font-size:0.78em;font-variant-numeric:tabular-nums;}
+.dr-note{
+  display:flex;align-items:flex-start;gap:9px;
+  padding:10px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;
+  font-size:0.9em;font-weight:600;color:#92400e;line-height:1.5;
+}
+.dr-note i{color:#f59e0b;flex-shrink:0;margin-top:2px;}
+.dr-action{padding:16px 20px 8px;border-top:1px solid #f0f0f0;}
+.dr-btn{
+  width:100%;padding:14px;border:none;border-radius:12px;
+  font-family:inherit;font-size:0.9em;font-weight:700;
+  text-transform:uppercase;letter-spacing:.3px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.dbtn-new  {background:#fef3c7;color:#d97706;}
+.dbtn-prep {background:#dbeafe;color:#2563eb;}
+.dbtn-ready{background:#16a34a;color:#fff;}
+.dbtn-req  {background:#ffedd5;color:#ea580c;}
 </style>
 </head>
 <body>
@@ -241,41 +236,51 @@ header{
 </div>
 
 <div class="split">
-
-  <!-- COL RICHIESTE CAMERIERE -->
-  <div class="col-req active" id="col-req">
+  <div class="col-req mob-on" id="col-req">
     <div class="col-hd">
       <div class="col-hd-l">
-        <i class="fas fa-bell" style="color:#ea580c;font-size:.85em;"></i>
+        <i class="fas fa-bell" style="color:#ea580c;font-size:.82em;"></i>
         <h2>Richieste</h2>
       </div>
       <span class="col-badge badge-req" id="badge-req">0</span>
     </div>
     <div class="col-cards" id="req-container">
-      <div class="empty-state" id="empty-req">
-        <i class="fas fa-bell-slash"></i>
-        <p>Nessuna richiesta</p>
-      </div>
+      <div class="empty-state" id="empty-req"><i class="fas fa-bell-slash"></i><p>Nessuna richiesta</p></div>
     </div>
   </div>
 
-  <!-- COL ORDINI CUCINA -->
-  <div class="col-ord active" id="col-ord">
-    <div class="col-hd" style="background:#f2f2f2;border-bottom-color:#e0e0e0;">
+  <div class="col-ord mob-on" id="col-ord">
+    <div class="col-hd" style="background:#f0f0f0;border-bottom-color:#e0e0e0;">
       <div class="col-hd-l">
-        <i class="fas fa-utensils" style="color:#d97706;font-size:.85em;"></i>
+        <i class="fas fa-utensils" style="color:#d97706;font-size:.82em;"></i>
         <h2>Ordini cucina</h2>
       </div>
       <span class="col-badge badge-ord" id="badge-ord">0</span>
     </div>
     <div class="ord-grid" id="ord-container">
-      <div class="empty-state" id="empty-ord" style="grid-column:1/-1">
-        <i class="fas fa-check-circle"></i>
-        <p>Nessun ordine in attesa</p>
-      </div>
+      <div class="empty-state" id="empty-ord" style="grid-column:1/-1"><i class="fas fa-circle-check"></i><p>Nessun ordine</p></div>
     </div>
   </div>
+</div>
 
+<!-- DRAWER DETTAGLI -->
+<div id="drawer">
+  <div id="drawer-backdrop" onclick="closeDrawer()"></div>
+  <div class="drawer-sheet">
+    <div class="dr-handle"></div>
+    <div class="dr-head">
+      <div class="dr-title">
+        <span class="dr-badge" id="dr-badge"></span>
+        <span class="dr-tlbl">Tavolo</span>
+        <span class="dr-tnum" id="dr-tnum"></span>
+      </div>
+      <button class="dr-close" onclick="closeDrawer()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="dr-body" id="dr-body"></div>
+    <div class="dr-action">
+      <button class="dr-btn" id="dr-btn"></button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -284,24 +289,20 @@ const SB_URL  = "https://jnzxhokxldzymnapcchd.supabase.co";
 const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impuenhob2t4bGR6eW1uYXBjY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MDkyODIsImV4cCI6MjA4MTI4NTI4Mn0.EaPqeczsuYGwMky9t5ove_uk17dNWcYFaWXb2CfiFgo";
 const client  = supabase.createClient(SB_URL, SB_ANON);
 
-// ── State ──────────────────────────────────────────────────────────────────
-const reqData = new Map();  // waiter requests
-const ordData = new Map();  // food orders
+const reqData   = new Map();
+const ordData   = new Map();
 const animating = new Set();
 
 // ── Mobile tabs ────────────────────────────────────────────────────────────
 function mobTab(which, btn) {
   document.querySelectorAll('.mt-btn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  document.getElementById('col-req').classList.toggle('active', which==='req');
-  document.getElementById('col-ord').classList.toggle('active', which==='ord');
+  document.getElementById('col-req').classList.toggle('mob-on', which==='req');
+  document.getElementById('col-ord').classList.toggle('mob-on', which==='ord');
 }
 
 // ── Clock ──────────────────────────────────────────────────────────────────
-function tick(){
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-}
+function tick(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
 tick(); setInterval(tick,10000);
 
 // ── Audio ──────────────────────────────────────────────────────────────────
@@ -310,8 +311,7 @@ function beep(){
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     [880,1100].forEach((f,i)=>{
       const o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);
-      o.frequency.value=f;o.type='sine';
+      o.connect(g);g.connect(ctx.destination);o.frequency.value=f;o.type='sine';
       g.gain.setValueAtTime(.28,ctx.currentTime+i*.15);
       g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.15+.28);
       o.start(ctx.currentTime+i*.15);o.stop(ctx.currentTime+i*.15+.28);
@@ -322,26 +322,19 @@ function beep(){
 // ── Timer ──────────────────────────────────────────────────────────────────
 function elMin(ts){ return Math.floor((Date.now()-new Date(ts))/60000); }
 function fmtMin(m){ return m<1?'<1 min':`${m} min`; }
-function timerCls(m,st){
-  if(st==='ready') return m>=5?'t-urg':'t-warn';
-  if(m>=10) return 't-urg';
-  if(m>=5) return 't-warn';
-  return '';
-}
+function timerCls(m,st){ if(st==='ready') return m>=5?'t-urg':'t-warn'; if(m>=10) return 't-urg'; return m>=5?'t-warn':''; }
 
 setInterval(()=>{
   document.querySelectorAll('[data-ts]').forEach(el=>{
-    const m=elMin(el.dataset.ts);
-    const st=el.dataset.st||'';
-    el.textContent=fmtMin(m);
-    el.className='card-timer '+timerCls(m,st);
+    const m=elMin(el.dataset.ts),st=el.dataset.st||'';
+    el.textContent=fmtMin(m);el.className='card-timer '+timerCls(m,st);
   });
   ordData.forEach((o,id)=>{
     if(o.status==='pending'&&elMin(o.created_at)>=10){
-      const card=document.querySelector(`.kds-card[data-id="${id}"]`);
-      if(card&&!card.classList.contains('s-urg')){
-        card.classList.remove('s-new');card.classList.add('s-urg');
-        const b=card.querySelector('.card-badge');
+      const c=document.querySelector(`.kds-card[data-id="${id}"]`);
+      if(c&&!c.classList.contains('s-urg')){
+        c.classList.remove('s-new');c.classList.add('s-urg');
+        const b=c.querySelector('.card-badge');
         if(b){b.className='card-badge cb-urg';b.textContent='ATTESA';}
       }
     }
@@ -367,38 +360,176 @@ const STAFF={
   other:      {icon:'fa-comment-dots',label:'Altra richiesta'},
 };
 
-// ── Sort orders ────────────────────────────────────────────────────────────
-function ordSortKey(o){
-  const w=o.status==='ready'?0:o.status==='preparing'?1:2;
-  return w*1e13+new Date(o.created_at).getTime();
+// ── Drawer ──────────────────────────────────────────────────────────────────
+let drawerOrdId = null;
+
+function openDrawer(ordId) {
+  const o = ordData.get(String(ordId));
+  if (!o) return;
+  drawerOrdId = String(ordId);
+
+  const items  = parseItems(o.order_details);
+  const st     = o.status;
+  const min    = elMin(o.created_at);
+  const isUrg  = st==='pending'&&min>=10;
+
+  const bCls = isUrg?'cb-urg':st==='pending'?'cb-new':st==='preparing'?'cb-prep':'cb-ready';
+  const bTxt = isUrg?'ATTESA':st==='pending'?'NUOVO':st==='preparing'?'IN PREP':'PRONTO';
+
+  document.getElementById('dr-badge').className='dr-badge '+bCls;
+  document.getElementById('dr-badge').textContent=bTxt;
+  document.getElementById('dr-tnum').textContent=o.table_number;
+
+  const itemsHtml = items.map(i=>
+    `<li><span class="dr-qty">×${i.qty}</span><span class="dr-name">${i.name}</span>${i.code?`<span class="dr-code">#${i.code}</span>`:''}</li>`
+  ).join('');
+
+  const noteHtml = o.customer_notes
+    ? `<div class="dr-note"><i class="fas fa-exclamation-triangle"></i>${o.customer_notes}</div>` : '';
+
+  document.getElementById('dr-body').innerHTML=`
+    <div>
+      <div class="dr-section-title">Ordine — ${items.length} piatt${items.length===1?'o':'i'} — ${fmtMin(min)}</div>
+      <ul class="dr-items">${itemsHtml}</ul>
+    </div>
+    ${noteHtml}`;
+
+  // Action button in drawer mirrors card button
+  const dbtn = document.getElementById('dr-btn');
+  if(st==='pending'){
+    dbtn.className='dr-btn dbtn-new';
+    dbtn.innerHTML='<i class="fas fa-fire-burner"></i> In preparazione';
+  } else if(st==='preparing'){
+    dbtn.className='dr-btn dbtn-prep';
+    dbtn.innerHTML='<i class="fas fa-bell-concierge"></i> Segna Pronto';
+  } else {
+    dbtn.className='dr-btn dbtn-ready';
+    dbtn.innerHTML='<i class="fas fa-check"></i> Segna Servito';
+  }
+  dbtn.onclick=()=>{ closeDrawer(); triggerAction(o.order_id, st); };
+
+  document.body.style.overflow='hidden';
+  document.getElementById('drawer').classList.add('open');
 }
 
-// ── Build order card ───────────────────────────────────────────────────────
-function buildOrderCard(o){
-  const items=parseItems(o.order_details);
-  const st=o.status;
-  const min=elMin(o.created_at);
-  const isUrg=st==='pending'&&min>=10;
+function openStaffDrawer(ordId) {
+  const o = reqData.get(String(ordId));
+  if (!o) return;
+  drawerOrdId = String(ordId);
 
-  const sClass=isUrg?'s-urg':st==='pending'?'s-new':st==='preparing'?'s-prep':'s-ready';
-  const bCls  =isUrg?'cb-urg':st==='pending'?'cb-new':st==='preparing'?'cb-prep':'cb-ready';
-  const bTxt  =isUrg?'ATTESA':st==='pending'?'NUOVO':st==='preparing'?'IN PREP':'PRONTO';
-  const btnCls=st==='pending'?'btn-new':st==='preparing'?'btn-prep':'btn-ready';
-  const btnTxt=st==='pending'
+  const type=o.waiter_request||'call';
+  const info=STAFF[type]||STAFF.other;
+  const min=elMin(o.created_at);
+
+  document.getElementById('dr-badge').className='dr-badge cb-req';
+  document.getElementById('dr-badge').textContent='RICHIESTA';
+  document.getElementById('dr-tnum').textContent=o.table_number;
+
+  document.getElementById('dr-body').innerHTML=`
+    <div>
+      <div class="dr-section-title">Richiesta — ${fmtMin(min)}</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#fff7f0;border-radius:10px;font-size:1em;font-weight:600;color:#ea580c;">
+        <i class="fas ${info.icon}" style="color:#fb923c;font-size:1.2em;"></i>${info.label}
+      </div>
+    </div>`;
+
+  const dbtn=document.getElementById('dr-btn');
+  dbtn.className='dr-btn dbtn-req';
+  dbtn.innerHTML='<i class="fas fa-check"></i> Gestita';
+  dbtn.onclick=()=>{ closeDrawer(); dismissStaffById(String(ordId)); };
+
+  document.body.style.overflow='hidden';
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer(){
+  document.body.style.overflow='';
+  document.getElementById('drawer').classList.remove('open');
+  drawerOrdId=null;
+}
+
+// ── Status config ──────────────────────────────────────────────────────────
+const CYCLE=['pending','preparing','ready'];
+
+async function advance(id,cur){
+  const idx=CYCLE.indexOf(cur);
+  const next=idx>=CYCLE.length-1?'served':CYCLE[idx+1];
+  const{error}=await client.from('orders').update({status:next}).eq('order_id',id);
+  if(error) console.warn('advance:',error.message);
+}
+
+function triggerAction(orderId, st) {
+  const id=String(orderId);
+  if(st==='ready'){
+    const card=document.querySelector(`.kds-card[data-id="${id}"]`);
+    if(card){
+      animating.add(id);ordData.delete(id);
+      card.querySelector('.card-body').innerHTML=`<div class="done-wrap"><i class="fas fa-circle-check"></i><strong>Consegnato!</strong><small>Tavolo ${card.querySelector('.card-tnum').textContent}</small></div>`;
+      const btn=card.querySelector('.card-btn');if(btn)btn.remove();
+      updateStats();
+      setTimeout(()=>{
+        card.classList.add('card-out');
+        setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},250);
+      },1300);
+    } else { ordData.delete(id); updateStats(); }
+    advance(id,st);
+  } else {
+    const nst=st==='pending'?'preparing':'ready';
+    const o=ordData.get(id);if(o){ordData.set(id,{...o,status:nst});renderOrders();}
+    advance(id,st);
+  }
+}
+
+async function dismissStaffById(id){
+  const card=document.querySelector(`.kds-card[data-id="${id}"]`);
+  animating.add(id);reqData.delete(id);
+  if(card){
+    card.classList.add('card-out');
+    setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},250);
+  } else { animating.delete(id); }
+  updateStats();
+  await client.from('orders').update({status:'handled'}).eq('order_id',id);
+}
+
+// ── Build order card (compact) ─────────────────────────────────────────────
+const MAX_PREVIEW = 3; // items shown before "+N altri"
+
+function buildOrderCard(o){
+  const items  = parseItems(o.order_details);
+  const st     = o.status;
+  const min    = elMin(o.created_at);
+  const isUrg  = st==='pending'&&min>=10;
+
+  const sClass = isUrg?'s-urg':st==='pending'?'s-new':st==='preparing'?'s-prep':'s-ready';
+  const bCls   = isUrg?'cb-urg':st==='pending'?'cb-new':st==='preparing'?'cb-prep':'cb-ready';
+  const bTxt   = isUrg?'ATTESA':st==='pending'?'NUOVO':st==='preparing'?'IN PREP':'PRONTO';
+  const btnCls = st==='pending'?'btn-new':st==='preparing'?'btn-prep':'btn-ready';
+  const btnTxt = st==='pending'
     ?'<i class="fas fa-fire-burner"></i> In preparazione'
     :st==='preparing'
     ?'<i class="fas fa-bell-concierge"></i> Pronto'
     :'<i class="fas fa-check"></i> Servito';
 
-  const itemsHtml=items.map(i=>
-    `<li><span class="i-qty">×${i.qty}</span><span class="i-name">${i.name}</span>${i.code?`<span class="i-code">#${i.code}</span>`:''}</li>`
+  const preview = items.slice(0,MAX_PREVIEW);
+  const extra   = items.length - MAX_PREVIEW;
+
+  const itemsHtml = preview.map(i=>
+    `<li><span class="i-qty">×${i.qty}</span><span class="i-name">${i.name}</span></li>`
   ).join('');
-  const noteHtml=o.customer_notes
-    ?`<div class="card-note"><i class="fas fa-pen-line"></i>${o.customer_notes}</div>`:'';
+
+  const moreHtml = extra>0
+    ? `<li class="i-more"><i class="fas fa-plus" style="font-size:.7em;"></i> altri ${extra} piatti — tocca per vedere tutti</li>`
+    : '';
+
+  const noteHtml = o.customer_notes
+    ? `<div class="card-note"><i class="fas fa-exclamation-triangle"></i>${o.customer_notes}</div>` : '';
+
+  const totalLabel = items.length>1 ? `${items.length} piatti` : '1 piatto';
 
   const card=document.createElement('div');
   card.className=`kds-card ${sClass}`;
   card.dataset.id=String(o.order_id);
+
   card.innerHTML=`
     <div class="card-top">
       <div class="card-top-l">
@@ -408,41 +539,30 @@ function buildOrderCard(o){
       </div>
       <div class="card-top-r">
         <div class="card-timer ${timerCls(min,st)}" data-ts="${o.created_at}" data-st="${st}">${fmtMin(min)}</div>
+        <span class="card-count">${totalLabel}</span>
       </div>
     </div>
     <div class="card-body">
       <hr class="card-div">
-      <ul class="card-items">${itemsHtml}</ul>
+      <ul class="card-items">${itemsHtml}${moreHtml}</ul>
       ${noteHtml}
     </div>
     <button class="card-btn ${btnCls}">${btnTxt}</button>`;
 
-  card.querySelector('.card-btn').addEventListener('click',async()=>{
-    const id=String(o.order_id);
-    if(st==='ready'){
-      animating.add(id);ordData.delete(id);
-      card.querySelector('.card-body').innerHTML=`<div class="done-wrap">
-        <i class="fas fa-circle-check"></i>
-        <strong>Consegnato!</strong>
-        <small>Tavolo ${o.table_number}</small></div>`;
-      card.querySelector('.card-btn').remove();
-      updateStats();
-      setTimeout(()=>{
-        card.classList.add('card-out');
-        setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},250);
-      },1300);
-      await advance(id,st);
-    } else {
-      const nst=st==='pending'?'preparing':'ready';
-      ordData.set(id,{...o,status:nst});
-      renderOrders();
-      await advance(id,st);
-    }
+  // Click on body/top → open drawer
+  card.querySelector('.card-top').addEventListener('click', ()=>openDrawer(o.order_id));
+  card.querySelector('.card-body').addEventListener('click', ()=>openDrawer(o.order_id));
+
+  // Action button (does NOT open drawer)
+  card.querySelector('.card-btn').addEventListener('click', e=>{
+    e.stopPropagation();
+    triggerAction(o.order_id, st);
   });
+
   return card;
 }
 
-// ── Build staff card ───────────────────────────────────────────────────────
+// ── Build staff card (compact) ─────────────────────────────────────────────
 function buildStaffCard(o){
   const type=o.waiter_request||'call';
   const info=STAFF[type]||STAFF.other;
@@ -452,7 +572,7 @@ function buildStaffCard(o){
   card.className='kds-card s-req';
   card.dataset.id=String(o.order_id);
   card.innerHTML=`
-    <div class="card-top">
+    <div class="card-top" style="cursor:pointer;">
       <div class="card-top-l">
         <span class="card-badge cb-req">RICHIESTA</span>
         <span class="card-tlbl">Tavolo</span>
@@ -462,104 +582,68 @@ function buildStaffCard(o){
         <div class="card-timer" data-ts="${o.created_at}">${fmtMin(min)}</div>
       </div>
     </div>
-    <div class="card-body">
+    <div class="card-body" style="cursor:pointer;">
       <hr class="card-div">
       <div class="req-row"><i class="fas ${info.icon}"></i>${info.label}</div>
     </div>
     <button class="card-btn btn-req"><i class="fas fa-check"></i> Gestita</button>`;
 
-  card.querySelector('.card-btn').addEventListener('click',async()=>{
-    const id=String(o.order_id);
-    animating.add(id);reqData.delete(id);
-    card.classList.add('card-out');
-    updateStats();
-    setTimeout(()=>{card.remove();animating.delete(id);updateEmpty();updateStats();},250);
-    await client.from('orders').update({status:'handled'}).eq('order_id',id);
+  card.querySelector('.card-top').addEventListener('click',()=>openStaffDrawer(o.order_id));
+  card.querySelector('.card-body').addEventListener('click',()=>openStaffDrawer(o.order_id));
+  card.querySelector('.card-btn').addEventListener('click',e=>{
+    e.stopPropagation();
+    dismissStaffById(String(o.order_id));
   });
   return card;
 }
 
-// ── Render orders ──────────────────────────────────────────────────────────
+// ── Render functions ────────────────────────────────────────────────────────
+function ordSortKey(o){ const w=o.status==='ready'?0:o.status==='preparing'?1:2; return w*1e13+new Date(o.created_at).getTime(); }
+
 function renderOrders(){
   const cont=document.getElementById('ord-container');
   const empty=document.getElementById('empty-ord');
-
-  cont.querySelectorAll('.kds-card').forEach(el=>{
-    if(!animating.has(el.dataset.id)) el.remove();
-  });
-
+  cont.querySelectorAll('.kds-card').forEach(el=>{ if(!animating.has(el.dataset.id)) el.remove(); });
   const sorted=[...ordData.values()].sort((a,b)=>ordSortKey(a)-ordSortKey(b));
-  sorted.forEach(o=>{
-    if(!animating.has(String(o.order_id)))
-      cont.appendChild(buildOrderCard(o));
-  });
-
-  empty.style.display=ordData.size===0&&!cont.querySelector('.kds-card')?'':'none';
+  sorted.forEach(o=>{ if(!animating.has(String(o.order_id))) cont.appendChild(buildOrderCard(o)); });
+  empty.style.display=ordData.size===0&&!cont.querySelector('.kds-card')?'flex':'none';
   updateStats();
 }
 
-// ── Render requests ────────────────────────────────────────────────────────
 function renderRequests(){
   const cont=document.getElementById('req-container');
   const empty=document.getElementById('empty-req');
-
-  cont.querySelectorAll('.kds-card').forEach(el=>{
-    if(!animating.has(el.dataset.id)) el.remove();
-  });
-  [...reqData.values()]
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))
+  cont.querySelectorAll('.kds-card').forEach(el=>{ if(!animating.has(el.dataset.id)) el.remove(); });
+  [...reqData.values()].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))
     .forEach(o=>{ if(!animating.has(String(o.order_id))) cont.appendChild(buildStaffCard(o)); });
-
-  empty.style.display=reqData.size===0&&!cont.querySelector('.kds-card')?'':'none';
+  empty.style.display=reqData.size===0&&!cont.querySelector('.kds-card')?'flex':'none';
   updateStats();
 }
 
 function updateEmpty(){
-  const oc=document.getElementById('ord-container');
-  const rc=document.getElementById('req-container');
-  document.getElementById('empty-ord').style.display=
-    ordData.size===0&&!oc.querySelector('.kds-card')?'':'none';
-  document.getElementById('empty-req').style.display=
-    reqData.size===0&&!rc.querySelector('.kds-card')?'':'none';
+  const oc=document.getElementById('ord-container'),rc=document.getElementById('req-container');
+  document.getElementById('empty-ord').style.display=ordData.size===0&&!oc.querySelector('.kds-card')?'flex':'none';
+  document.getElementById('empty-req').style.display=reqData.size===0&&!rc.querySelector('.kds-card')?'flex':'none';
 }
 
 function updateStats(){
-  const nO=ordData.size,nR=ordData.size&&[...ordData.values()].filter(o=>o.status==='ready').length,nS=reqData.size;
-  document.getElementById('hb-ord').textContent=nO;
-  document.getElementById('hb-req').textContent=nS;
-  document.getElementById('tb-o').textContent=nO;
+  const nO=ordData.size,nR=[...ordData.values()].filter(o=>o.status==='ready').length,nS=reqData.size;
+  ['hb-ord','tb-o'].forEach(id=>document.getElementById(id).textContent=nO);
+  ['hb-req','tb-s'].forEach(id=>document.getElementById(id).textContent=nS);
   document.getElementById('tb-r').textContent=nR;
-  document.getElementById('tb-s').textContent=nS;
   document.getElementById('badge-ord').textContent=nO;
   document.getElementById('badge-req').textContent=nS;
-  document.getElementById('tb-time').textContent=
-    'Aggiornato '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('tb-time').textContent='Aggiornato '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ── Supabase ops ───────────────────────────────────────────────────────────
-const CYCLE=['pending','preparing','ready'];
-async function advance(id,cur){
-  const idx=CYCLE.indexOf(cur);
-  const next=idx>=CYCLE.length-1?'served':CYCLE[idx+1];
-  const{error}=await client.from('orders').update({status:next}).eq('order_id',id);
-  if(error) console.warn('advance:',error.message);
-}
-
-// ── Load ───────────────────────────────────────────────────────────────────
+// ── Load + realtime ─────────────────────────────────────────────────────────
 async function loadInitialOrders(){
-  const{data,error}=await client.from('orders').select('*')
-    .not('status','in','("served","handled")')
-    .order('created_at',{ascending:true});
+  const{data,error}=await client.from('orders').select('*').not('status','in','("served","handled")').order('created_at',{ascending:true});
   if(error){console.error(error);return;}
-  (data||[]).forEach(o=>{
-    const id=String(o.order_id);
-    if(o.waiter_request) reqData.set(id,o);
-    else ordData.set(id,o);
-  });
+  (data||[]).forEach(o=>{ const id=String(o.order_id); o.waiter_request?reqData.set(id,o):ordData.set(id,o); });
   renderOrders();renderRequests();
 }
 
-// ── Realtime ───────────────────────────────────────────────────────────────
 client.channel('kds-rt')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},({new:o})=>{
     beep();
@@ -575,11 +659,8 @@ client.channel('kds-rt')
         const el=document.querySelector(`.kds-card[data-id="${id}"]`);
         if(el){el.classList.add('card-out');setTimeout(()=>{el.remove();updateEmpty();updateStats();},250);}
       }
-    } else if(o.waiter_request){
-      reqData.set(id,o);renderRequests();
-    } else {
-      ordData.set(id,o);renderOrders();
-    }
+    } else if(o.waiter_request){reqData.set(id,o);renderRequests();}
+    else{ordData.set(id,o);renderOrders();}
   })
   .subscribe();
 
@@ -588,34 +669,26 @@ function loadDemo(){
   const btn=document.getElementById('demo-btn');
   btn.disabled=true;btn.innerHTML='<i class="fas fa-check"></i> Demo';
   const now=Date.now();
-  const orders=[
+  [
     {order_id:'demo-1',table_number:3,status:'pending',
-     created_at:new Date(now-2*60000).toISOString(),
-     customer_notes:'Senza wasabi — allergia sesamo',waiter_request:null,
-     order_details:JSON.stringify([{qty:2,name:'Nigiri Salmone',code:'101'},{qty:1,name:'Tacos JUN',code:'201'},{qty:3,name:'Uramaki Spicy',code:'301'}])},
+     created_at:new Date(now-2*60000).toISOString(),waiter_request:null,
+     customer_notes:'Senza wasabi — allergia sesamo',
+     order_details:JSON.stringify([{qty:2,name:'Nigiri Salmone',code:'101'},{qty:1,name:'Tacos JUN Selection',code:'201'},{qty:3,name:'Uramaki Spicy Crunch',code:'301'},{qty:2,name:'Gyoza Pollo',code:'401'},{qty:1,name:'Miso Soup',code:'501'},{qty:4,name:'Edamame',code:'601'}])},
     {order_id:'demo-2',table_number:7,status:'preparing',
-     created_at:new Date(now-9*60000).toISOString(),
-     customer_notes:null,waiter_request:null,
-     order_details:JSON.stringify([{qty:4,name:'Sashimi Tonno',code:'150'},{qty:2,name:'Gyoza Pollo',code:'401'}])},
+     created_at:new Date(now-9*60000).toISOString(),waiter_request:null,customer_notes:null,
+     order_details:JSON.stringify([{qty:4,name:'Sashimi Tonno Premium',code:'150'},{qty:2,name:'Chirashi',code:'160'},{qty:1,name:'JUN Selection',code:'001'}])},
     {order_id:'demo-3',table_number:12,status:'ready',
-     created_at:new Date(now-14*60000).toISOString(),
-     customer_notes:null,waiter_request:null,
-     order_details:JSON.stringify([{qty:2,name:'JUN Selection',code:'001'},{qty:3,name:'Dim Sum',code:'601'}])},
+     created_at:new Date(now-14*60000).toISOString(),waiter_request:null,
+     customer_notes:'Tavolo compleanno — portare candeline',
+     order_details:JSON.stringify([{qty:2,name:'JUN Selection',code:'001'},{qty:3,name:'Dim Sum Gamberetti',code:'601'},{qty:2,name:'Tataki Salmone',code:'701'}])},
     {order_id:'demo-4',table_number:5,status:'pending',
-     created_at:new Date(now-13*60000).toISOString(),
-     customer_notes:null,waiter_request:null,
-     order_details:JSON.stringify([{qty:6,name:'Hosomaki Salmone',code:'801'},{qty:2,name:'Edamame',code:'901'}])},
-  ];
-  const reqs=[
-    {order_id:'demo-w1',table_number:9,status:'pending',
-     created_at:new Date(now-1*60000).toISOString(),
-     customer_notes:null,waiter_request:'bill',order_details:'[]'},
-    {order_id:'demo-w2',table_number:4,status:'pending',
-     created_at:new Date(now-3*60000).toISOString(),
-     customer_notes:null,waiter_request:'drinks',order_details:'[]'},
-  ];
-  orders.forEach(o=>ordData.set(o.order_id,o));
-  reqs.forEach(o=>reqData.set(o.order_id,o));
+     created_at:new Date(now-13*60000).toISOString(),waiter_request:null,customer_notes:null,
+     order_details:JSON.stringify([{qty:6,name:'Hosomaki Salmone',code:'801'},{qty:2,name:'Edamame',code:'901'},{qty:3,name:'Nigiri Tonno',code:'102'},{qty:2,name:'Gunkan Ikura',code:'301'},{qty:1,name:'Tacos JUN',code:'201'}])},
+  ].forEach(o=>ordData.set(o.order_id,o));
+  [
+    {order_id:'demo-w1',table_number:9,status:'pending',created_at:new Date(now-1*60000).toISOString(),customer_notes:null,waiter_request:'bill',order_details:'[]'},
+    {order_id:'demo-w2',table_number:4,status:'pending',created_at:new Date(now-3*60000).toISOString(),customer_notes:null,waiter_request:'drinks',order_details:'[]'},
+  ].forEach(o=>reqData.set(o.order_id,o));
   renderOrders();renderRequests();
 }
 
