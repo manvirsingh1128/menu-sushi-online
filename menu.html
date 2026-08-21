@@ -159,6 +159,14 @@
         .dish-card.allergen-blocked { opacity: 0.5; }
         .dish-card.allergen-blocked .btn-add,
         .dish-card.allergen-blocked .qty-controls { pointer-events: none; opacity: 0.3; }
+        .dish-card.already-ordered { opacity: 0.45; }
+        .dish-card.already-ordered .btn-add,
+        .dish-card.already-ordered .qty-controls { pointer-events: none; opacity: 0.3; }
+        .dish-card.already-ordered .dish-info { cursor: pointer; }
+        .already-ordered-tag {
+            display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;
+            font-size: 0.68em; font-weight: 700; color: #059669;
+        }
         .allergen-warn-tag {
             display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;
             font-size: 0.68em; font-weight: 700; color: #c62828;
@@ -197,7 +205,7 @@
         .btn-add {
             position: absolute; bottom: -8px; right: -8px;
             width: 40px; height: 40px; border-radius: 50%;
-            background: #111; color: #fff; border: none; font-size: 1.6em;
+            background: #fff; color: #111; border: none; font-size: 1.6em;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.28); line-height: 1;
             touch-action: manipulation; -webkit-tap-highlight-color: transparent;
@@ -1052,6 +1060,10 @@
                 <div id="di-allergen-notice" style="display:none;background:#fef2f2;border-radius:12px;padding:10px 14px;font-size:0.78em;color:#c62828;line-height:1.5;margin-bottom:16px;align-items:flex-start;gap:8px;border-left:3px solid #dc2626;">
                     <i class="fas fa-triangle-exclamation" style="color:#dc2626;flex-shrink:0;margin-top:1px;"></i>
                     <span id="di-allergen-msg">Contiene i tuoi allergeni</span>
+                </div>
+                <div id="di-already-ordered-notice" style="display:none;background:#f0fdf4;border-radius:12px;padding:10px 14px;font-size:0.78em;color:#15803d;line-height:1.5;margin-bottom:16px;align-items:flex-start;gap:8px;border-left:3px solid #22c55e;">
+                    <i class="fas fa-check-circle" style="color:#22c55e;flex-shrink:0;margin-top:1px;"></i>
+                    <span id="di-already-ordered-msg">Categoria già ordinata in questo pasto</span>
                 </div>
                 <div id="di-qty-wrap">
                     <button id="di-cta-btn" onclick="diSetQty(1)">
@@ -2051,6 +2063,7 @@
         const cart = {};
         let tableSize = 2;
         let tableNumber = 1;
+        const orderedMax1Cats = new Set(); // categorie max1 già ordinate in questa sessione
 
         const isWeekend = () => { const d = new Date().getDay(); return d === 0 || d === 6; };
         function getTabLabel(cat) {
@@ -2186,8 +2199,10 @@
                     const isWkndDish = item.desc && item.desc.toLowerCase().includes('solo weekend');
                     const wkndOk = isWeekend();
                     const hasBlockedAllergen = activeFilters.size > 0 && item.allergens && item.allergens.some(a => activeFilters.has(a));
+                    const isCatAlreadyOrdered = cat.max1 && orderedMax1Cats.has(cat.id);
                     if (isWkndDish && !wkndOk) card.classList.add('weekend-only');
                     if (hasBlockedAllergen) card.classList.add('allergen-blocked');
+                    if (isCatAlreadyOrdered) card.classList.add('already-ordered');
                     if (cat.max1) tags.unshift(`<span class="dish-tag max1-card"><i class="fas fa-user"></i> Max 1</span>`);
                     if (isSpicy) tags.push(`<span class="dish-tag spicy"><i class="fas fa-fire"></i> ${t.spicyTag||'Piccante'}</span>`);
                     if (isVeg) tags.push(`<span class="dish-tag veg"><i class="fas fa-leaf"></i> ${t.vegTag||'Veg'}</span>`);
@@ -2196,12 +2211,13 @@
                     const iName = getLang(item,'name');
                     const iDesc = getLang(item,'desc');
 
-                    // etichetta allergeni conflittuali sulla card
                     let allergenWarnHtml = '';
                     if (hasBlockedAllergen) {
                         const conflicting = item.allergens.filter(a => activeFilters.has(a));
                         const names = conflicting.map(a => (t.allergenNames && t.allergenNames[a]) || a).join(', ');
                         allergenWarnHtml = `<span class="allergen-warn-tag"><i class="fas fa-triangle-exclamation"></i>${names}</span>`;
+                    } else if (isCatAlreadyOrdered) {
+                        allergenWarnHtml = `<span class="already-ordered-tag"><i class="fas fa-check-circle"></i>${t.alreadyOrdered||'Già ordinato'}</span>`;
                     }
 
                     const imgSrc = dishImgs[item.id] || item.img || null;
@@ -2258,6 +2274,10 @@
         }
 
         function addItem(id, max1) {
+            if (max1) {
+                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
+                if (cat && orderedMax1Cats.has(cat.id)) return;
+            }
             if (max1 && (cart[id] || 0) >= tableSize) { openMax1Explain(id); return; }
             cart[id] = 1;
             document.getElementById(`add-${id}`).style.display = 'none';
@@ -2409,6 +2429,12 @@
         }
 
         function cartSendOrder() {
+            // registra categorie max1 ordinate prima di svuotare il carrello
+            Object.keys(cart).forEach(id => {
+                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
+                if (cat) orderedMax1Cats.add(cat.id);
+            });
+
             Object.keys(cart).forEach(id => {
                 delete cart[id];
                 const addBtn = document.getElementById(`add-${id}`);
@@ -2417,6 +2443,12 @@
                 if (addBtn) addBtn.style.display = '';
                 if (qtyEl) qtyEl.classList.remove('show');
                 if (card) card.classList.remove('in-cart');
+                // se categoria max1 già ordinata, griglia subito la card
+                const catOfItem = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
+                if (catOfItem && orderedMax1Cats.has(catOfItem.id)) {
+                    if (card) card.classList.add('already-ordered');
+                    if (addBtn) addBtn.style.display = 'none';
+                }
             });
             updateCartBadge();
             closeCart(() => {
@@ -2504,9 +2536,11 @@
             const wkndOkNow = isWeekend();
             const isWkndBlocked = isWkndItem && !wkndOkNow;
             const isAllergenBlocked = activeFilters.size > 0 && item.allergens && item.allergens.some(a => activeFilters.has(a));
-            diIsBlocked = isWkndBlocked || isAllergenBlocked;
+            const itemCat = menuData.find(c => c.items.some(i => i.id == id));
+            const isAlreadyOrdered = itemCat && itemCat.max1 && orderedMax1Cats.has(itemCat.id);
+            diIsBlocked = isWkndBlocked || isAllergenBlocked || isAlreadyOrdered;
 
-            // notice allergeni nel popup
+            // notice allergeni
             const allergenNotice = document.getElementById('di-allergen-notice');
             if (isAllergenBlocked) {
                 allergenNotice.style.display = 'flex';
@@ -2516,6 +2550,18 @@
                     (currentLang === 'en' ? 'Contains your allergens: ' : currentLang === 'zh' ? '含有你的过敏原：' : 'Contiene i tuoi allergeni: ') + names;
             } else {
                 allergenNotice.style.display = 'none';
+            }
+
+            // notice già ordinato
+            const alreadyNotice = document.getElementById('di-already-ordered-notice');
+            if (isAlreadyOrdered) {
+                alreadyNotice.style.display = 'flex';
+                document.getElementById('di-already-ordered-msg').textContent =
+                    currentLang === 'en' ? 'Already ordered in this meal' :
+                    currentLang === 'zh' ? '本餐已点过此类菜品' :
+                    'Categoria già ordinata in questo pasto';
+            } else {
+                alreadyNotice.style.display = 'none';
             }
 
             document.getElementById('di-desc').textContent = isWkndItem
