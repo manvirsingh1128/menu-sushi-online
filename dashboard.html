@@ -33,6 +33,21 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 @keyframes dotSOS{0%,100%{opacity:1;transform:scale(1.2)}50%{opacity:.1;transform:scale(.5)}}
 #offline-label{display:none;font-size:.6em;font-weight:800;color:#ef4444;letter-spacing:.6px;text-transform:uppercase;}
 
+/* ── Spinner caricamento ── */
+#loading-overlay{
+  position:fixed;inset:0;z-index:10000;
+  background:#111;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;transition:opacity .4s;
+}
+#loading-overlay.hidden{opacity:0;pointer-events:none;}
+.ld-spinner{
+  width:44px;height:44px;border-radius:50%;
+  border:4px solid #333;border-top-color:#fff;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-text{font-size:.75em;color:#666;letter-spacing:1px;font-weight:600;}
+
 /* ── Barra emergenza ── */
 #conn-bar{
   display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
@@ -775,15 +790,23 @@ function subscribeRealtime(){
 
 // ── Init ───────────────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
+  const ov = document.getElementById('loading-overlay');
   loadCronologia();
   initMasonry();
-  await pingLoop(); // ping iniziale prima di caricare
   await loadPending();
   subscribeRealtime();
   updateTimers();
-  setInterval(pingLoop, 1000); // ping ogni secondo
+  // nascondi spinner con fade
+  ov.classList.add('hidden');
+  setTimeout(() => ov.style.display = 'none', 420);
+  // ping parte solo dopo 2s: evita falsi offline durante il caricamento
+  setTimeout(() => setInterval(pingLoop, 1000), 2000);
 });
 </script>
+<div id="loading-overlay">
+  <div class="ld-spinner"></div>
+  <div class="ld-text">CARICAMENTO...</div>
+</div>
 <div id="conn-flash"></div>
 <div id="conn-bar">⚠ EMERGENZA — MANCA CONNESSIONE &nbsp;·&nbsp; gli ordini vengono salvati in locale</div>
 </body>
