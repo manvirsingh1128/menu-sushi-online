@@ -29,6 +29,7 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 #online-dot{width:9px;height:9px;border-radius:50%;background:#dc2626;flex-shrink:0;}
 @keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.65)}}
 #online-dot{animation:dotPulse 1.8s ease-in-out infinite;}
+#offline-label{display:none;font-size:.6em;font-weight:800;color:#ef4444;letter-spacing:.6px;text-transform:uppercase;}
 
 /* ── Indicatore urgenza — dentro header ── */
 #urg-indicator{
@@ -243,6 +244,7 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
     <div id="hidden-badge"><i class="fa-solid fa-arrow-down"></i><span id="hidden-count"></span></div>
     <span id="hd-clock">--:--</span>
     <div id="online-dot"></div>
+    <span id="offline-label">OFFLINE</span>
   </div>
 </div>
 
@@ -340,6 +342,40 @@ function tickClock(){
 }
 tickClock(); setInterval(tickClock,1000);
 
+// ── Offline / snapshot ────────────────────────────────────────────────────
+const SNAP_KEY  = 'jun_kds_snap';
+const QUEUE_KEY = 'jun_kds_queue';
+const activeOrders = new Map(); // id → order object
+
+function snapSave(){
+  try{ localStorage.setItem(SNAP_KEY, JSON.stringify([...activeOrders.values()])); }catch(e){}
+}
+function snapLoad(){
+  try{ return JSON.parse(localStorage.getItem(SNAP_KEY)||'[]'); }catch{ return []; }
+}
+function queuePush(item){
+  try{
+    const q = JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');
+    q.push(item);
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+  }catch(e){}
+}
+async function queueFlush(){
+  try{
+    const q = JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');
+    if(!q.length) return;
+    for(const item of q){
+      await sb.from('orders').update({ status: item.status }).eq('id', item.id);
+    }
+    localStorage.removeItem(QUEUE_KEY);
+    console.log('[Jun KDS] coda offline sincronizzata:', q.length, 'aggiornamenti');
+  }catch(e){ console.warn('[Jun KDS] flush fallito:', e.message); }
+}
+function setOffline(offline){
+  const lbl = document.getElementById('offline-label');
+  if(lbl) lbl.style.display = offline ? 'inline' : 'none';
+}
+
 // ── Cronologia (persistente in localStorage) ───────────────────────────────
 const CRON_KEY = 'jun_kds_cron';
 const CRON_MAX = 80;
@@ -414,8 +450,14 @@ function toggleDone(el){
 async function gestita(btn, tipo, tavolo, orderId){
   addLog('req', tavolo, null, tipo);
   if(orderId){
-    const { error } = await sb.from('orders').update({ status:'handled' }).eq('id', orderId);
-    if(error) console.warn('[Jun KDS] gestita:', error.message);
+    if(navigator.onLine){
+      const { error } = await sb.from('orders').update({ status:'handled' }).eq('id', orderId);
+      if(error) console.warn('[Jun KDS] gestita:', error.message);
+    } else {
+      queuePush({ id: orderId, status: 'handled' });
+    }
+    activeOrders.delete(orderId);
+    snapSave();
   }
   const card=btn.closest('.req-card');
   card.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .3s,transform .3s;';
@@ -427,8 +469,14 @@ async function pronto(btn, orderId){
   if(btn.disabled) return;
   btn.disabled=true;
   if(orderId){
-    const { error } = await sb.from('orders').update({ status:'ready' }).eq('id', orderId);
-    if(error) console.warn('[Jun KDS] pronto:', error.message);
+    if(navigator.onLine){
+      const { error } = await sb.from('orders').update({ status:'ready' }).eq('id', orderId);
+      if(error) console.warn('[Jun KDS] pronto:', error.message);
+    } else {
+      queuePush({ id: orderId, status: 'ready' });
+    }
+    activeOrders.delete(orderId);
+    snapSave();
   }
   const ticket=btn.closest('.ticket');
   const tav=ticket.querySelector('.tk-tavolo-num').textContent;
@@ -521,6 +569,9 @@ function renderTicket(order, silent){
   const items = JSON.parse(order.order_details || '[]');
   if(!items.length) return;
 
+  activeOrders.set(order.id, order);
+  snapSave();
+
   const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
   const col   = tableColor(order.table_number);
 
@@ -571,6 +622,9 @@ function renderTicket(order, silent){
 
 // ── Render richiesta cameriere ─────────────────────────────────────────────
 function renderReqCard(order, silent){
+  activeOrders.set(order.id, order);
+  snapSave();
+
   const ora = order.created_at
     ? new Date(order.created_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
     : '--:--';
@@ -603,13 +657,29 @@ function renderReqCard(order, silent){
 
 // ── Carica ordini pendenti ─────────────────────────────────────────────────
 async function loadPending(){
+  if(!navigator.onLine){
+    console.warn('[Jun KDS] offline — carico snapshot locale');
+    snapLoad().forEach(order => {
+      if(order.waiter_request) renderReqCard(order, true);
+      else renderTicket(order, true);
+    });
+    return;
+  }
   const { data, error } = await sb
     .from('orders')
     .select('*')
     .eq('status','pending')
     .order('created_at',{ ascending:true });
 
-  if(error){ console.warn('[Jun KDS] load:', error.message); return; }
+  if(error){
+    console.warn('[Jun KDS] load fallito, uso snapshot:', error.message);
+    snapLoad().forEach(order => {
+      if(order.waiter_request) renderReqCard(order, true);
+      else renderTicket(order, true);
+    });
+    return;
+  }
+  activeOrders.clear();
   data.forEach(order => {
     if(order.waiter_request) renderReqCard(order, true);
     else renderTicket(order, true);
@@ -633,11 +703,23 @@ function subscribeRealtime(){
 
 // ── Init ───────────────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
+  setOffline(!navigator.onLine);
   loadCronologia();
   initMasonry();
   await loadPending();
   subscribeRealtime();
   updateTimers();
+
+  window.addEventListener('offline', () => setOffline(true));
+
+  window.addEventListener('online', async () => {
+    setOffline(false);
+    await queueFlush();
+    document.querySelectorAll('.ticket,.req-card').forEach(el => el.remove());
+    activeOrders.clear();
+    updateEmptyState();
+    await loadPending();
+  });
 });
 </script>
 </body>
