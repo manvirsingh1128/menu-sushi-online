@@ -423,21 +423,27 @@ async function onBackOnline(){
   setTimeout(() => newSinceReconnect.clear(), 10000); // rimuovi ocra dopo 10s
 }
 
+let _pinging = false;
 async function pingLoop(){
+  if(_pinging) return; // salta se il ping precedente è ancora in corso
+  _pinging = true;
+  // fast path: browser sa già che è offline
+  if(!navigator.onLine){
+    if(realOnline){ realOnline=false; setOffline(true); }
+    _pinging = false; return;
+  }
   try{
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 2500);
-    await fetch(SB_URL + '/rest/v1/', { method:'HEAD', signal:ctrl.signal });
+    const t = setTimeout(()=>ctrl.abort(), 800); // timeout aggressivo
+    await fetch(SB_URL+'/rest/v1/',{method:'HEAD',cache:'no-store',signal:ctrl.signal});
     clearTimeout(t);
     if(!realOnline) await onBackOnline();
-    realOnline = true;
+    realOnline=true;
     setOffline(false);
-  } catch(e){
-    if(realOnline){
-      realOnline = false;
-      setOffline(true);
-    }
+  }catch(e){
+    if(realOnline){ realOnline=false; setOffline(true); }
   }
+  _pinging = false;
 }
 
 // ── Cronologia (persistente in localStorage) ───────────────────────────────
