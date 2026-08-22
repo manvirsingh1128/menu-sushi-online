@@ -440,17 +440,17 @@ async function onBackOnline(){
 
 let _pinging = false;
 async function pingLoop(){
-  if(_pinging) return; // salta se il ping precedente è ancora in corso
+  if(_pinging) return;
   _pinging = true;
-  // fast path: browser sa già che è offline
   if(!navigator.onLine){
     if(realOnline){ realOnline=false; setOffline(true); }
     _pinging = false; return;
   }
   try{
     const ctrl = new AbortController();
-    const t = setTimeout(()=>ctrl.abort(), 800); // timeout aggressivo
-    await fetch(SB_URL+'/rest/v1/',{method:'HEAD',cache:'no-store',signal:ctrl.signal});
+    const t = setTimeout(()=>ctrl.abort(), 3000);
+    // Cloudflare trace: risponde in <100ms, no-cors, nessun problema CORS
+    await fetch('https://1.1.1.1/cdn-cgi/trace',{cache:'no-store',mode:'no-cors',signal:ctrl.signal});
     clearTimeout(t);
     if(!realOnline) await onBackOnline();
     realOnline=true;
