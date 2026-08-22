@@ -25,12 +25,6 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 #btn-cronologia:hover{color:#fff;background:#444;}
 #logo{height:36px;object-fit:contain;margin:0 auto;}
 #hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-#btn-test{
-  background:#222;border:1px solid #333;color:#555;
-  padding:4px 8px;border-radius:4px;font-size:0.65em;
-  font-family:inherit;cursor:pointer;flex-shrink:0;
-}
-#btn-test:hover{border-color:#666;color:#aaa;}
 #hd-clock{font-size:.85em;font-weight:600;color:#ccc;font-variant-numeric:tabular-nums;flex-shrink:0;}
 #online-dot{width:9px;height:9px;border-radius:50%;background:#dc2626;flex-shrink:0;}
 @keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.65)}}
@@ -79,6 +73,8 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 #cron-title{font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;}
 #cron-close{background:none;border:none;color:#555;font-size:1.1em;cursor:pointer;}
 #cron-close:hover{color:#fff;}
+#cron-reset{background:none;border:none;color:#555;font-size:.9em;cursor:pointer;padding:4px 6px;border-radius:4px;}
+#cron-reset:hover{color:#e63946;background:#2a1a1a;}
 #cron-list{overflow-y:auto;flex:1;}
 .cron-item{border-bottom:1px solid #1e1e1e;padding:12px 16px;}
 .cron-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
@@ -245,7 +241,6 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
   <div id="hd-right">
     <div id="urg-indicator"></div>
     <div id="hidden-badge"><i class="fa-solid fa-arrow-down"></i><span id="hidden-count"></span></div>
-    <button id="btn-test">+ TEST</button>
     <span id="hd-clock">--:--</span>
     <div id="online-dot"></div>
   </div>
@@ -255,7 +250,12 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 <div id="cronologia">
   <div id="cron-header">
     <span id="cron-title">Cronologia turno</span>
-    <button id="cron-close" onclick="toggleCronologia()"><i class="fa-solid fa-xmark"></i></button>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button id="cron-reset" onclick="resetCronologia()" title="Nuovo turno — cancella storico">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+      <button id="cron-close" onclick="toggleCronologia()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
   </div>
   <div id="cron-list">
     <div id="cron-empty">Nessuna attività ancora.</div>
@@ -340,28 +340,64 @@ function tickClock(){
 }
 tickClock(); setInterval(tickClock,1000);
 
-// ── Cronologia ─────────────────────────────────────────────────────────────
-function toggleCronologia(){
-  document.getElementById('cronologia').classList.toggle('open');
-  document.getElementById('cron-overlay').classList.toggle('open');
+// ── Cronologia (persistente in localStorage) ───────────────────────────────
+const CRON_KEY = 'jun_kds_cron';
+const CRON_MAX = 80;
+
+function cronSave(entry){
+  try{
+    const arr = JSON.parse(localStorage.getItem(CRON_KEY)||'[]');
+    arr.unshift(entry);
+    if(arr.length > CRON_MAX) arr.length = CRON_MAX;
+    localStorage.setItem(CRON_KEY, JSON.stringify(arr));
+  }catch(e){}
 }
-function addLog(tipo, tavolo, items, nota){
-  const ora=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+
+function cronLoad(){
+  try{ return JSON.parse(localStorage.getItem(CRON_KEY)||'[]'); }catch{ return []; }
+}
+
+function cronRender(entry){
   const labels={pronto:'Ordine pronto',req:'Richiesta gestita',nuovo:'Nuovo ordine'};
   document.getElementById('cron-empty').style.display='none';
   const div=document.createElement('div');
   div.className='cron-item';
   div.innerHTML=`
     <div class="cron-top">
-      <div class="cron-dot ${tipo}"></div>
-      <span class="cron-label">T${tavolo} — ${labels[tipo]||tipo}</span>
-      <span class="cron-ora">${ora}</span>
+      <div class="cron-dot ${entry.tipo}"></div>
+      <span class="cron-label">T${entry.tavolo} — ${labels[entry.tipo]||entry.tipo}</span>
+      <span class="cron-ora">${entry.ora}</span>
     </div>
-    ${items?`<div class="cron-dishes">${items.map(i=>`<div class="cron-dish">${i.qty} ${i.name}</div>`).join('')}</div>`:''}
-    ${nota?`<div class="cron-nota-log">${nota}</div>`:''}
+    ${entry.items?`<div class="cron-dishes">${entry.items.map(i=>`<div class="cron-dish">${i.qty} ${i.name}</div>`).join('')}</div>`:''}
+    ${entry.nota?`<div class="cron-nota-log">${entry.nota}</div>`:''}
   `;
   const list=document.getElementById('cron-list');
   list.insertBefore(div, list.children[1]||null);
+}
+
+function resetCronologia(){
+  localStorage.removeItem(CRON_KEY);
+  const list=document.getElementById('cron-list');
+  list.innerHTML='<div id="cron-empty">Nessuna attività ancora.</div>';
+}
+
+function toggleCronologia(){
+  document.getElementById('cronologia').classList.toggle('open');
+  document.getElementById('cron-overlay').classList.toggle('open');
+}
+
+function addLog(tipo, tavolo, items, nota){
+  const ora=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const entry={tipo,tavolo,items,nota,ora};
+  cronSave(entry);
+  cronRender(entry);
+}
+
+function loadCronologia(){
+  const entries = cronLoad();
+  if(!entries.length) return;
+  document.getElementById('cron-empty').style.display='none';
+  entries.forEach(e => cronRender(e));
 }
 
 // ── Checkbox + logica PRONTO ───────────────────────────────────────────────
@@ -595,32 +631,9 @@ function subscribeRealtime(){
     });
 }
 
-// ── Bottone TEST — inserisce ordine demo in Supabase ─────────────────────
-document.getElementById('btn-test').addEventListener('click', async () => {
-  const tables  = [3,5,7,9,12,15];
-  const dishes  = [
-    {qty:2,name:'Nigiri Salmone',code:'101',cat:'Nigiri'},
-    {qty:1,name:'JUN Selection',code:'201',cat:'Selezioni'},
-    {qty:3,name:'Uramaki California',code:'301',cat:'Uramaki'},
-    {qty:2,name:'Gyoza Pollo',code:'401',cat:'Caldi'},
-    {qty:1,name:'Miso Soup',code:'501',cat:'Zuppe'},
-    {qty:2,name:'Sashimi Tonno',code:'601',cat:'Sashimi'},
-  ];
-  const t = tables[Math.floor(Math.random()*tables.length)];
-  const d = [dishes[Math.floor(Math.random()*dishes.length)],
-             dishes[Math.floor(Math.random()*dishes.length)]];
-  const { error } = await sb.from('orders').insert({
-    table_number: t,
-    order_details: JSON.stringify(d),
-    customer_notes: null,
-    status:'pending',
-    waiter_request: null
-  });
-  if(error) console.warn('[Jun KDS] test insert:', error.message);
-});
-
 // ── Init ───────────────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
+  loadCronologia();
   initMasonry();
   await loadPending();
   subscribeRealtime();
