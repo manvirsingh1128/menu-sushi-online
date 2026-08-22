@@ -39,27 +39,21 @@ html,body{
   font-size:.78em;font-weight:600;color:var(--text-muted);
   margin-bottom:12px;text-align:center;letter-spacing:.2px;
 }
-/* input + bottone: impilati su mobile */
-.input-row{display:flex;flex-direction:column;gap:10px;}
+/* input senza bottone — Enter per aggiungere */
 #code-input{
-  width:100%;background:var(--bg-card);
-  border:1.5px solid var(--border-line);border-radius:16px;
-  color:#111;font-size:2em;font-weight:700;font-family:inherit;
-  padding:16px 20px;outline:none;
+  width:100%;background:#fff;
+  border:2px solid #111;border-radius:14px;
+  color:#111;font-size:1.25em;font-weight:700;font-family:inherit;
+  padding:13px 18px;outline:none;
   -webkit-appearance:none;appearance:none;
-  transition:border-color .15s;letter-spacing:2px;text-align:center;
+  letter-spacing:2px;text-align:center;
 }
-#code-input::placeholder{color:#ccc;font-weight:400;font-size:.5em;letter-spacing:0;}
-#code-input:focus{border-color:#111;background:#fff;}
+#code-input::placeholder{color:#ccc;font-weight:400;font-size:.75em;letter-spacing:0;}
 #code-input::-webkit-outer-spin-button,
 #code-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-#btn-add{
-  width:100%;background:#111;color:#fff;border:none;border-radius:16px;
-  font-family:inherit;font-size:1.05em;font-weight:700;
-  padding:17px;cursor:pointer;touch-action:manipulation;
-  transition:opacity .15s;
+.input-hint{
+  margin-top:8px;font-size:.75em;color:var(--text-muted);text-align:center;
 }
-#btn-add:active{opacity:.75;}
 
 #error-msg{
   display:none;
@@ -82,7 +76,10 @@ html,body{
   display:flex;align-items:center;gap:12px;
   padding:14px 16px;border-bottom:1px solid var(--border-line);
   border-left:4px solid #111;background:#fff;
+  cursor:pointer;
+  -webkit-user-select:none;user-select:none;
 }
+.cart-card:active{background:var(--bg-card);}
 .cart-thumb-wrap{flex-shrink:0;}
 .cart-thumb{
   width:60px;height:60px;border-radius:10px;object-fit:cover;
@@ -95,10 +92,10 @@ html,body{
 }
 .cart-info{flex:1;min-width:0;}
 .cart-name{
-  font-size:.94em;font-weight:700;color:#111;line-height:1.3;margin-bottom:3px;
+  font-size:.94em;font-weight:700;color:#111;line-height:1.3;
   overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
 }
-.cart-price{font-size:.82em;font-weight:600;color:var(--text-dim);}
+.cart-tap-hint{font-size:.72em;color:var(--text-muted);margin-top:2px;}
 
 /* qty controls — pill con ombra, touch-friendly */
 .cart-qty-wrap{flex-shrink:0;}
@@ -126,10 +123,10 @@ html,body{
   border-top:1px solid rgba(0,0,0,0.1);box-shadow:0 -4px 16px rgba(0,0,0,0.07);
   z-index:800;
 }
-#footer-inner{display:flex;align-items:center;gap:12px;max-width:560px;margin:0 auto;}
+#footer-inner{max-width:560px;margin:0 auto;}
 #footer-cart{
-  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:16px 12px;border:none;border-radius:16px;
+  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:17px;border:none;border-radius:16px;
   background:#111;color:#fff;font-size:1em;font-weight:700;
   cursor:pointer;font-family:inherit;touch-action:manipulation;
 }
@@ -139,10 +136,6 @@ html,body{
   width:22px;height:22px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;margin-left:2px;
 }
-#footer-total{
-  font-size:.8em;color:var(--text-dim);white-space:nowrap;
-}
-#footer-total strong{display:block;font-size:1.3em;color:#111;font-weight:700;}
 
 /* ── CONFERMA POPUP (identico a menu.html) ── */
 #order-confirm-overlay{
@@ -196,6 +189,42 @@ html,body{
 }
 #empty-state i{font-size:2.5em;color:#e0e0e0;}
 #empty-state p{font-size:.88em;line-height:1.5;}
+
+/* ── POPUP DETTAGLIO ── */
+#detail-overlay{
+  display:none;position:fixed;inset:0;z-index:1200;
+  background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  align-items:flex-end;justify-content:center;
+}
+#detail-overlay.open{display:flex;}
+#detail-box{
+  width:100%;max-width:480px;
+  background:#fff;border-radius:24px 24px 0 0;
+  padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));
+  animation:slideUp .28s cubic-bezier(.32,1,.64,1) both;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+#detail-handle{
+  width:36px;height:4px;border-radius:2px;background:#e0e0e0;
+  margin:0 auto 18px;
+}
+#detail-img{
+  width:100%;height:180px;object-fit:cover;border-radius:14px;
+  background:var(--bg-card);display:block;margin-bottom:14px;
+}
+#detail-img-ph{
+  width:100%;height:100px;border-radius:14px;
+  background:var(--bg-card);display:none;align-items:center;justify-content:center;
+  font-size:2.5em;color:#ddd;margin-bottom:14px;
+}
+#detail-name{font-size:1.15em;font-weight:800;color:#111;margin-bottom:6px;letter-spacing:-.01em;}
+#detail-price{font-size:1.05em;font-weight:700;color:#555;margin-bottom:16px;}
+#detail-close{
+  width:100%;padding:15px;border:none;border-radius:14px;
+  background:#111;color:#fff;font-size:1em;font-weight:700;
+  cursor:pointer;font-family:inherit;touch-action:manipulation;
+}
+#detail-close:active{opacity:.8;}
 </style>
 </head>
 <body>
@@ -208,11 +237,9 @@ html,body{
 <!-- INPUT -->
 <div id="input-section">
   <div class="input-label">Scrivi il numero del piatto dalla carta</div>
-  <div class="input-row">
-    <input id="code-input" type="text" inputmode="numeric" pattern="[0-9]*"
-           placeholder="es. 109" autocomplete="off" autocorrect="off" spellcheck="false">
-    <button id="btn-add" onclick="addDish()">Aggiungi</button>
-  </div>
+  <input id="code-input" type="text" inputmode="numeric" pattern="[0-9]*"
+         placeholder="es. 109" autocomplete="off" autocorrect="off" spellcheck="false">
+  <div class="input-hint">Premi Invio per aggiungere</div>
   <div id="error-msg"></div>
 </div>
 
@@ -230,15 +257,23 @@ html,body{
 <!-- FOOTER -->
 <div id="footer">
   <div id="footer-inner">
-    <div id="footer-total">
-      <span id="ft-count"></span>
-      <strong id="ft-price"></strong>
-    </div>
     <button id="footer-cart" onclick="sendOrder()">
       <i class="fa-solid fa-paper-plane"></i>
       Invia ordine
       <span id="ft-badge"></span>
     </button>
+  </div>
+</div>
+
+<!-- DETAIL POPUP -->
+<div id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div id="detail-box">
+    <div id="detail-handle"></div>
+    <img id="detail-img" src="" alt="" onerror="this.style.display='none';document.getElementById('detail-img-ph').style.display='flex';">
+    <div id="detail-img-ph"><i class="fa-solid fa-bowl-rice"></i></div>
+    <div id="detail-name"></div>
+    <div id="detail-price"></div>
+    <button id="detail-close" onclick="closeDetail()">Chiudi</button>
   </div>
 </div>
 
@@ -611,7 +646,7 @@ function renderCart(){
     footer.style.display = 'none';
     list.innerHTML = `<div id="empty-state">
       <i class="fa-regular fa-clipboard"></i>
-      <p>Nessun piatto aggiunto.<br>Scrivi il numero e premi Aggiungi.</p>
+      <p>Nessun piatto aggiunto.<br>Scrivi il numero e premi Invio.</p>
     </div>`;
     return;
   }
@@ -631,15 +666,15 @@ function renderCart(){
     card.className = 'cart-card';
     card.innerHTML = `
       <div class="cart-thumb-wrap">${thumbHtml}</div>
-      <div class="cart-info">
+      <div class="cart-info" onclick="openDetail(${id})">
         <div class="cart-name">${dish.name}</div>
-        <div class="cart-price">${dish.price}</div>
+        <div class="cart-tap-hint">Tocca per dettagli</div>
       </div>
       <div class="cart-qty-wrap">
         <div class="cart-qty-inner">
-          <button class="q-btn" onclick="changeQty(${id},-1)">−</button>
+          <button class="q-btn" onclick="event.stopPropagation();changeQty(${id},-1)">−</button>
           <span class="q-num">${qty}</span>
-          <button class="q-btn" onclick="changeQty(${id},1)">+</button>
+          <button class="q-btn" onclick="event.stopPropagation();changeQty(${id},1)">+</button>
         </div>
       </div>
     `;
@@ -658,10 +693,27 @@ function changeQty(id, delta){
 }
 
 function updateFooter(){
-  const {n, sum} = cartTotal();
-  document.getElementById('ft-count').textContent = n === 1 ? '1 piatto' : `${n} piatti`;
-  document.getElementById('ft-price').textContent = `€${sum.toFixed(2).replace('.',',')}`;
+  const {n} = cartTotal();
   document.getElementById('ft-badge').textContent = n;
+}
+
+function openDetail(id){
+  const dish = dishMap.get(id);
+  if(!dish) return;
+  const imgSrc = dishImgs[id];
+  const img = document.getElementById('detail-img');
+  const ph  = document.getElementById('detail-img-ph');
+  if(imgSrc){
+    img.src = imgSrc; img.style.display='block'; ph.style.display='none';
+  } else {
+    img.style.display='none'; ph.style.display='flex';
+  }
+  document.getElementById('detail-name').textContent  = dish.name;
+  document.getElementById('detail-price').textContent = dish.price;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+function closeDetail(){
+  document.getElementById('detail-overlay').classList.remove('open');
 }
 
 // ── SEND ─────────────────────────────────────────────────────────────────────
