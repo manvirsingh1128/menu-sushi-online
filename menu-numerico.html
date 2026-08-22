@@ -5,426 +5,498 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Jun Restaurant — Ordine</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;background:#121212;color:#f0f0f0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;font-size:16px;}
+html,body{
+  height:100%;
+  background:#fff;color:#252525;
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:16px;
+}
+:root{
+  --accent:#1a1a1a;
+  --bg:#ffffff;
+  --bg-card:#f7f7f5;
+  --border:rgba(0,0,0,0.08);
+  --border-line:#c8c8c8;
+  --text:#252525;
+  --text-dim:#666;
+  --text-muted:#999;
+  --green:#16a34a;
+}
+
+/* ── HEADER ── */
+#top-header{
+  position:fixed;top:0;left:0;right:0;height:60px;z-index:100;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,0,0,0.08);
+  display:flex;align-items:center;justify-content:center;
+}
+.logo{height:34px;object-fit:contain;filter:brightness(0);}
 
 /* ── INPUT SECTION ── */
 #input-section{
-  padding:48px 20px 20px;
+  padding:80px 20px 20px;
   display:flex;flex-direction:column;align-items:center;
 }
-.brand{
-  font-size:.75em;font-weight:700;letter-spacing:3px;text-transform:uppercase;
-  color:#b8860b;margin-bottom:32px;
+.input-label{
+  font-size:.78em;font-weight:700;letter-spacing:.5px;color:var(--text-muted);
+  margin-bottom:14px;text-align:center;
 }
 .input-row{
-  display:flex;gap:10px;width:100%;max-width:420px;
+  display:flex;gap:10px;width:100%;max-width:440px;
 }
 #code-input{
-  flex:1;background:#1a1a1a;border:1.5px solid #333;border-radius:12px;
-  color:#f0f0f0;font-size:1.4em;font-weight:600;font-family:inherit;
+  flex:1;background:var(--bg-card);
+  border:1.5px solid var(--border-line);border-radius:14px;
+  color:var(--text);font-size:1.5em;font-weight:700;font-family:inherit;
   padding:14px 18px;outline:none;
   -webkit-appearance:none;appearance:none;
   transition:border-color .15s;
 }
-#code-input::placeholder{color:#444;font-weight:400;font-size:.75em;}
-#code-input:focus{border-color:#b8860b;}
-/* rimuove le frecce su number input */
+#code-input::placeholder{color:#ccc;font-weight:400;font-size:.65em;}
+#code-input:focus{border-color:#111;}
 #code-input::-webkit-outer-spin-button,
 #code-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 #btn-add{
-  background:#b8860b;color:#121212;border:none;border-radius:12px;
-  font-family:inherit;font-size:1em;font-weight:700;
-  padding:14px 22px;cursor:pointer;white-space:nowrap;flex-shrink:0;
-  transition:background .15s,transform .1s;
+  background:#111;color:#fff;border:none;border-radius:14px;
+  font-family:inherit;font-size:.95em;font-weight:700;
+  padding:14px 24px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:opacity .15s,transform .1s;touch-action:manipulation;
 }
-#btn-add:active{background:#9a6f08;transform:scale(.97);}
+#btn-add:active{opacity:.75;transform:scale(.97);}
 
 #error-msg{
-  display:none;color:#ef4444;font-size:.82em;font-weight:500;
-  margin-top:10px;width:100%;max-width:420px;
-  padding:10px 14px;background:#2a1111;border-radius:8px;border:1px solid #4a1a1a;
+  display:none;
+  margin-top:10px;width:100%;max-width:440px;
+  font-size:.83em;font-weight:600;color:#dc2626;
+  background:#fef2f2;border:1px solid #fecaca;border-radius:10px;
+  padding:10px 14px;
 }
 
 /* ── CART LIST ── */
-#cart-section{width:100%;max-width:560px;margin:0 auto;padding:0 16px 140px;}
+#cart-section{width:100%;max-width:560px;margin:0 auto;padding:0 0 130px;}
+
 #cart-title{
-  font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:2px;
-  color:#555;padding:24px 0 12px;border-top:1px solid #222;margin-top:24px;
-  display:none;
+  font-size:.72em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+  color:#fff;background:#111;padding:6px 20px;
+  display:none;border-top:1px solid var(--border-line);border-bottom:1px solid var(--border-line);
 }
-#cart-list{display:flex;flex-direction:column;gap:10px;}
+
 .cart-card{
-  background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;
-  display:flex;align-items:center;gap:12px;padding:12px;
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;border-bottom:1px solid var(--border-line);
+  border-left:3px solid #111;background:#fff;
 }
+.cart-thumb-wrap{position:relative;flex-shrink:0;}
 .cart-thumb{
-  width:52px;height:52px;border-radius:10px;object-fit:cover;
-  background:#252525;flex-shrink:0;
+  width:72px;height:72px;border-radius:12px;object-fit:cover;
+  background:var(--bg-card);display:block;
 }
 .cart-thumb-placeholder{
-  width:52px;height:52px;border-radius:10px;background:#252525;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.72em;font-weight:700;color:#444;letter-spacing:.5px;
+  width:72px;height:72px;border-radius:12px;
+  background:var(--bg-card);display:flex;align-items:center;justify-content:center;
+  color:#ccc;font-size:1.6em;
 }
 .cart-info{flex:1;min-width:0;}
-.cart-name{font-size:.9em;font-weight:600;line-height:1.25;margin-bottom:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.cart-price{font-size:.82em;color:#b8860b;font-weight:600;}
-.cart-controls{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.qty-btn{
-  width:30px;height:30px;border-radius:50%;border:1.5px solid #333;
-  background:none;color:#f0f0f0;font-size:1.1em;font-weight:700;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:border-color .1s,background .1s;
+.cart-name{
+  font-size:.97em;font-weight:700;color:#111;line-height:1.3;margin-bottom:4px;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
 }
-.qty-btn:active{background:#2a2a2a;}
-.qty-val{font-size:.95em;font-weight:700;min-width:22px;text-align:center;}
-.cart-remove{
-  width:30px;height:30px;border-radius:50%;border:none;background:none;
-  color:#555;font-size:1em;cursor:pointer;margin-left:2px;
-  display:flex;align-items:center;justify-content:center;
-  transition:color .1s;
-}
-.cart-remove:active{color:#ef4444;}
+.cart-price{font-size:.85em;font-weight:600;color:var(--text-dim);}
 
-/* ── FOOTER STICKY ── */
+/* qty controls — stile identico a menu.html */
+.cart-qty-wrap{flex-shrink:0;}
+.cart-qty-inner{
+  display:flex;align-items:center;
+  background:#fff;border-radius:24px;height:40px;padding:0 4px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.18);
+}
+.q-btn{
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:none;color:#111;font-size:1.4em;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;line-height:1;touch-action:manipulation;
+}
+.q-btn:active{background:#f0f0f0;}
+.q-num{font-size:1.1em;font-weight:700;min-width:22px;text-align:center;}
+
+/* ── FOOTER ── */
 #footer{
   position:fixed;bottom:0;left:0;right:0;
-  background:rgba(18,18,18,.97);backdrop-filter:blur(16px);
-  border-top:1px solid #222;
-  padding:14px 20px calc(14px + env(safe-area-inset-bottom));
   display:none;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));
+  background:rgba(255,255,255,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(0,0,0,0.1);box-shadow:0 -4px 16px rgba(0,0,0,0.07);
+  z-index:800;
 }
-#footer-inner{display:flex;align-items:center;justify-content:space-between;max-width:560px;margin:0 auto;gap:12px;}
-#footer-total{font-size:.88em;color:#888;line-height:1.3;}
-#footer-total strong{display:block;font-size:1.2em;color:#f0f0f0;font-weight:700;}
-#btn-send{
-  background:#b8860b;color:#121212;border:none;border-radius:12px;
-  font-family:inherit;font-size:.95em;font-weight:700;
-  padding:13px 26px;cursor:pointer;white-space:nowrap;
-  transition:background .15s,transform .1s;
+#footer-inner{display:flex;align-items:center;gap:12px;max-width:560px;margin:0 auto;}
+#footer-cart{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 12px;border:none;border-radius:14px;
+  background:#111;color:#fff;font-size:.95em;font-weight:700;
+  cursor:pointer;font-family:inherit;touch-action:manipulation;
 }
-#btn-send:active{background:#9a6f08;transform:scale(.97);}
+#footer-cart:active{opacity:.8;}
+#ft-badge{
+  background:#fff;color:#111;font-size:.72em;font-weight:800;
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin-left:2px;
+}
+#footer-total{
+  font-size:.82em;color:var(--text-dim);white-space:nowrap;
+}
+#footer-total strong{display:block;font-size:1.25em;color:#111;font-weight:700;}
 
-/* ── CONFERMA OVERLAY ── */
-#confirm-overlay{
-  display:none;position:fixed;inset:0;z-index:999;
-  background:#121212;
-  flex-direction:column;align-items:center;justify-content:center;
-  padding:32px 24px;gap:16px;
-  animation:fadeIn .3s ease;
+/* ── CONFERMA POPUP (identico a menu.html) ── */
+#order-confirm-overlay{
+  display:none;position:fixed;inset:0;z-index:1300;
+  background:rgba(0,0,0,0.52);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;padding:24px;
 }
-#confirm-overlay.open{display:flex;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-.confirm-check{
-  width:72px;height:72px;border-radius:50%;
-  background:#b8860b;display:flex;align-items:center;justify-content:center;
-  font-size:2em;color:#121212;margin-bottom:8px;
+#order-confirm-overlay.open{display:flex;}
+#order-confirm-overlay.open #order-confirm-box{
+  animation:popIn .32s cubic-bezier(.34,1.3,.64,1) both;
 }
-.confirm-title{font-size:1.5em;font-weight:700;text-align:center;}
-.confirm-sub{font-size:.85em;color:#666;text-align:center;margin-top:-8px;}
+@keyframes popIn{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:none}}
+#order-confirm-box{
+  background:#fff;border-radius:24px;width:100%;max-width:360px;
+  padding:32px 24px 24px;box-shadow:0 24px 60px rgba(0,0,0,0.25);
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;
+}
+#order-confirm-icon{
+  width:64px;height:64px;border-radius:50%;background:#f0fdf4;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.8em;color:var(--green);margin-bottom:8px;
+}
+#order-confirm-box h3{font-size:1.3em;font-weight:800;color:#0a0a0a;margin:0;letter-spacing:-.03em;}
+#order-confirm-box p{font-size:.88em;color:#777;margin:0;line-height:1.6;}
 #confirm-list{
-  width:100%;max-width:400px;max-height:45vh;overflow-y:auto;
-  display:flex;flex-direction:column;gap:6px;margin-top:8px;
+  width:100%;max-height:35vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:4px;margin-top:10px;text-align:left;
 }
 .confirm-row{
-  background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;
-  padding:10px 14px;display:flex;justify-content:space-between;align-items:center;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;background:var(--bg-card);border-radius:10px;gap:8px;
 }
-.confirm-row-name{font-size:.88em;font-weight:600;}
-.confirm-row-qty{font-size:.82em;color:#b8860b;font-weight:700;}
+.confirm-row-name{font-size:.85em;font-weight:600;color:#111;flex:1;min-width:0;}
+.confirm-row-meta{font-size:.82em;color:var(--text-dim);white-space:nowrap;}
+.confirm-row-price{font-size:.82em;font-weight:700;color:#111;white-space:nowrap;}
 #confirm-grand{
-  font-size:1.1em;font-weight:700;color:#b8860b;
-  width:100%;max-width:400px;text-align:right;
-  padding:4px 2px;
+  font-size:1em;font-weight:800;color:#111;margin-top:4px;
+  width:100%;text-align:right;padding:0 2px;
 }
-#btn-new{
-  margin-top:12px;background:none;border:1.5px solid #333;border-radius:12px;
-  color:#f0f0f0;font-family:inherit;font-size:.9em;font-weight:600;
-  padding:12px 32px;cursor:pointer;
+#order-confirm-close{
+  margin-top:16px;width:100%;padding:15px;border:none;border-radius:14px;
+  background:#111;color:#fff;font-size:1em;font-weight:700;
+  cursor:pointer;font-family:inherit;touch-action:manipulation;
 }
-#btn-new:active{background:#1a1a1a;}
+#order-confirm-close:active{opacity:.8;}
+
+/* ── EMPTY STATE ── */
+#empty-state{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:60px 24px;color:var(--text-muted);text-align:center;
+}
+#empty-state i{font-size:2.5em;color:#e0e0e0;}
+#empty-state p{font-size:.88em;line-height:1.5;}
 </style>
 </head>
 <body>
 
-<!-- ── INPUT ── -->
+<!-- HEADER -->
+<div id="top-header">
+  <img class="logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
+</div>
+
+<!-- INPUT -->
 <div id="input-section">
-  <div class="brand">Jun Restaurant</div>
+  <div class="input-label">Scrivi il numero del piatto dalla carta</div>
   <div class="input-row">
     <input id="code-input" type="text" inputmode="numeric" pattern="[0-9]*"
-           placeholder="Numero piatto..." autocomplete="off" autocorrect="off">
+           placeholder="es. 109" autocomplete="off" autocorrect="off" spellcheck="false">
     <button id="btn-add" onclick="addDish()">Aggiungi</button>
   </div>
   <div id="error-msg"></div>
 </div>
 
-<!-- ── CARRELLO ── -->
+<!-- CARRELLO -->
 <div id="cart-section">
   <div id="cart-title">Piatti selezionati</div>
-  <div id="cart-list"></div>
+  <div id="cart-list">
+    <div id="empty-state">
+      <i class="fa-regular fa-clipboard"></i>
+      <p>Nessun piatto aggiunto.<br>Scrivi il numero e premi Aggiungi.</p>
+    </div>
+  </div>
 </div>
 
-<!-- ── FOOTER ── -->
+<!-- FOOTER -->
 <div id="footer">
   <div id="footer-inner">
     <div id="footer-total">
       <span id="ft-count"></span>
       <strong id="ft-price"></strong>
     </div>
-    <button id="btn-send" onclick="sendOrder()">Invia ordine</button>
+    <button id="footer-cart" onclick="sendOrder()">
+      <i class="fa-solid fa-paper-plane"></i>
+      Invia ordine
+      <span id="ft-badge"></span>
+    </button>
   </div>
 </div>
 
-<!-- ── CONFERMA ── -->
-<div id="confirm-overlay">
-  <div class="confirm-check">✓</div>
-  <div class="confirm-title">Ordine inviato!</div>
-  <div class="confirm-sub">Il tuo ordine è stato registrato.</div>
-  <div id="confirm-list"></div>
-  <div id="confirm-grand"></div>
-  <button id="btn-new" onclick="resetOrder()">Nuovo ordine</button>
+<!-- CONFERMA POPUP -->
+<div id="order-confirm-overlay">
+  <div id="order-confirm-box">
+    <div id="order-confirm-icon"><i class="fas fa-check"></i></div>
+    <h3>Ordine inviato!</h3>
+    <p>Il tuo ordine è stato registrato.<br>Il cameriere lo porterà al tuo tavolo.</p>
+    <div id="confirm-list"></div>
+    <div id="confirm-grand"></div>
+    <button id="order-confirm-close" onclick="resetOrder()">Nuovo ordine</button>
+  </div>
 </div>
 
 <script>
 // ── DATI ─────────────────────────────────────────────────────────────────────
 const menuData = [
   { id:'jun-selection', name:'JUN Selection', max1:true, items:[
-    { id:888, name:'Gamberi Special', price:'€10.00', allergens:['crustaceans','gluten','eggs'] },
-    { id:801, name:'Ebi Flower', price:'€9.00', allergens:['crustaceans','fish','gluten','soy'] },
-    { id:805, name:'Sprint Vegetariano', price:'€8.00', allergens:[] },
-    { id:806, name:'Sprint Gambero', price:'€9.00', allergens:['crustaceans','eggs','sesame','soy'] },
+    { id:888, name:'Gamberi Special', price:'€10.00' },
+    { id:801, name:'Ebi Flower', price:'€9.00' },
+    { id:805, name:'Sprint Vegetariano', price:'€8.00' },
+    { id:806, name:'Sprint Gambero', price:'€9.00' },
   ]},
   { id:'jun-uramaki', name:'JUN Uramaki', max1:true, items:[
-    { id:808, name:'Uramaki Flower Selection', price:'€14.00', allergens:['fish','sesame','eggs','nuts'] },
-    { id:809, name:'Uramaki Black Flower', price:'€14.00', allergens:['crustaceans','fish','sesame','eggs','nuts'] },
+    { id:808, name:'Uramaki Flower Selection', price:'€14.00' },
+    { id:809, name:'Uramaki Black Flower', price:'€14.00' },
   ]},
   { id:'antipasti', name:'Antipasti', items:[
-    { id:1, name:'Involtino Primavera', price:'€3.00', allergens:['gluten'] },
-    { id:2, name:'Involtino Giapponese', price:'€4.00', allergens:['gluten'] },
-    { id:3, name:'Involtino di Gamberi', price:'€5.00', allergens:['gluten','crustaceans'] },
-    { id:4, name:'Nuvole di Gamberi', price:'€2.50', allergens:['crustaceans','gluten'] },
-    { id:5, name:'Edamame', price:'€4.00', allergens:['soy'] },
-    { id:6, name:'Dim Sun Mix', price:'€9.00', allergens:['gluten'] },
+    { id:1, name:'Involtino Primavera', price:'€3.00' },
+    { id:2, name:'Involtino Giapponese', price:'€4.00' },
+    { id:3, name:'Involtino di Gamberi', price:'€5.00' },
+    { id:4, name:'Nuvole di Gamberi', price:'€2.50' },
+    { id:5, name:'Edamame', price:'€4.00' },
+    { id:6, name:'Dim Sun Mix', price:'€9.00' },
   ]},
   { id:'dim-sum', name:'Dim Sum', items:[
-    { id:10, name:'Pane Cinese al Vapore', price:'€3.00', allergens:['gluten'] },
-    { id:11, name:'Coniglietto al Vapore', price:'€4.00', allergens:['gluten','eggs','milk'] },
-    { id:12, name:'Ravioli di Verdure', price:'€4.00', allergens:['gluten'] },
-    { id:13, name:'Ravioli di Carne al Vapore', price:'€5.00', allergens:['gluten'] },
-    { id:14, name:'Shaomai al Vapore', price:'€6.00', allergens:['gluten','crustaceans'] },
-    { id:16, name:'Insalata di Pollo', price:'€6.00', allergens:['sesame','soy'] },
+    { id:10, name:'Pane Cinese al Vapore', price:'€3.00' },
+    { id:11, name:'Coniglietto al Vapore', price:'€4.00' },
+    { id:12, name:'Ravioli di Verdure', price:'€4.00' },
+    { id:13, name:'Ravioli di Carne al Vapore', price:'€5.00' },
+    { id:14, name:'Shaomai al Vapore', price:'€6.00' },
+    { id:16, name:'Insalata di Pollo', price:'€6.00' },
   ]},
   { id:'insalata', name:'Insalata', items:[
-    { id:17, name:'Insalata con Avocado', price:'€6.00', allergens:['sesame','soy'] },
-    { id:18, name:'Insalata con Gamberi', price:'€7.00', allergens:['crustaceans','sesame','soy'] },
-    { id:19, name:'Insalata Sesamo', price:'€8.00', allergens:['crustaceans','sesame','soy'] },
-    { id:25, name:'Gamberi Cocktail', price:'€7.00', allergens:['crustaceans','sesame','eggs'] },
-    { id:27, name:'Wakame', price:'€4.00', allergens:[] },
-    { id:28, name:'Goma e Wakame', price:'€4.00', allergens:['sesame'] },
+    { id:17, name:'Insalata con Avocado', price:'€6.00' },
+    { id:18, name:'Insalata con Gamberi', price:'€7.00' },
+    { id:19, name:'Insalata Sesamo', price:'€8.00' },
+    { id:25, name:'Gamberi Cocktail', price:'€7.00' },
+    { id:27, name:'Wakame', price:'€4.00' },
+    { id:28, name:'Goma e Wakame', price:'€4.00' },
   ]},
   { id:'zuppe', name:'Zuppe', items:[
-    { id:29, name:'Zuppa Misoshiru', price:'€4.00', allergens:['soy'] },
-    { id:30, name:'Zuppa Agropiccante', price:'€4.00', allergens:['soy','eggs'] },
-    { id:31, name:'Zuppa di Asparagi', price:'€4.00', allergens:['eggs'] },
+    { id:29, name:'Zuppa Misoshiru', price:'€4.00' },
+    { id:30, name:'Zuppa Agropiccante', price:'€4.00' },
+    { id:31, name:'Zuppa di Asparagi', price:'€4.00' },
   ]},
   { id:'fritti', name:'Fritti', items:[
-    { id:32, name:'Patatine Fritte', price:'€3.50', allergens:[] },
-    { id:33, name:'Patatine Mediterranea', price:'€4.50', allergens:[] },
-    { id:35, name:'Pollo Fritto', price:'€6.00', allergens:['gluten','eggs'] },
-    { id:37, name:'Calamari Fritti', price:'€8.00', allergens:['molluscs','gluten','eggs'] },
-    { id:38, name:'Chele di Granchio', price:'€7.00', allergens:['crustaceans','gluten','eggs'] },
-    { id:39, name:'Polpette di Gamberi', price:'€6.00', allergens:['crustaceans','gluten','eggs'] },
-    { id:40, name:'Polpette di Polipo', price:'€9.00', allergens:['molluscs','gluten','eggs','soy'] },
-    { id:42, name:'Tempura Verdure', price:'€8.00', allergens:['gluten','eggs'] },
-    { id:43, name:'Tempura Mista', price:'€10.00', allergens:['crustaceans','gluten','eggs'] },
+    { id:32, name:'Patatine Fritte', price:'€3.50' },
+    { id:33, name:'Patatine Mediterranea', price:'€4.50' },
+    { id:35, name:'Pollo Fritto', price:'€6.00' },
+    { id:37, name:'Calamari Fritti', price:'€8.00' },
+    { id:38, name:'Chele di Granchio', price:'€7.00' },
+    { id:39, name:'Polpette di Gamberi', price:'€6.00' },
+    { id:40, name:'Polpette di Polipo', price:'€9.00' },
+    { id:42, name:'Tempura Verdure', price:'€8.00' },
+    { id:43, name:'Tempura Mista', price:'€10.00' },
   ]},
   { id:'riso', name:'Riso', items:[
-    { id:44, name:'Riso Bianco al Vapore', price:'€3.00', allergens:[] },
-    { id:45, name:'Riso Cantonese', price:'€6.00', allergens:['eggs'] },
-    { id:46, name:'Riso con Gamberi', price:'€6.00', allergens:['crustaceans','eggs'] },
-    { id:47, name:'Riso con Salmone', price:'€7.00', allergens:['fish','eggs'] },
-    { id:48, name:'Riso con Verdure', price:'€5.00', allergens:['eggs'] },
-    { id:49, name:'Riso con Pollo Teriyaki', price:'€7.00', allergens:['eggs','sesame','soy','gluten'] },
-    { id:51, name:'Riso al Curry', price:'€5.00', allergens:['eggs','mustard'] },
-    { id:52, name:'Gnocchi di Riso', price:'€7.00', allergens:['crustaceans'] },
+    { id:44, name:'Riso Bianco al Vapore', price:'€3.00' },
+    { id:45, name:'Riso Cantonese', price:'€6.00' },
+    { id:46, name:'Riso con Gamberi', price:'€6.00' },
+    { id:47, name:'Riso con Salmone', price:'€7.00' },
+    { id:48, name:'Riso con Verdure', price:'€5.00' },
+    { id:49, name:'Riso con Pollo Teriyaki', price:'€7.00' },
+    { id:51, name:'Riso al Curry', price:'€5.00' },
+    { id:52, name:'Gnocchi di Riso', price:'€7.00' },
   ]},
   { id:'pasta', name:'Pasta', items:[
-    { id:53, name:'Spaghetti di Soia Piccante', price:'€6.00', allergens:['soy'] },
-    { id:54, name:'Spaghetti di Soia con Verdure', price:'€6.00', allergens:['soy'] },
-    { id:55, name:'Spaghetti di Soia con Gamberi', price:'€7.00', allergens:['crustaceans','soy'] },
-    { id:57, name:'Spaghetti di Riso con Verdure', price:'€6.00', allergens:['eggs'] },
-    { id:58, name:'Spaghetti di Riso con Gamberi', price:'€7.00', allergens:['crustaceans','eggs'] },
-    { id:59, name:'Spaghetti di Riso con Pollo', price:'€7.00', allergens:['eggs'] },
-    { id:60, name:'Tagliatelle alla Piastra', price:'€10.00', allergens:['gluten','eggs','fish','molluscs'] },
-    { id:61, name:'Tagliatelle col Pomodoro', price:'€6.00', allergens:['gluten','eggs'] },
-    { id:62, name:'Yaki Udon con Gamberi', price:'€6.00', allergens:['gluten','crustaceans','eggs'] },
-    { id:63, name:'Yaki Udon con Verdure', price:'€6.00', allergens:['gluten','eggs'] },
-    { id:66, name:'Ramen ai Frutti di Mare', price:'€11.00', allergens:['gluten','eggs','fish','molluscs','soy'] },
+    { id:53, name:'Spaghetti di Soia Piccante', price:'€6.00' },
+    { id:54, name:'Spaghetti di Soia con Verdure', price:'€6.00' },
+    { id:55, name:'Spaghetti di Soia con Gamberi', price:'€7.00' },
+    { id:57, name:'Spaghetti di Riso con Verdure', price:'€6.00' },
+    { id:58, name:'Spaghetti di Riso con Gamberi', price:'€7.00' },
+    { id:59, name:'Spaghetti di Riso con Pollo', price:'€7.00' },
+    { id:60, name:'Tagliatelle alla Piastra', price:'€10.00' },
+    { id:61, name:'Tagliatelle col Pomodoro', price:'€6.00' },
+    { id:62, name:'Yaki Udon con Gamberi', price:'€6.00' },
+    { id:63, name:'Yaki Udon con Verdure', price:'€6.00' },
+    { id:66, name:'Ramen ai Frutti di Mare', price:'€11.00' },
   ]},
   { id:'tartare', name:'Tartare & Speciali', items:[
-    { id:67, name:'Sake Tartare', price:'€6.00', allergens:['fish','sesame','soy'] },
-    { id:72, name:'Tartare Black Sake', price:'€7.00', allergens:['fish','sesame','soy','nuts'] },
-    { id:74, name:'Tartare Black Veggie', price:'€6.00', allergens:['sesame','soy','nuts'] },
-    { id:77, name:'Mille Foglie Sake', price:'€6.00', allergens:['fish','gluten','milk'] },
-    { id:78, name:'Mille Foglie Tuna', price:'€7.00', allergens:['fish','gluten','milk'] },
-    { id:82, name:'Tramezzino Fritto', price:'€10.00', allergens:['fish','gluten','milk','soy'] },
-    { id:83, name:'Hamburger Fritto', price:'€8.00', allergens:['fish','gluten','soy','eggs'] },
-    { id:84, name:'Hamburger Vegge Fritto', price:'€7.00', allergens:['gluten','soy','eggs'] },
+    { id:67, name:'Sake Tartare', price:'€6.00' },
+    { id:72, name:'Tartare Black Sake', price:'€7.00' },
+    { id:74, name:'Tartare Black Veggie', price:'€6.00' },
+    { id:77, name:'Mille Foglie Sake', price:'€6.00' },
+    { id:78, name:'Mille Foglie Tuna', price:'€7.00' },
+    { id:82, name:'Tramezzino Fritto', price:'€10.00' },
+    { id:83, name:'Hamburger Fritto', price:'€8.00' },
+    { id:84, name:'Hamburger Vegge Fritto', price:'€7.00' },
   ]},
   { id:'tacos', name:'Tacos', max1:true, items:[
-    { id:85, name:'Tacos Sake', price:'€7.00', allergens:['fish','gluten','soy','nuts'] },
-    { id:86, name:'Tacos Veggie', price:'€7.00', allergens:['gluten','soy','nuts'] },
-    { id:87, name:'Alga Tacos', price:'€7.00', allergens:['fish','gluten','eggs','soy'] },
-    { id:88, name:'Alga Tacos Speciale', price:'€7.00', allergens:['fish','gluten','eggs','sesame','soy'] },
+    { id:85, name:'Tacos Sake', price:'€7.00' },
+    { id:86, name:'Tacos Veggie', price:'€7.00' },
+    { id:87, name:'Alga Tacos', price:'€7.00' },
+    { id:88, name:'Alga Tacos Speciale', price:'€7.00' },
   ]},
   { id:'sashimi', name:'Sashimi & Chirashi', items:[
-    { id:89, name:'Sashimi Sake', price:'€11.00', allergens:['fish'] },
-    { id:92, name:'Sashimi Burrata', price:'€15.00', allergens:['fish','milk','gluten'] },
-    { id:94, name:'Carpaccio Salmone', price:'€10.00', allergens:['fish','sesame','soy'] },
-    { id:100, name:'Cirashi Don', price:'€4.00', allergens:['sesame'] },
-    { id:101, name:'Cirashi Sake Don', price:'€6.00', allergens:['fish','sesame'] },
-    { id:104, name:'Cirashi Avocado Don', price:'€5.00', allergens:['sesame'] },
-    { id:105, name:'Cirashi Anguilla Don', price:'€8.00', allergens:['fish','sesame','soy','gluten'] },
+    { id:89, name:'Sashimi Sake', price:'€11.00' },
+    { id:92, name:'Sashimi Burrata', price:'€15.00' },
+    { id:94, name:'Carpaccio Salmone', price:'€10.00' },
+    { id:100, name:'Cirashi Don', price:'€4.00' },
+    { id:101, name:'Cirashi Sake Don', price:'€6.00' },
+    { id:104, name:'Cirashi Avocado Don', price:'€5.00' },
+    { id:105, name:'Cirashi Anguilla Don', price:'€8.00' },
   ]},
   { id:'poke', name:'Poké', items:[
-    { id:106, name:'Poké Classic', price:'€9.00', allergens:['fish','soy','sesame','nuts','gluten'] },
-    { id:108, name:'Poké Veggie', price:'€8.00', allergens:['soy','sesame','nuts','gluten'] },
+    { id:106, name:'Poké Classic', price:'€9.00' },
+    { id:108, name:'Poké Veggie', price:'€8.00' },
   ]},
   { id:'uramaki', name:'Uramaki', items:[
-    { id:109, name:'Uramaki Sake', price:'€9.00', allergens:['fish','sesame'] },
-    { id:110, name:'Uramaki Kaory', price:'€9.00', allergens:['fish','sesame','milk'] },
-    { id:111, name:'Uramaki Maguro', price:'€10.00', allergens:['fish','sesame'] },
-    { id:112, name:'Uramaki Ebi', price:'€9.00', allergens:['crustaceans','sesame','nuts'] },
-    { id:113, name:'Uramaki California', price:'€8.50', allergens:['fish','sesame','eggs'] },
-    { id:114, name:'Uramaki Spicy Sake', price:'€9.50', allergens:['fish','sesame','soy'] },
-    { id:115, name:'Uramaki Spicy Tuna', price:'€10.50', allergens:['fish','sesame','soy'] },
-    { id:116, name:'Uramaki Ebiten', price:'€10.00', allergens:['crustaceans','gluten','eggs','sesame','soy'] },
-    { id:117, name:'Uramaki Miura', price:'€9.50', allergens:['fish','milk','sesame','soy','gluten'] },
-    { id:118, name:'Uramaki JUN Selection', price:'€10.50', allergens:['fish','gluten','eggs','sesame','nuts'] },
-    { id:119, name:'Uramaki Vegetariano', price:'€7.00', allergens:['sesame','eggs'] },
-    { id:120, name:'Uramaki Fritto', price:'€10.00', allergens:['fish','gluten','sesame','milk'] },
-    { id:121, name:'Uramaki Cheddar', price:'€11.00', allergens:['crustaceans','gluten','eggs','sesame','soy','milk'] },
-    { id:131, name:'Uramaki Kaory Tayoma', price:'€10.00', allergens:['fish','sesame','milk','soy'] },
-    { id:132, name:'Uramaki Tempura', price:'€13.00', allergens:['fish','gluten','eggs','sesame','milk'] },
-    { id:133, name:'Uramaki Genovese', price:'€12.00', allergens:['fish','nuts','gluten'] },
-    { id:136, name:'Uramaki Astice', price:'€15.00', allergens:['crustaceans','fish','eggs'] },
-    { id:138, name:'Uramaki Black Kaory', price:'€10.00', allergens:['fish','sesame','milk'] },
-    { id:139, name:'Uramaki Black Ebiten', price:'€10.00', allergens:['crustaceans','gluten','eggs','sesame','soy'] },
-    { id:140, name:'Uramaki Black Spicy', price:'€13.00', allergens:['crustaceans','fish','gluten','eggs','sesame','soy'] },
-    { id:141, name:'Uramaki Black Veggie', price:'€8.00', allergens:['sesame','eggs','nuts'] },
-    { id:142, name:'Uramaki Tempura Veggie', price:'€10.00', allergens:['gluten','eggs','sesame','milk'] },
-    { id:143, name:'Uramaki Black Fantasia', price:'€13.00', allergens:['fish','sesame','milk'] },
+    { id:109, name:'Uramaki Sake', price:'€9.00' },
+    { id:110, name:'Uramaki Kaory', price:'€9.00' },
+    { id:111, name:'Uramaki Maguro', price:'€10.00' },
+    { id:112, name:'Uramaki Ebi', price:'€9.00' },
+    { id:113, name:'Uramaki California', price:'€8.50' },
+    { id:114, name:'Uramaki Spicy Sake', price:'€9.50' },
+    { id:115, name:'Uramaki Spicy Tuna', price:'€10.50' },
+    { id:116, name:'Uramaki Ebiten', price:'€10.00' },
+    { id:117, name:'Uramaki Miura', price:'€9.50' },
+    { id:118, name:'Uramaki JUN Selection', price:'€10.50' },
+    { id:119, name:'Uramaki Vegetariano', price:'€7.00' },
+    { id:120, name:'Uramaki Fritto', price:'€10.00' },
+    { id:121, name:'Uramaki Cheddar', price:'€11.00' },
+    { id:131, name:'Uramaki Kaory Tayoma', price:'€10.00' },
+    { id:132, name:'Uramaki Tempura', price:'€13.00' },
+    { id:133, name:'Uramaki Genovese', price:'€12.00' },
+    { id:136, name:'Uramaki Astice', price:'€15.00' },
+    { id:138, name:'Uramaki Black Kaory', price:'€10.00' },
+    { id:139, name:'Uramaki Black Ebiten', price:'€10.00' },
+    { id:140, name:'Uramaki Black Spicy', price:'€13.00' },
+    { id:141, name:'Uramaki Black Veggie', price:'€8.00' },
+    { id:142, name:'Uramaki Tempura Veggie', price:'€10.00' },
+    { id:143, name:'Uramaki Black Fantasia', price:'€13.00' },
   ]},
   { id:'tataki', name:'Tataki', items:[
-    { id:145, name:'Sake Tataki', price:'€10.00', allergens:['fish','sesame','soy','gluten'] },
+    { id:145, name:'Sake Tataki', price:'€10.00' },
   ]},
   { id:'gunkan', name:'Gunkan', items:[
-    { id:147, name:'Gunkan Sake', price:'€5.00', allergens:['fish','soy'] },
-    { id:151, name:'Gunkan White', price:'€4.00', allergens:['gluten','milk'] },
-    { id:152, name:'Gunkan Sake Speciale', price:'€5.00', allergens:['fish','milk'] },
-    { id:159, name:'Gunkan Soy Tuna', price:'€5.50', allergens:['fish','soy'] },
-    { id:160, name:'Gunkan Soy Sake', price:'€5.00', allergens:['fish','soy'] },
-    { id:161, name:'Gunkan Avocado', price:'€5.00', allergens:[] },
-    { id:162, name:'Bowl Mix', price:'€7.00', allergens:['fish','crustaceans','gluten','milk','eggs'] },
+    { id:147, name:'Gunkan Sake', price:'€5.00' },
+    { id:151, name:'Gunkan White', price:'€4.00' },
+    { id:152, name:'Gunkan Sake Speciale', price:'€5.00' },
+    { id:159, name:'Gunkan Soy Tuna', price:'€5.50' },
+    { id:160, name:'Gunkan Soy Sake', price:'€5.00' },
+    { id:161, name:'Gunkan Avocado', price:'€5.00' },
+    { id:162, name:'Bowl Mix', price:'€7.00' },
   ]},
   { id:'hosomaki', name:'Hosomaki & Futomaki', items:[
-    { id:163, name:'Ebi', price:'€5.00', allergens:['crustaceans'] },
-    { id:164, name:'Kani', price:'€5.00', allergens:['fish','gluten'] },
-    { id:165, name:'Wurstel', price:'€4.00', allergens:['gluten'] },
-    { id:166, name:'Sake', price:'€5.00', allergens:['fish'] },
-    { id:167, name:'Maguro', price:'€6.00', allergens:['fish'] },
-    { id:168, name:'Avocado', price:'€4.00', allergens:[] },
-    { id:169, name:'Kappa', price:'€4.00', allergens:[] },
-    { id:170, name:'Futomaki', price:'€7.00', allergens:['fish','gluten'] },
-    { id:171, name:'Futomaki Ebiten', price:'€5.00', allergens:['crustaceans','gluten','eggs','soy'] },
-    { id:172, name:'Futomaki Vegetariano', price:'€6.50', allergens:[] },
-    { id:173, name:'Tayoma', price:'€6.00', allergens:['fish','soy'] },
-    { id:174, name:'Hosomaki Sake Fritto', price:'€6.00', allergens:['fish','gluten','soy'] },
-    { id:176, name:'Hosomaki Avocado Fritto', price:'€5.00', allergens:['gluten','soy'] },
-    { id:177, name:'Hosomaki Philadelphia', price:'€7.00', allergens:['fish','gluten','milk','soy'] },
-    { id:179, name:'Futomaki Fritto', price:'€8.00', allergens:['fish','gluten','soy'] },
+    { id:163, name:'Ebi', price:'€5.00' },
+    { id:164, name:'Kani', price:'€5.00' },
+    { id:165, name:'Wurstel', price:'€4.00' },
+    { id:166, name:'Sake', price:'€5.00' },
+    { id:167, name:'Maguro', price:'€6.00' },
+    { id:168, name:'Avocado', price:'€4.00' },
+    { id:169, name:'Kappa', price:'€4.00' },
+    { id:170, name:'Futomaki', price:'€7.00' },
+    { id:171, name:'Futomaki Ebiten', price:'€5.00' },
+    { id:172, name:'Futomaki Vegetariano', price:'€6.50' },
+    { id:173, name:'Tayoma', price:'€6.00' },
+    { id:174, name:'Hosomaki Sake Fritto', price:'€6.00' },
+    { id:176, name:'Hosomaki Avocado Fritto', price:'€5.00' },
+    { id:177, name:'Hosomaki Philadelphia', price:'€7.00' },
+    { id:179, name:'Futomaki Fritto', price:'€8.00' },
   ]},
   { id:'temaki', name:'Temaki', items:[
-    { id:180, name:'Temaki Miura', price:'€5.00', allergens:['fish','sesame','milk','soy','gluten'] },
-    { id:181, name:'Temaki California', price:'€5.00', allergens:['fish','gluten','eggs','sesame'] },
-    { id:182, name:'Temaki Veggie', price:'€4.50', allergens:['eggs','sesame'] },
-    { id:184, name:'Temaki Ebi Tempura', price:'€5.00', allergens:['crustaceans','gluten','eggs','soy'] },
-    { id:185, name:'Temaki Sake', price:'€5.00', allergens:['fish','sesame'] },
-    { id:187, name:'Temaki Sake Spicy', price:'€5.00', allergens:['fish','sesame','soy'] },
-    { id:190, name:'Temaki Black Sake', price:'€5.50', allergens:['fish','sesame'] },
-    { id:191, name:'Temaki Black Veggie', price:'€5.00', allergens:['eggs','sesame'] },
-    { id:192, name:'Temaki Black Ebi Tempura', price:'€5.50', allergens:['crustaceans','gluten','eggs','soy'] },
-    { id:193, name:'Temaki Black Philadelphia', price:'€5.50', allergens:['fish','gluten','milk','sesame'] },
+    { id:180, name:'Temaki Miura', price:'€5.00' },
+    { id:181, name:'Temaki California', price:'€5.00' },
+    { id:182, name:'Temaki Veggie', price:'€4.50' },
+    { id:184, name:'Temaki Ebi Tempura', price:'€5.00' },
+    { id:185, name:'Temaki Sake', price:'€5.00' },
+    { id:187, name:'Temaki Sake Spicy', price:'€5.00' },
+    { id:190, name:'Temaki Black Sake', price:'€5.50' },
+    { id:191, name:'Temaki Black Veggie', price:'€5.00' },
+    { id:192, name:'Temaki Black Ebi Tempura', price:'€5.50' },
+    { id:193, name:'Temaki Black Philadelphia', price:'€5.50' },
   ]},
   { id:'nigiri', name:'Nigiri & Box', items:[
-    { id:196, name:'Nigiri Sake', price:'€4.00', allergens:['fish'] },
-    { id:197, name:'Nigiri Sake Special', price:'€5.00', allergens:['fish','gluten','milk'] },
-    { id:200, name:'Nigiri Zafferano', price:'€6.00', allergens:['fish','soy','gluten'] },
-    { id:202, name:'Nigiri Maguro', price:'€4.00', allergens:['fish'] },
-    { id:205, name:'Nigiri Suzuki', price:'€4.00', allergens:['fish'] },
-    { id:207, name:'Nigiri Kani', price:'€4.00', allergens:['fish','gluten'] },
-    { id:208, name:'Nigiri Ebi', price:'€4.00', allergens:['crustaceans'] },
-    { id:209, name:'Nigiri Avocado', price:'€4.00', allergens:[] },
-    { id:212, name:'Black Sake', price:'€4.00', allergens:['fish'] },
-    { id:213, name:'Black Maguro', price:'€4.00', allergens:['fish'] },
-    { id:214, name:'Black Suzuki', price:'€4.00', allergens:['fish'] },
-    { id:215, name:'Black Ebi', price:'€4.00', allergens:['crustaceans'] },
-    { id:216, name:'Black Avocado', price:'€5.00', allergens:[] },
-    { id:217, name:'Nigiri Mix', price:'€8.00', allergens:['fish'] },
-    { id:218, name:'Nigiri Fantasia', price:'€8.00', allergens:['fish','milk'] },
-    { id:219, name:'Nigiri Misto', price:'€10.00', allergens:['fish'] },
-    { id:220, name:'Maxi Sake', price:'€8.00', allergens:['fish'] },
-    { id:221, name:'Box Medio', price:'€14.00', allergens:['fish'] },
-    { id:222, name:'Maki Misto', price:'€6.00', allergens:['fish'] },
+    { id:196, name:'Nigiri Sake', price:'€4.00' },
+    { id:197, name:'Nigiri Sake Special', price:'€5.00' },
+    { id:200, name:'Nigiri Zafferano', price:'€6.00' },
+    { id:202, name:'Nigiri Maguro', price:'€4.00' },
+    { id:205, name:'Nigiri Suzuki', price:'€4.00' },
+    { id:207, name:'Nigiri Kani', price:'€4.00' },
+    { id:208, name:'Nigiri Ebi', price:'€4.00' },
+    { id:209, name:'Nigiri Avocado', price:'€4.00' },
+    { id:212, name:'Black Sake', price:'€4.00' },
+    { id:213, name:'Black Maguro', price:'€4.00' },
+    { id:214, name:'Black Suzuki', price:'€4.00' },
+    { id:215, name:'Black Ebi', price:'€4.00' },
+    { id:216, name:'Black Avocado', price:'€5.00' },
+    { id:217, name:'Nigiri Mix', price:'€8.00' },
+    { id:218, name:'Nigiri Fantasia', price:'€8.00' },
+    { id:219, name:'Nigiri Misto', price:'€10.00' },
+    { id:220, name:'Maxi Sake', price:'€8.00' },
+    { id:221, name:'Box Medio', price:'€14.00' },
+    { id:222, name:'Maki Misto', price:'€6.00' },
   ]},
   { id:'onigiri', name:'Onigiri & Oshi', items:[
-    { id:224, name:'Onigiri Miura', price:'€5.00', allergens:['fish','milk','sesame'] },
-    { id:225, name:'Onigiri Horo', price:'€4.00', allergens:['sesame'] },
-    { id:228, name:'Oshi Sake Spicy', price:'€10.00', allergens:['fish','soy'] },
-    { id:229, name:'Oshi Kaory', price:'€8.00', allergens:['fish','milk'] },
+    { id:224, name:'Onigiri Miura', price:'€5.00' },
+    { id:225, name:'Onigiri Horo', price:'€4.00' },
+    { id:228, name:'Oshi Sake Spicy', price:'€10.00' },
+    { id:229, name:'Oshi Kaory', price:'€8.00' },
   ]},
   { id:'secondi-pollo', name:'Secondi Pollo', items:[
-    { id:231, name:'Pollo con Mandorle', price:'€6.00', allergens:['nuts'] },
-    { id:232, name:'Pollo con Funghi e Bambù', price:'€6.00', allergens:[] },
-    { id:233, name:'Pollo al Limone', price:'€6.00', allergens:[] },
-    { id:234, name:'Pollo con Verdure', price:'€6.00', allergens:[] },
-    { id:236, name:'Pollo al Curry', price:'€6.00', allergens:['mustard'] },
-    { id:238, name:'Pollo in Salsa Piccante', price:'€6.00', allergens:['soy'] },
+    { id:231, name:'Pollo con Mandorle', price:'€6.00' },
+    { id:232, name:'Pollo con Funghi e Bambù', price:'€6.00' },
+    { id:233, name:'Pollo al Limone', price:'€6.00' },
+    { id:234, name:'Pollo con Verdure', price:'€6.00' },
+    { id:236, name:'Pollo al Curry', price:'€6.00' },
+    { id:238, name:'Pollo in Salsa Piccante', price:'€6.00' },
   ]},
   { id:'secondi-vitello', name:'Secondi Vitello', items:[
-    { id:240, name:'Vitello con Funghi e Bambù', price:'€6.50', allergens:[] },
-    { id:242, name:'Vitello con Verdure', price:'€6.50', allergens:[] },
-    { id:244, name:'Vitello in Salsa Piccante', price:'€6.50', allergens:['soy'] },
+    { id:240, name:'Vitello con Funghi e Bambù', price:'€6.50' },
+    { id:242, name:'Vitello con Verdure', price:'€6.50' },
+    { id:244, name:'Vitello in Salsa Piccante', price:'€6.50' },
   ]},
   { id:'secondi-gamberi', name:'Secondi Gamberi', items:[
-    { id:246, name:'Gamberi in Salsa Piccante', price:'€7.00', allergens:['crustaceans','soy'] },
-    { id:247, name:'Gamberi con Verdure', price:'€7.00', allergens:['crustaceans'] },
-    { id:249, name:'Gamberi con Funghi e Bambù', price:'€7.00', allergens:['crustaceans'] },
-    { id:250, name:'Gamberi al Limone', price:'€7.00', allergens:['crustaceans'] },
-    { id:252, name:'Gamberi Sale e Pepe', price:'€8.00', allergens:['crustaceans'] },
+    { id:246, name:'Gamberi in Salsa Piccante', price:'€7.00' },
+    { id:247, name:'Gamberi con Verdure', price:'€7.00' },
+    { id:249, name:'Gamberi con Funghi e Bambù', price:'€7.00' },
+    { id:250, name:'Gamberi al Limone', price:'€7.00' },
+    { id:252, name:'Gamberi Sale e Pepe', price:'€8.00' },
   ]},
   { id:'secondi-calamari', name:'Secondi Calamari & Tofu', items:[
-    { id:256, name:'Calamari in Salsa Piccante', price:'€7.00', allergens:['molluscs','soy'] },
-    { id:257, name:'Calamari con Verdure', price:'€7.00', allergens:['molluscs'] },
-    { id:263, name:'Tofu in Salsa Piccante', price:'€5.00', allergens:['soy'] },
-    { id:264, name:'Tofu Stufato', price:'€5.00', allergens:['soy'] },
+    { id:256, name:'Calamari in Salsa Piccante', price:'€7.00' },
+    { id:257, name:'Calamari con Verdure', price:'€7.00' },
+    { id:263, name:'Tofu in Salsa Piccante', price:'€5.00' },
+    { id:264, name:'Tofu Stufato', price:'€5.00' },
   ]},
   { id:'grigliata', name:'Grigliata', items:[
-    { id:265, name:'Funghi e Bambù', price:'€10.00', allergens:[] },
-    { id:266, name:'Verdure Miste Saltate', price:'€5.00', allergens:[] },
-    { id:267, name:'Spiedini di Calamari', price:'€8.00', allergens:['molluscs'] },
-    { id:268, name:'Spiedini di Pollo', price:'€7.00', allergens:[] },
-    { id:269, name:'Spiedini di Gamberi', price:'€9.00', allergens:['crustaceans'] },
-    { id:271, name:'Zucchine alla Griglia', price:'€4.00', allergens:[] },
-    { id:272, name:'Cipolle alla Griglia', price:'€4.00', allergens:[] },
-    { id:273, name:'Melanzane alla Griglia', price:'€4.00', allergens:[] },
-    { id:274, name:'Misto Verdure alla Griglia', price:'€5.00', allergens:[] },
-    { id:275, name:'Yaki Tori', price:'€7.00', allergens:['soy','gluten'] },
-    { id:277, name:'Salmone alla Griglia', price:'€8.00', allergens:['fish'] },
-    { id:280, name:'Gamberoni alla Griglia', price:'€9.00', allergens:['crustaceans'] },
-    { id:281, name:'Wurstel alla Griglia', price:'€5.00', allergens:['gluten'] },
+    { id:265, name:'Funghi e Bambù', price:'€10.00' },
+    { id:266, name:'Verdure Miste Saltate', price:'€5.00' },
+    { id:267, name:'Spiedini di Calamari', price:'€8.00' },
+    { id:268, name:'Spiedini di Pollo', price:'€7.00' },
+    { id:269, name:'Spiedini di Gamberi', price:'€9.00' },
+    { id:271, name:'Zucchine alla Griglia', price:'€4.00' },
+    { id:272, name:'Cipolle alla Griglia', price:'€4.00' },
+    { id:273, name:'Melanzane alla Griglia', price:'€4.00' },
+    { id:274, name:'Misto Verdure alla Griglia', price:'€5.00' },
+    { id:275, name:'Yaki Tori', price:'€7.00' },
+    { id:277, name:'Salmone alla Griglia', price:'€8.00' },
+    { id:280, name:'Gamberoni alla Griglia', price:'€9.00' },
+    { id:281, name:'Wurstel alla Griglia', price:'€5.00' },
   ]},
 ];
 
@@ -484,47 +556,41 @@ const dishImgs = {
   808:"img/d_808.jpg",809:"img/d_809.jpg",888:"img/d_888.jpg"
 };
 
-// ── LOOKUP MAP ────────────────────────────────────────────────────────────────
+// ── LOOKUP ────────────────────────────────────────────────────────────────────
 const dishMap = new Map();
 menuData.forEach(cat => cat.items.forEach(item => dishMap.set(item.id, item)));
 
 // ── CART ──────────────────────────────────────────────────────────────────────
-const cart = new Map(); // id → { dish, qty }
+const cart = new Map();
 
 function priceNum(dish){
   return parseFloat(dish.price.replace('€','').replace(',','.')) || 0;
 }
-
 function cartTotal(){
   let n=0, sum=0;
   cart.forEach(({dish,qty})=>{ n+=qty; sum+=priceNum(dish)*qty; });
-  return { n, sum };
+  return {n, sum};
 }
 
 // ── ADD ───────────────────────────────────────────────────────────────────────
 function addDish(){
   const inp = document.getElementById('code-input');
-  const raw = inp.value.trim();
   const err = document.getElementById('error-msg');
+  const raw = inp.value.trim();
 
-  if(!raw){ showError('Scrivi il numero del piatto.'); return; }
+  if(!raw){ showError('Inserisci il numero del piatto.'); return; }
 
   const id = parseInt(raw, 10);
   const dish = dishMap.get(id);
 
   if(!dish){
-    showError(`Numero ${raw} non trovato — controlla sul menu.`);
-    inp.select();
-    return;
+    showError(`Numero ${raw} non trovato — controlla sul menu cartaceo.`);
+    inp.select(); return;
   }
 
   err.style.display = 'none';
-
-  if(cart.has(id)){
-    cart.get(id).qty++;
-  } else {
-    cart.set(id, { dish, qty:1 });
-  }
+  if(cart.has(id)) cart.get(id).qty++;
+  else cart.set(id, {dish, qty:1});
 
   inp.value = '';
   inp.focus();
@@ -537,47 +603,52 @@ function showError(msg){
   el.style.display = 'block';
 }
 
-// ── RENDER CART ───────────────────────────────────────────────────────────────
+// ── RENDER ────────────────────────────────────────────────────────────────────
 function renderCart(){
-  const list  = document.getElementById('cart-list');
-  const title = document.getElementById('cart-title');
-  const footer= document.getElementById('footer');
+  const list   = document.getElementById('cart-list');
+  const title  = document.getElementById('cart-title');
+  const footer = document.getElementById('footer');
 
   list.innerHTML = '';
 
   if(cart.size === 0){
     title.style.display = 'none';
     footer.style.display = 'none';
+    list.innerHTML = `<div id="empty-state">
+      <i class="fa-regular fa-clipboard"></i>
+      <p>Nessun piatto aggiunto.<br>Scrivi il numero e premi Aggiungi.</p>
+    </div>`;
     return;
   }
 
   title.style.display = 'block';
   footer.style.display = 'block';
 
-  cart.forEach(({dish, qty}, id) => {
+  cart.forEach(({dish,qty}, id) => {
     const imgSrc = dishImgs[id];
     const thumbHtml = imgSrc
-      ? `<img class="cart-thumb" src="${imgSrc}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-         <div class="cart-thumb-placeholder" style="display:none;">${id}</div>`
-      : `<div class="cart-thumb-placeholder">${id}</div>`;
+      ? `<img class="cart-thumb" src="${imgSrc}" alt="" loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+         <div class="cart-thumb-placeholder" style="display:none;"><i class="fa-solid fa-bowl-rice"></i></div>`
+      : `<div class="cart-thumb-placeholder"><i class="fa-solid fa-bowl-rice"></i></div>`;
 
-    const div = document.createElement('div');
-    div.className = 'cart-card';
-    div.dataset.id = id;
-    div.innerHTML = `
-      ${thumbHtml}
+    const card = document.createElement('div');
+    card.className = 'cart-card';
+    card.innerHTML = `
+      <div class="cart-thumb-wrap">${thumbHtml}</div>
       <div class="cart-info">
         <div class="cart-name">${dish.name}</div>
         <div class="cart-price">${dish.price}</div>
       </div>
-      <div class="cart-controls">
-        <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
-        <span class="qty-val">${qty}</span>
-        <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
-        <button class="cart-remove" onclick="removeDish(${id})" title="Rimuovi">✕</button>
+      <div class="cart-qty-wrap">
+        <div class="cart-qty-inner">
+          <button class="q-btn" onclick="changeQty(${id},-1)">−</button>
+          <span class="q-num">${qty}</span>
+          <button class="q-btn" onclick="changeQty(${id},1)">+</button>
+        </div>
       </div>
     `;
-    list.appendChild(div);
+    list.appendChild(card);
   });
 
   updateFooter();
@@ -585,64 +656,62 @@ function renderCart(){
 
 function changeQty(id, delta){
   if(!cart.has(id)) return;
-  const entry = cart.get(id);
-  entry.qty += delta;
-  if(entry.qty <= 0){ cart.delete(id); }
-  renderCart();
-}
-
-function removeDish(id){
-  cart.delete(id);
+  const e = cart.get(id);
+  e.qty += delta;
+  if(e.qty <= 0) cart.delete(id);
   renderCart();
 }
 
 function updateFooter(){
-  const { n, sum } = cartTotal();
+  const {n, sum} = cartTotal();
   document.getElementById('ft-count').textContent = n === 1 ? '1 piatto' : `${n} piatti`;
   document.getElementById('ft-price').textContent = `€${sum.toFixed(2).replace('.',',')}`;
+  document.getElementById('ft-badge').textContent = n;
 }
 
 // ── SEND ─────────────────────────────────────────────────────────────────────
 function sendOrder(){
-  if(cart.size === 0) return;
-
-  const { n, sum } = cartTotal();
+  if(!cart.size) return;
+  const {n, sum} = cartTotal();
   const items = [];
-  cart.forEach(({dish,qty}) => items.push({ id:dish.id, name:dish.name, qty, prezzo:dish.price }));
+  cart.forEach(({dish,qty}) => items.push({id:dish.id, name:dish.name, qty, prezzo:dish.price}));
 
-  console.log('─── ORDINE JUN ────────────────────');
-  console.log('Piatti:', items);
+  console.log('─── ORDINE JUN ───────────────────');
+  console.table(items);
   console.log('Totale piatti:', n);
-  console.log('Totale:', `€${sum.toFixed(2)}`);
-  console.log('───────────────────────────────────');
+  console.log('Totale prezzo:', `€${sum.toFixed(2)}`);
+  console.log('──────────────────────────────────');
 
-  // Conferma UI
   const cl = document.getElementById('confirm-list');
   cl.innerHTML = '';
   items.forEach(it => {
     const row = document.createElement('div');
     row.className = 'confirm-row';
-    row.innerHTML = `<span class="confirm-row-name">${it.name}</span><span class="confirm-row-qty">${it.qty}×</span>`;
+    row.innerHTML = `
+      <span class="confirm-row-name">${it.name}</span>
+      <span class="confirm-row-meta">${it.qty}×</span>
+      <span class="confirm-row-price">${(parseFloat(it.prezzo.replace('€',''))*it.qty).toFixed(2).replace('.',',')} €</span>
+    `;
     cl.appendChild(row);
   });
-  document.getElementById('confirm-grand').textContent = `Totale: €${sum.toFixed(2).replace('.',',')}`;
-  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('confirm-grand').textContent =
+    `Totale: €${sum.toFixed(2).replace('.',',')}`;
+  document.getElementById('order-confirm-overlay').classList.add('open');
 }
 
 function resetOrder(){
   cart.clear();
-  document.getElementById('confirm-overlay').classList.remove('open');
+  document.getElementById('order-confirm-overlay').classList.remove('open');
   document.getElementById('error-msg').style.display = 'none';
   renderCart();
   document.getElementById('code-input').focus();
 }
 
-// ── ENTER KEY ────────────────────────────────────────────────────────────────
+// ── ENTER ─────────────────────────────────────────────────────────────────────
 document.getElementById('code-input').addEventListener('keydown', e => {
   if(e.key === 'Enter'){ e.preventDefault(); addDish(); }
 });
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
 document.getElementById('code-input').focus();
 </script>
 </body>
