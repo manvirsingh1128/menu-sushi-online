@@ -433,6 +433,7 @@ async function onBackOnline(){
   document.querySelectorAll('.ticket,.req-card').forEach(el => el.remove());
   activeOrders.clear();
   newSinceReconnect.clear();
+  _alerted.clear();
   updateEmptyState();
   await loadPending(wasKnown);
   setTimeout(() => newSinceReconnect.clear(), 10000); // rimuovi ocra dopo 10s
@@ -628,7 +629,7 @@ function updateTimers(){
   });
   updateUrgIndicator();
 }
-setInterval(updateTimers,30000);
+setInterval(updateTimers,60000);
 
 // ── Beep ───────────────────────────────────────────────────────────────────
 function beep(){

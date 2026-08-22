@@ -2531,6 +2531,10 @@
         }
 
         function cartSendOrder() {
+            const btn = document.getElementById('cart-cta');
+            if(btn.disabled) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Invio...';
             // Costruisce order_details PRIMA di svuotare il carrello
             const _details = Object.entries(cart).map(([id, qty]) => {
                 const item = menuData.flatMap(c => c.items).find(i => i.id == id);
@@ -2568,6 +2572,7 @@
                 if (qtyEl) qtyEl.classList.remove('show');
                 if (card) card.classList.remove('in-cart');
             });
+            btn.disabled = false;
             updateCartBadge();
             closeCart(() => {
                 document.getElementById('order-confirm-overlay').classList.add('open');
