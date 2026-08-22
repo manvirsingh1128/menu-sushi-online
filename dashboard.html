@@ -44,9 +44,17 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 #conn-bar.on{display:block;}
 @keyframes connPulse{0%,100%{opacity:1}50%{opacity:.55}}
 
-/* ── Bordo ocra ordini dopo riconnessione ── */
-.ticket.recovered{border:2px solid #d97706 !important;box-shadow:0 0 0 2px #d9770640;}
-.req-card.recovered{border:2px solid #d97706 !important;box-shadow:0 0 0 2px #d9770640;}
+/* ── Flash schermo intero offline ── */
+#conn-flash{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:#dc2626;pointer-events:none;
+}
+#conn-flash.flash{display:block;animation:flashOut 1.4s ease-out forwards;}
+@keyframes flashOut{0%{opacity:.9}60%{opacity:.6}100%{opacity:0;display:none;}}
+
+/* ── Bordo ocra ordini mancati (offline) ── */
+.ticket.recovered{border:4px solid #d97706 !important;box-shadow:0 0 0 3px #d9770650,inset 0 0 0 1px #f59e0b60;}
+.req-card.recovered{border:4px solid #d97706 !important;box-shadow:0 0 0 3px #d9770650,inset 0 0 0 1px #f59e0b60;}
 
 /* ── Indicatore urgenza — dentro header ── */
 #urg-indicator{
@@ -362,9 +370,9 @@ tickClock(); setInterval(tickClock,1000);
 // ── Offline / snapshot ────────────────────────────────────────────────────
 const SNAP_KEY  = 'jun_kds_snap';
 const QUEUE_KEY = 'jun_kds_queue';
-const activeOrders = new Map(); // id → order object
-let realOnline   = true;  // stato reale verificato via ping
-let recovering   = false; // true per 8s dopo riconnessione → bordo ocra
+const activeOrders     = new Map(); // id → order object
+let realOnline         = true;      // stato reale verificato via ping
+const newSinceReconnect = new Set(); // ID ordini arrivati MENTRE eravamo offline
 
 function snapSave(){
   try{ localStorage.setItem(SNAP_KEY, JSON.stringify([...activeOrders.values()])); }catch(e){}
@@ -390,25 +398,33 @@ async function queueFlush(){
     console.log('[Jun KDS] coda offline sincronizzata:', q.length, 'aggiornamenti');
   }catch(e){ console.warn('[Jun KDS] flush fallito:', e.message); }
 }
+function triggerFlash(){
+  const el = document.getElementById('conn-flash');
+  if(!el) return;
+  el.classList.remove('flash');
+  void el.offsetWidth; // restart animation
+  el.classList.add('flash');
+}
 function setOffline(offline){
-  const lbl  = document.getElementById('offline-label');
-  const bar  = document.getElementById('conn-bar');
-  const dot  = document.getElementById('online-dot');
+  const lbl = document.getElementById('offline-label');
+  const bar = document.getElementById('conn-bar');
+  const dot = document.getElementById('online-dot');
   if(lbl) lbl.style.display = offline ? 'inline' : 'none';
   if(bar) bar.classList.toggle('on', offline);
-  if(dot){ dot.classList.toggle('sos', offline); dot.style.background = offline ? '#dc2626' : (realOnline ? '#16a34a' : '#dc2626'); }
+  if(dot){ dot.classList.toggle('sos', offline); dot.style.background = offline ? '#dc2626' : '#16a34a'; }
 }
 
 async function onBackOnline(){
   realOnline = true;
   setOffline(false);
-  recovering = true;
+  const wasKnown = new Set(activeOrders.keys()); // ID già in display prima del blackout
   await queueFlush();
   document.querySelectorAll('.ticket,.req-card').forEach(el => el.remove());
   activeOrders.clear();
+  newSinceReconnect.clear();
   updateEmptyState();
-  await loadPending();
-  setTimeout(() => { recovering = false; }, 8000);
+  await loadPending(wasKnown);
+  setTimeout(() => newSinceReconnect.clear(), 10000); // rimuovi ocra dopo 10s
 }
 
 async function pingLoop(){
@@ -421,7 +437,11 @@ async function pingLoop(){
     realOnline = true;
     setOffline(false);
   } catch(e){
-    if(realOnline){ realOnline = false; setOffline(true); }
+    if(realOnline){ // prima volta che perdiamo connessione
+      realOnline = false;
+      triggerFlash();
+      setOffline(true);
+    }
   }
 }
 
@@ -637,7 +657,7 @@ function renderTicket(order, silent){
     : '';
 
   const div = document.createElement('div');
-  div.className = `ticket ${col}${silent ? '' : ' is-new'}${recovering ? ' recovered' : ''}`;
+  div.className = `ticket ${col}${silent ? '' : ' is-new'}${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
   div.dataset.ts = tsVal;
   div.dataset.id = order.id;
   div.innerHTML = `
@@ -679,7 +699,7 @@ function renderReqCard(order, silent){
     : '--:--';
 
   const div = document.createElement('div');
-  div.className = `req-card${recovering ? ' recovered' : ''}`;
+  div.className = `req-card${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
   div.dataset.id = order.id;
   div.innerHTML = `
     <div class="req-top">
@@ -705,7 +725,7 @@ function renderReqCard(order, silent){
 }
 
 // ── Carica ordini pendenti ─────────────────────────────────────────────────
-async function loadPending(){
+async function loadPending(wasKnown = null){
   if(!realOnline){
     console.warn('[Jun KDS] offline — carico snapshot locale');
     snapLoad().forEach(order => {
@@ -730,6 +750,8 @@ async function loadPending(){
   }
   activeOrders.clear();
   data.forEach(order => {
+    // se wasKnown passato, segna solo gli ID che non erano in display prima del blackout
+    if(wasKnown && !wasKnown.has(order.id)) newSinceReconnect.add(order.id);
     if(order.waiter_request) renderReqCard(order, true);
     else renderTicket(order, true);
   });
@@ -761,6 +783,7 @@ window.addEventListener('load', async () => {
   setInterval(pingLoop, 1000); // ping ogni secondo
 });
 </script>
+<div id="conn-flash"></div>
 <div id="conn-bar">⚠ EMERGENZA — MANCA CONNESSIONE &nbsp;·&nbsp; gli ordini vengono salvati in locale</div>
 </body>
 </html>
