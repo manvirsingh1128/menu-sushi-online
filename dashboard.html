@@ -699,6 +699,14 @@ function renderTicket(order, silent){
 }
 
 // ── Render richiesta cameriere ─────────────────────────────────────────────
+const _waiterIta = {
+  explanation: 'Spiegazione sui piatti',
+  drinks:      'Ordine bevande',
+  bill:        'Richiesta conto',
+  other:       'Altra assistenza',
+  call:        'Chiamata cameriere'
+};
+
 function renderReqCard(order, silent){
   activeOrders.set(order.id, order);
   snapSave();
@@ -706,6 +714,8 @@ function renderReqCard(order, silent){
   const ora = order.created_at
     ? new Date(order.created_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
     : '--:--';
+
+  const reqLabel = order.customer_notes || _waiterIta[order.waiter_request] || order.waiter_request;
 
   const div = document.createElement('div');
   div.className = `req-card${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
@@ -717,19 +727,19 @@ function renderReqCard(order, silent){
       <span class="req-time">${ora}</span>
     </div>
     <hr class="tk-sep">
-    <div class="req-body">${order.waiter_request}</div>
+    <div class="req-body">${reqLabel}</div>
     <button class="req-btn">Gestita</button>
   `;
 
   div.querySelector('.req-btn').addEventListener('click', function(){
-    gestita(this, order.waiter_request, order.table_number, order.id);
+    gestita(this, reqLabel, order.table_number, order.id);
   });
 
   document.getElementById('sidebar').appendChild(div);
 
   if(!silent){
     beep();
-    addLog('req', order.table_number, null, order.waiter_request);
+    addLog('req', order.table_number, null, reqLabel);
   }
 }
 
