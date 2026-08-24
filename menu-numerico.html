@@ -6,6 +6,7 @@
 <title>Jun Restaurant — Ordine</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{
@@ -238,6 +239,31 @@ html,body{
 #empty-state i{font-size:2.5em;color:#e0e0e0;}
 #empty-state p{font-size:.88em;line-height:1.5;}
 
+/* ── SPLASH ── */
+@keyframes splashLogoIn{0%{opacity:0;transform:translateY(14px) scale(.92)}100%{opacity:1;transform:none}}
+@keyframes splashTrackIn{from{opacity:0}to{opacity:1}}
+@keyframes splashBarFill{0%{width:0%}60%{width:75%}100%{width:100%}}
+@keyframes splashGlowPulse{0%,100%{opacity:.7}50%{opacity:1}}
+#splash{position:fixed;inset:0;z-index:10000;background:#0f0f0f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:52px;transition:opacity .55s ease;}
+#splash-logo{height:50px;object-fit:contain;opacity:0;animation:splashLogoIn 1s .2s cubic-bezier(.22,1,.36,1) forwards;}
+#splash-bar-track{width:140px;height:2px;background:rgba(255,255,255,.12);border-radius:2px;overflow:visible;position:relative;opacity:0;animation:splashTrackIn .4s .7s ease forwards;}
+#splash-bar{height:100%;background:#fff;border-radius:2px;width:0;position:relative;animation:splashBarFill 1.9s .9s cubic-bezier(.16,1,.3,1) forwards;}
+#splash-bar::after{content:'';position:absolute;right:-1px;top:-5px;bottom:-5px;width:18px;background:rgba(255,255,255,.9);filter:blur(6px);border-radius:50%;animation:splashGlowPulse .8s ease-in-out infinite;}
+
+/* ── ONBOARDING ── */
+#onboarding{display:none;position:fixed;inset:0;z-index:9999;background:#0f0f0f;align-items:center;justify-content:center;padding:32px 20px;overflow-y:auto;}
+#onboarding.open{display:flex;}
+#ob-content{display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;gap:20px;}
+#ob-logo{height:46px;object-fit:contain;}
+#ob-card{background:#1c1c1c;border-radius:28px;padding:28px 24px;width:100%;display:flex;flex-direction:column;gap:0;}
+.ob-label{color:#fff;font-size:1em;font-weight:700;margin:0 0 18px;line-height:1.4;}
+.ob-stepper{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.ob-step-btn{width:70px;height:70px;border-radius:18px;border:none;background:#333;color:#fff;font-size:2em;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s;touch-action:manipulation;flex-shrink:0;}
+.ob-step-btn:active{background:#555;}
+.ob-step-num{font-size:3.2em;font-weight:800;color:#fff;flex:1;text-align:center;letter-spacing:-.04em;}
+#ob-enter{width:100%;padding:22px;background:#fff;color:#111;border:none;border-radius:18px;font-size:1.15em;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation;transition:opacity .15s;letter-spacing:-.02em;}
+#ob-enter:active{opacity:.85;}
+
 /* ── POPUP DETTAGLIO ── */
 #detail-overlay{
   display:none;position:fixed;inset:0;z-index:1200;
@@ -276,6 +302,28 @@ html,body{
 </style>
 </head>
 <body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img id="splash-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
+  <div id="splash-bar-track"><div id="splash-bar"></div></div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div id="ob-content">
+    <img id="ob-logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
+    <div id="ob-card">
+      <p class="ob-label">Qual è il tuo tavolo?</p>
+      <div class="ob-stepper">
+        <button class="ob-step-btn" id="ob-minus">−</button>
+        <span class="ob-step-num" id="ob-num">1</span>
+        <button class="ob-step-btn" id="ob-plus">+</button>
+      </div>
+    </div>
+    <button id="ob-enter">Inizia →</button>
+  </div>
+</div>
 
 <!-- HEADER -->
 <div id="top-header">
@@ -354,6 +402,70 @@ html,body{
 </div>
 
 <script>
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+const _SB_URL  = 'https://mtjsxtdubfsqtyvwgdrt.supabase.co';
+const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anN4dGR1YmZzcXR5dndnZHJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTE5MzcsImV4cCI6MjEwMjk4NzkzN30.P4ufwf0G111YKGxFpx9jyj5RTxRX10CsFUVfmWYZpmA';
+const _sb = (typeof supabase !== 'undefined') ? supabase.createClient(_SB_URL, _SB_ANON) : null;
+
+// ── SESSIONE ──────────────────────────────────────────────────────────────────
+const SESSION_KEY      = 'jun_num_session';
+const TABLE_KEY        = 'jun_num_table';
+const VALID_CODE       = 'jun2025';
+const SESSION_DURATION = 2.5 * 60 * 60 * 1000;
+let tableNumber = 1;
+let _obTable    = 1;
+
+function _obUpdate(){ document.getElementById('ob-num').textContent = _obTable; }
+
+function _startSession(table){
+  tableNumber = table;
+  localStorage.setItem(TABLE_KEY, String(table));
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ start: Date.now() }));
+  document.getElementById('onboarding').classList.remove('open');
+  document.getElementById('code-input').focus();
+}
+
+function checkSession(){
+  const params = new URLSearchParams(window.location.search);
+  const code   = params.get('k');
+  const tParam = parseInt(params.get('t'), 10) || null;
+  const now    = Date.now();
+  let session  = null;
+  try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch {}
+
+  if (code === VALID_CODE){
+    localStorage.removeItem(TABLE_KEY);
+    session = { start: now };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    const url = new URL(window.location.href);
+    url.searchParams.delete('k'); url.searchParams.delete('t');
+    history.replaceState({}, '', url);
+    scheduleExpiry(SESSION_DURATION);
+    if (tParam){ _startSession(tParam); return; }
+    document.getElementById('onboarding').classList.add('open');
+  } else if (session && (now - session.start) < SESSION_DURATION){
+    scheduleExpiry(SESSION_DURATION - (now - session.start));
+    const saved = parseInt(localStorage.getItem(TABLE_KEY), 10);
+    if (saved){ tableNumber = saved; return; }
+    document.getElementById('onboarding').classList.add('open');
+  } else {
+    session = { start: now };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    scheduleExpiry(SESSION_DURATION);
+    document.getElementById('onboarding').classList.add('open');
+  }
+}
+
+function scheduleExpiry(msLeft){
+  setTimeout(() => {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TABLE_KEY);
+    cart.clear(); renderCart();
+    _obTable = 1; _obUpdate();
+    document.getElementById('onboarding').classList.add('open');
+  }, msLeft);
+}
+
 // ── DATI ─────────────────────────────────────────────────────────────────────
 const menuData = [
   { id:'jun-selection', name:'JUN Selection', max1:true, items:[
@@ -632,7 +744,7 @@ const dishImgs = {
   196:"img/d_196.jpg",197:"img/d_197.jpg",200:"img/d_200.jpg",
   202:"img/d_202.jpg",205:"img/d_205.jpg",207:"img/d_207.jpg",
   208:"img/d_208.jpg",209:"img/d_209.jpg",212:"img/d_212.jpg",
-  213:"img/d_213.jpg",214:"img/d_214.jpg",215:"img/d_215.jpg",
+  213:"img/d_213.jpg",214:"img/d_214.jpg",
   217:"img/d_217.jpg",218:"img/d_218.jpg",219:"img/d_219.jpg",
   220:"img/d_220.jpg",221:"img/d_221.jpg",224:"img/d_224.jpg",
   225:"img/d_225.jpg",228:"img/d_228.jpg",229:"img/d_229.jpg",
@@ -783,30 +895,35 @@ function closeDetail(){
 function sendOrder(){
   if(!cart.size) return;
   const {n, sum} = cartTotal();
-  const items = [];
-  cart.forEach(({dish,qty}) => items.push({id:dish.id, name:dish.name, qty, prezzo:dish.price}));
+  const sbItems = [];
+  cart.forEach(({dish,qty}) => sbItems.push({ qty, name:dish.name, code:String(dish.id), cat:'' }));
 
-  console.log('─── ORDINE JUN ───────────────────');
-  console.table(items);
-  console.log('Totale piatti:', n);
-  console.log('Totale prezzo:', `€${sum.toFixed(2)}`);
-  console.log('──────────────────────────────────');
-
+  // Popup conferma
   const cl = document.getElementById('confirm-list');
   cl.innerHTML = '';
-  items.forEach(it => {
+  cart.forEach(({dish,qty}) => {
     const row = document.createElement('div');
     row.className = 'confirm-row';
     row.innerHTML = `
-      <span class="confirm-row-name">${it.name}</span>
-      <span class="confirm-row-meta">${it.qty}×</span>
-      <span class="confirm-row-price">${(parseFloat(it.prezzo.replace('€',''))*it.qty).toFixed(2).replace('.',',')} €</span>
+      <span class="confirm-row-name">${dish.name}</span>
+      <span class="confirm-row-meta">${qty}×</span>
+      <span class="confirm-row-price">${(parseFloat(dish.price.replace('€',''))*qty).toFixed(2).replace('.',',')} €</span>
     `;
     cl.appendChild(row);
   });
-  document.getElementById('confirm-grand').textContent =
-    `Totale: €${sum.toFixed(2).replace('.',',')}`;
+  document.getElementById('confirm-grand').textContent = `Totale: €${sum.toFixed(2).replace('.',',')}`;
   document.getElementById('order-confirm-overlay').classList.add('open');
+
+  // Supabase
+  if(_sb && sbItems.length){
+    _sb.from('orders').insert({
+      table_number: tableNumber,
+      order_details: JSON.stringify(sbItems),
+      customer_notes: null,
+      status: 'pending',
+      waiter_request: null
+    }).then(({error}) => { if(error) console.warn('[Jun] ordine:', error.message); });
+  }
 }
 
 function resetOrder(){
@@ -820,6 +937,15 @@ function resetOrder(){
 // ── WAITER ────────────────────────────────────────────────────────────────────
 function callWaiter(){
   document.getElementById('waiter-confirm-overlay').classList.add('open');
+  if(_sb){
+    _sb.from('orders').insert({
+      table_number: tableNumber,
+      order_details: JSON.stringify([]),
+      customer_notes: 'Chiamata cameriere',
+      status: 'pending',
+      waiter_request: 'call'
+    }).then(({error}) => { if(error) console.warn('[Jun] cameriere:', error.message); });
+  }
 }
 function closeWaiterConfirm(){
   document.getElementById('waiter-confirm-overlay').classList.remove('open');
@@ -830,7 +956,26 @@ document.getElementById('code-input').addEventListener('keydown', e => {
   if(e.key === 'Enter'){ e.preventDefault(); addDish(); }
 });
 
-document.getElementById('code-input').focus();
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ob-minus').addEventListener('click', () => {
+    if(_obTable > 1){ _obTable--; _obUpdate(); }
+  });
+  document.getElementById('ob-plus').addEventListener('click', () => {
+    if(_obTable < 99){ _obTable++; _obUpdate(); }
+  });
+  document.getElementById('ob-enter').addEventListener('click', () => {
+    _startSession(_obTable);
+  });
+
+  // Splash → poi sessione
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; }, 560);
+    checkSession();
+  }, 2900);
+});
 </script>
 </body>
 </html>
