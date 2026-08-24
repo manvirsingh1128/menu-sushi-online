@@ -223,6 +223,7 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
   background:#e8e2d8;border-radius:4px;text-align:center;padding:2px 5px;
 }
 .tk-name{color:#1a1a1a;}
+.tk-code{font-size:.8em;font-weight:700;color:#777;}
 
 .tk-nota{
   font-size:.9em;font-weight:600;color:#111;
@@ -653,13 +654,12 @@ function renderTicket(order, silent){
 
   const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
   const col   = tableColor(order.table_number);
-  const totPiatti = items.reduce((s, it) => s + (parseInt(it.qty) || 1), 0);
 
   const itemsHtml = items.map(it=>
     `<div class="tk-item" onclick="toggleDone(this)">
       <span class="tk-check">✓</span>
       <span class="tk-qty">${it.qty}x</span>
-      <span class="tk-name">${it.name}</span>
+      <span class="tk-name">${it.name}${it.code ? ` <span class="tk-code">(${it.code})</span>` : ''}</span>
     </div>`
   ).join('');
 
@@ -674,7 +674,7 @@ function renderTicket(order, silent){
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo</span>
-      <span class="tk-tavolo-num">${order.table_number}<br><span class="tk-giorno">(${totPiatti})</span></span>
+      <span class="tk-tavolo-num">${order.table_number}</span>
       <span class="tk-time">-</span>
     </div>
     <hr class="tk-sep">
