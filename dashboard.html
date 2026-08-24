@@ -659,7 +659,7 @@ function renderTicket(order, silent){
     `<div class="tk-item" onclick="toggleDone(this)">
       <span class="tk-check">✓</span>
       <span class="tk-qty">${it.qty}x</span>
-      <span class="tk-name">${it.name}${it.code ? ` <span class="tk-code">(${it.code})</span>` : ''}</span>
+      <span class="tk-name">${it.name}${it.code ? ` <span class="tk-code">${it.code}</span>` : ''}</span>
     </div>`
   ).join('');
 
