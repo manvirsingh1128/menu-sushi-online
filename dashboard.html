@@ -265,6 +265,21 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 }
 .req-btn:hover{background:#15803d;}
 
+/* ── Ticket già pronti (rimangono visibili sul board) ── */
+.ticket.is-ready{
+  opacity:.45;
+  pointer-events:none;
+}
+.ticket.is-ready .tk-top{
+  background:#2e4a31 !important;
+  animation:none !important;
+}
+.ticket.is-ready .btn-pronto{
+  background:#2e4a31;
+  color:#7ab87f;
+  cursor:default;
+}
+
 /* ── Empty state board ── */
 #board-empty{
   padding:60px 24px;font-size:.9em;color:#2a2a2a;
@@ -356,7 +371,7 @@ function shortestCol(){
 
 function updateEmptyState(){
   const board = document.getElementById('board');
-  const hasTickets = board.querySelectorAll('.ticket').length > 0;
+  const hasTickets = board.querySelectorAll('.ticket:not(.is-ready)').length > 0;
   // mostra/nasconde colonne masonry
   board.querySelectorAll('.mcol').forEach(c => c.style.display = hasTickets ? '' : 'none');
   // mostra/nasconde stato vuoto
@@ -547,7 +562,7 @@ async function gestita(btn, tipo, tavolo, orderId){
   }
   const card=btn.closest('.req-card');
   card.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .3s,transform .3s;';
-  setTimeout(()=>card.remove(),300);
+  setTimeout(()=>{ card.remove(); updateUrgIndicator(); },300);
 }
 
 // ── PRONTO ─────────────────────────────────────────────────────────────────
@@ -572,12 +587,14 @@ async function pronto(btn, orderId){
   }));
   const nota=ticket.querySelector('.tk-nota')?.textContent||null;
   addLog('pronto',tav,items,nota);
-  btn.innerHTML='<i class="fa-solid fa-check"></i> Inviato';
+  btn.innerHTML='<i class="fa-solid fa-check"></i> Pronto';
   btn.style.background='#4b7a56';
   setTimeout(()=>{
-    ticket.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .35s,transform .35s;';
-    setTimeout(()=>{ ticket.remove(); updateEmptyState(); },350);
-  },1000);
+    ticket.classList.remove('urgent');
+    ticket.classList.add('is-ready');
+    updateEmptyState();
+    updateUrgIndicator();
+  }, 800);
 }
 
 // ── Indicatore urgenza top-right ──────────────────────────────────────────
