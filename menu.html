@@ -227,6 +227,7 @@
         }
         .qty-num { font-size: 1.4em; font-weight: 700; min-width: 22px; text-align: center; }
         .btn-plus:disabled { color: #ccc; cursor: default; }
+        .btn-limit-soft { opacity: 0.4; cursor: default; }
 
         .max1-divider {
             display: flex; align-items: center; gap: 10px; margin: 8px 0 24px;
@@ -2145,7 +2146,7 @@
                 }
                 const cat = menuData.find(c => c.items.some(i => i.id === Number(id)));
                 const plusBtn = qtyWrap ? qtyWrap.querySelector('.btn-plus') : null;
-                if (plusBtn && cat && cat.max1) plusBtn.disabled = itemRemaining(Number(id)) <= 0;
+                if (plusBtn && cat && cat.max1) plusBtn.classList.toggle('btn-limit-soft', itemRemaining(Number(id)) <= 0);
             });
         }
 
@@ -2407,7 +2408,7 @@
             minusBtn.style.fontSize = '0.75em';
             const plusBtn = document.querySelector(`#qty-${id} .btn-plus`);
             if (plusBtn && max1) {
-                plusBtn.disabled = itemRemaining(id) <= 0;
+                plusBtn.classList.toggle('btn-limit-soft', itemRemaining(id) <= 0);
             }
             updateCartBadge();
             showAddedToast(id);
@@ -2436,7 +2437,7 @@
                 }
                 const plusBtn = document.querySelector(`#qty-${id} .btn-plus`);
                 if (plusBtn && max1) {
-                    plusBtn.disabled = itemRemaining(id) <= 0;
+                    plusBtn.classList.toggle('btn-limit-soft', itemRemaining(id) <= 0);
                 }
             }
             updateCartBadge();
@@ -2843,19 +2844,20 @@
             const max1Esaurito = item && item.max1 && itemRemaining(diCurrentId) <= 0;
             if (diQty === 0) {
                 ctaBtn.style.display = '';
-                const ctaBloccato = diIsBlocked || max1Esaurito;
-                ctaBtn.disabled = ctaBloccato;
-                ctaBtn.style.opacity = ctaBloccato ? '0.4' : '';
-                ctaBtn.style.cursor  = ctaBloccato ? 'default' : '';
+                ctaBtn.disabled = diIsBlocked;
+                ctaBtn.style.opacity = (diIsBlocked || max1Esaurito) ? '0.4' : '';
+                ctaBtn.style.cursor  = (diIsBlocked || max1Esaurito) ? 'default' : '';
                 pill.classList.remove('visible');
             } else {
                 ctaBtn.style.display = 'none';
                 pill.classList.add('visible');
             }
             if (item && item.max1) {
-                plusBtn.disabled = diIsBlocked || max1Esaurito;
+                plusBtn.disabled = diIsBlocked;
+                plusBtn.classList.toggle('btn-limit-soft', !diIsBlocked && max1Esaurito);
             } else {
                 plusBtn.disabled = diIsBlocked;
+                plusBtn.classList.remove('btn-limit-soft');
             }
         }
 
