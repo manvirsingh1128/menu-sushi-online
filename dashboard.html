@@ -626,9 +626,17 @@ function updateTimers(){
 setInterval(updateTimers,60000);
 
 // ── Beep ───────────────────────────────────────────────────────────────────
+let _ac = null;
+function _ensureAC(){
+  if(!_ac) _ac = new AudioContext();
+  if(_ac.state === 'suspended') _ac.resume();
+  return _ac;
+}
+document.addEventListener('pointerdown', () => _ensureAC(), { once: true });
+
 function beep(){
   try{
-    const ac=new AudioContext();
+    const ac = _ensureAC();
     [0,.2].forEach(t=>{
       const o=ac.createOscillator(),g=ac.createGain();
       o.connect(g);g.connect(ac.destination);
