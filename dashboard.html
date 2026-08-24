@@ -653,9 +653,7 @@ function renderTicket(order, silent){
 
   const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
   const col   = tableColor(order.table_number);
-  const _days = ['dom','lun','mar','mer','gio','ven','sab'];
-  const _d    = order.created_at ? new Date(order.created_at) : new Date();
-  const giorno = `${_days[_d.getDay()]} ${_d.getDate()}/${_d.getMonth()+1}`;
+  const totPiatti = items.reduce((s, it) => s + (parseInt(it.qty) || 1), 0);
 
   const itemsHtml = items.map(it=>
     `<div class="tk-item" onclick="toggleDone(this)">
@@ -676,7 +674,7 @@ function renderTicket(order, silent){
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo</span>
-      <span class="tk-tavolo-num">${order.table_number}<br><span class="tk-giorno">(${giorno})</span></span>
+      <span class="tk-tavolo-num">${order.table_number}<br><span class="tk-giorno">(${totPiatti})</span></span>
       <span class="tk-time">-</span>
     </div>
     <hr class="tk-sep">
