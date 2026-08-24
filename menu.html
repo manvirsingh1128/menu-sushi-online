@@ -1573,6 +1573,7 @@
         document.getElementById('pp-save').addEventListener('click', () => {
             tableSize = ppTempSize;
             document.getElementById('people-label').textContent = tableSize;
+            localStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
             ppOverlay.style.display = 'none';
             pendingMax1Id = null;
             renderMenu();
@@ -2144,19 +2145,20 @@
                 }
                 const cat = menuData.find(c => c.items.some(i => i.id === Number(id)));
                 const plusBtn = qtyWrap ? qtyWrap.querySelector('.btn-plus') : null;
-                if (plusBtn && cat && cat.max1) plusBtn.disabled = catRemaining(cat) <= 0;
+                if (plusBtn && cat && cat.max1) plusBtn.disabled = itemRemaining(Number(id)) <= 0;
             });
         }
 
         const cart = {};
         let tableSize = 1;
         let tableNumber = 1;
-        const orderedMax1Cats = new Map(); // cat.id → quantità totale ordinata in ordini precedenti
+        const orderedMax1Cats = new Map();  // cat.id → qty ordinata (per badge "già ordinato")
+        const orderedMax1Items = new Map(); // itemId → 1 se già ordinato (blocco per piatto)
 
-        // Helpers max1: contano già inviati e nel carrello corrente
+        // Helpers max1
         function catOrdered(cat) { return orderedMax1Cats.get(cat.id) || 0; }
-        function catInCart(cat) { return cat.items.reduce((s, item) => s + (cart[item.id] || 0), 0); }
-        function catRemaining(cat) { return tableSize - catOrdered(cat) - catInCart(cat); }
+        function itemOrdered(id) { return orderedMax1Items.get(parseInt(id)) || 0; }
+        function itemRemaining(id) { return tableSize - itemOrdered(id) - (cart[parseInt(id)] || 0); }
 
         const isWeekend = () => { const d = new Date().getDay(); return d === 0 || d === 6; };
         function getTabLabel(cat) {
@@ -2292,7 +2294,7 @@
                     const isWkndDish = item.desc && item.desc.toLowerCase().includes('solo weekend');
                     const wkndOk = isWeekend();
                     const hasBlockedAllergen = activeFilters.size > 0 && item.allergens && item.allergens.some(a => activeFilters.has(a));
-                    const isCatAlreadyOrdered = cat.max1 && (orderedMax1Cats.get(cat.id) || 0) > 0;
+                    const isCatAlreadyOrdered = cat.max1 && itemOrdered(item.id) > 0;
                     if (isWkndDish && !wkndOk) card.classList.add('weekend-only');
                     if (hasBlockedAllergen) card.classList.add('allergen-blocked');
                     if (cat.max1) tags.unshift(`<span class="dish-tag max1-card"><i class="fas fa-user"></i> Max 1</span>`);
@@ -2367,10 +2369,34 @@
             }, 1800);
         }
 
+        function showLimitToast() {
+            let toast = document.getElementById('limit-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'limit-toast';
+                toast.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%) translateY(-12px);background:#dc2626;color:#fff;padding:10px 20px;border-radius:50px;font-size:0.88em;font-weight:600;z-index:9999;opacity:0;transition:top 0s,opacity 0.25s,transform 0.25s;pointer-events:none;white-space:nowrap;';
+                document.body.appendChild(toast);
+            }
+            const hdr = document.getElementById('sticky-header');
+            const tabs = document.getElementById('sticky-tabs');
+            const hdrH = hdr ? hdr.offsetHeight : 70;
+            const tabsH = tabs ? tabs.offsetHeight : 60;
+            const headerHidden = hdr && hdr.classList.contains('header-hidden');
+            toast.style.top = (headerHidden ? tabsH : hdrH + tabsH) + 10 + 'px';
+            const p = tableSize === 1 ? 'a' : 'e';
+            toast.innerHTML = `<i class="fas fa-triangle-exclamation" style="margin-right:7px;"></i>Limite raggiunto: max ${tableSize} piatt${tableSize === 1 ? 'o' : 'i'} per ${tableSize} person${p}`;
+            clearTimeout(toast._timer);
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            toast._timer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-12px)';
+            }, 2500);
+        }
+
         function addItem(id, max1) {
             if (max1) {
-                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
-                if (cat && catRemaining(cat) <= 0) { openMax1Explain(id); return; }
+                if (itemRemaining(id) <= 0) { openMax1Explain(id); return; }
             }
             cart[id] = 1;
             document.getElementById(`add-${id}`).style.display = 'none';
@@ -2381,8 +2407,7 @@
             minusBtn.style.fontSize = '0.75em';
             const plusBtn = document.querySelector(`#qty-${id} .btn-plus`);
             if (plusBtn && max1) {
-                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
-                plusBtn.disabled = cat ? catRemaining(cat) <= 0 : false;
+                plusBtn.disabled = itemRemaining(id) <= 0;
             }
             updateCartBadge();
             showAddedToast(id);
@@ -2391,8 +2416,7 @@
         function changeQty(id, delta, max1) {
             const current = cart[id] || 0;
             if (delta > 0 && max1) {
-                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
-                if (cat && catRemaining(cat) <= 0) { openMax1Explain(id); return; }
+                if (itemRemaining(id) <= 0) { openMax1Explain(id); return; }
             }
             cart[id] = (current || 1) + delta;
             if (cart[id] <= 0) {
@@ -2412,8 +2436,7 @@
                 }
                 const plusBtn = document.querySelector(`#qty-${id} .btn-plus`);
                 if (plusBtn && max1) {
-                    const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
-                    plusBtn.disabled = cat ? catRemaining(cat) <= 0 : false;
+                    plusBtn.disabled = itemRemaining(id) <= 0;
                 }
             }
             updateCartBadge();
@@ -2500,7 +2523,7 @@
         function cartChangeQty(id, delta) {
             if (delta > 0) {
                 const catOfItem = menuData.find(c => c.items.some(i => i.id == id));
-                if (catOfItem && catOfItem.max1 && catRemaining(catOfItem) <= 0) {
+                if (catOfItem && catOfItem.max1 && itemRemaining(id) <= 0) {
                     openMax1Explain(id);
                     return;
                 }
@@ -2534,6 +2557,7 @@
             const btn = document.getElementById('cart-cta');
             if(btn.disabled) return;
             btn.disabled = true;
+            const _savedBtnHTML = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Invio...';
             // Costruisce order_details PRIMA di svuotare il carrello
             const _details = Object.entries(cart).map(([id, qty]) => {
@@ -2560,7 +2584,10 @@
             // accumula quantità ordinate per categoria max1 (conta tra ordini successivi)
             Object.keys(cart).forEach(id => {
                 const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == id));
-                if (cat) orderedMax1Cats.set(cat.id, (orderedMax1Cats.get(cat.id) || 0) + cart[id]);
+                if (cat) {
+                    orderedMax1Cats.set(cat.id, (orderedMax1Cats.get(cat.id) || 0) + cart[id]);
+                    orderedMax1Items.set(parseInt(id), (orderedMax1Items.get(parseInt(id)) || 0) + cart[id]);
+                }
             });
 
             Object.keys(cart).forEach(id => {
@@ -2572,6 +2599,7 @@
                 if (qtyEl) qtyEl.classList.remove('show');
                 if (card) card.classList.remove('in-cart');
             });
+            btn.innerHTML = _savedBtnHTML;
             btn.disabled = false;
             updateCartBadge();
             closeCart(() => {
@@ -2669,7 +2697,7 @@
             const isWkndBlocked = isWkndItem && !wkndOkNow;
             const isAllergenBlocked = activeFilters.size > 0 && item.allergens && item.allergens.some(a => activeFilters.has(a));
             const itemCat = menuData.find(c => c.items.some(i => i.id == id));
-            const isAlreadyOrdered = itemCat && itemCat.max1 && (orderedMax1Cats.get(itemCat.id) || 0) > 0;
+            const isAlreadyOrdered = itemCat && itemCat.max1 && itemOrdered(id) > 0;
             diIsBlocked = isWkndBlocked || isAllergenBlocked;
 
             // notice allergeni
@@ -2773,14 +2801,9 @@
             newQty = Math.max(0, newQty);
             if (diIsBlocked && newQty > diQty) return;
             if (item.max1) {
-                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == diCurrentId));
-                if (cat) {
-                    // quanto spazio rimane per QUESTO item: tableSize - già ordinati - altri item della categoria nel carrello
-                    const othersInCart = cat.items.filter(i => i.id !== diCurrentId).reduce((s, i) => s + (cart[i.id] || 0), 0);
-                    const maxForThis = tableSize - catOrdered(cat) - othersInCart;
-                    if (newQty > maxForThis) { openMax1Explain(diCurrentId); return; }
-                    newQty = Math.min(newQty, maxForThis);
-                }
+                const maxForThis = tableSize - itemOrdered(diCurrentId);
+                if (newQty > maxForThis) { openMax1Explain(diCurrentId); return; }
+                newQty = Math.min(newQty, maxForThis);
             }
             diQty = newQty;
 
@@ -2817,21 +2840,20 @@
             const ctaBtn = document.getElementById('di-cta-btn');
             const pill   = document.getElementById('di-qty-pill');
             numEl.textContent = diQty;
+            const max1Esaurito = item && item.max1 && itemRemaining(diCurrentId) <= 0;
             if (diQty === 0) {
                 ctaBtn.style.display = '';
-                ctaBtn.disabled = diIsBlocked;
-                ctaBtn.style.opacity = diIsBlocked ? '0.4' : '';
-                ctaBtn.style.cursor  = diIsBlocked ? 'default' : '';
+                const ctaBloccato = diIsBlocked || max1Esaurito;
+                ctaBtn.disabled = ctaBloccato;
+                ctaBtn.style.opacity = ctaBloccato ? '0.4' : '';
+                ctaBtn.style.cursor  = ctaBloccato ? 'default' : '';
                 pill.classList.remove('visible');
             } else {
                 ctaBtn.style.display = 'none';
                 pill.classList.add('visible');
             }
             if (item && item.max1) {
-                const cat = menuData.find(c => c.max1 && c.items.some(i => i.id == diCurrentId));
-                const othersInCart = cat ? cat.items.filter(i => i.id !== diCurrentId).reduce((s, i) => s + (cart[i.id] || 0), 0) : 0;
-                const maxForThis = cat ? tableSize - catOrdered(cat) - othersInCart : tableSize;
-                plusBtn.disabled = diIsBlocked || diQty >= maxForThis;
+                plusBtn.disabled = diIsBlocked || max1Esaurito;
             } else {
                 plusBtn.disabled = diIsBlocked;
             }
@@ -2880,6 +2902,8 @@
             tableSize   = _obPeople;
             tableNumber = _obTable;
             localStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
+            orderedMax1Cats.clear();
+            orderedMax1Items.clear();
             document.getElementById('people-label').textContent = tableSize;
             // menu già caricato in background, re-render solo per aggiornare tableSize (max1)
             renderMenu();
@@ -2896,20 +2920,6 @@
             // ── QR SESSION ──
             if (!checkSession()) return;
 
-            let saved = null;
-            try {
-                const raw = localStorage.getItem('jun_ob');
-                if (raw) { saved = JSON.parse(raw); }
-            } catch { localStorage.removeItem('jun_ob'); }
-
-            // Tavolo QR diverso da jun_ob → forza onboarding
-            if (saved && _qrTable && saved.table !== _qrTable) saved = null;
-
-            if (saved) {
-                tableSize   = saved.people || 1;
-                tableNumber = saved.table  || 1;
-                document.getElementById('people-label').textContent = tableSize;
-            }
 
             // ripristina filtri allergeni (prima di renderMenu per usarli subito)
             let savedFiltersArr = null;
@@ -2951,8 +2961,21 @@
                 document.getElementById('ob-table-locked-num').textContent = _qrTable;
             }
 
-            // Mostra onboarding SUBITO se primo accesso — coperto da splash (z-index 9999 < 10000)
-            // Così quando lo splash sfuma l'onboarding è già dipinto, nessun flash del menu
+            let saved = null;
+            try {
+                const raw = localStorage.getItem('jun_ob');
+                if (raw) { saved = JSON.parse(raw); }
+            } catch { localStorage.removeItem('jun_ob'); }
+
+            if (saved && _qrTable && saved.table !== _qrTable) saved = null;
+
+            if (saved) {
+                tableSize   = saved.people || 1;
+                tableNumber = saved.table  || 1;
+                document.getElementById('people-label').textContent = tableSize;
+            }
+
+            // Mostra onboarding solo al primo accesso (nuovo scan QR), non al refresh
             if (!saved) _showOnboarding();
 
             setTimeout(() => {
@@ -3031,11 +3054,8 @@
             try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch {}
 
             if (code === VALID_CODE) {
-                // Nuova scansione QR valida
-                if (session && session.table !== tableParam) {
-                    // Tavolo cambiato → resetta onboarding per forzare selezione persone
-                    localStorage.removeItem('jun_ob');
-                }
+                // Nuova scansione QR valida → chiedi sempre quante persone
+                localStorage.removeItem('jun_ob');
                 session = { start: now, table: tableParam };
                 localStorage.setItem(SESSION_KEY, JSON.stringify(session));
                 // Rimuovi k e t dall'URL senza reload
