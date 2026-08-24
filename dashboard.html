@@ -185,6 +185,7 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 }
 .tk-tavolo-label{font-size:.7em;opacity:.8;text-transform:uppercase;letter-spacing:1px;font-weight:600;justify-self:start;}
 .tk-tavolo-num{font-size:3em;font-weight:900;line-height:1;text-align:center;}
+.tk-giorno{font-size:.28em;font-weight:600;opacity:.75;letter-spacing:.3px;}
 .tk-time{font-size:.72em;font-weight:700;justify-self:end;text-align:right;transition:color .5s;}
 .tk-time.warn{color:#ffe066;}
 .tk-time.urg{color:#ff4444;}
@@ -652,6 +653,9 @@ function renderTicket(order, silent){
 
   const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
   const col   = tableColor(order.table_number);
+  const _days = ['dom','lun','mar','mer','gio','ven','sab'];
+  const _d    = order.created_at ? new Date(order.created_at) : new Date();
+  const giorno = `${_days[_d.getDay()]} ${_d.getDate()}/${_d.getMonth()+1}`;
 
   const itemsHtml = items.map(it=>
     `<div class="tk-item" onclick="toggleDone(this)">
@@ -672,7 +676,7 @@ function renderTicket(order, silent){
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo</span>
-      <span class="tk-tavolo-num">${order.table_number}</span>
+      <span class="tk-tavolo-num">${order.table_number}<br><span class="tk-giorno">(${giorno})</span></span>
       <span class="tk-time">-</span>
     </div>
     <hr class="tk-sep">
