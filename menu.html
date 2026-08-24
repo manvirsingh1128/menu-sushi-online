@@ -2590,6 +2590,11 @@
                     orderedMax1Items.set(parseInt(id), (orderedMax1Items.get(parseInt(id)) || 0) + cart[id]);
                 }
             });
+            // persiste i contatori max1 in localStorage (sopravvivono al refresh della pagina)
+            try {
+                localStorage.setItem('jun_max1items', JSON.stringify([...orderedMax1Items]));
+                localStorage.setItem('jun_max1cats', JSON.stringify([...orderedMax1Cats]));
+            } catch(e) {}
 
             Object.keys(cart).forEach(id => {
                 delete cart[id];
@@ -2906,6 +2911,8 @@
             localStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
             orderedMax1Cats.clear();
             orderedMax1Items.clear();
+            localStorage.removeItem('jun_max1items');
+            localStorage.removeItem('jun_max1cats');
             document.getElementById('people-label').textContent = tableSize;
             // menu già caricato in background, re-render solo per aggiornare tableSize (max1)
             renderMenu();
@@ -2975,6 +2982,15 @@
                 tableSize   = saved.people || 1;
                 tableNumber = saved.table  || 1;
                 document.getElementById('people-label').textContent = tableSize;
+                // ripristina contatori max1 (persiste tra refresh nella stessa sessione)
+                try {
+                    const rawItems = localStorage.getItem('jun_max1items');
+                    if (rawItems) JSON.parse(rawItems).forEach(([k, v]) => orderedMax1Items.set(k, v));
+                } catch(e) { localStorage.removeItem('jun_max1items'); }
+                try {
+                    const rawCats = localStorage.getItem('jun_max1cats');
+                    if (rawCats) JSON.parse(rawCats).forEach(([k, v]) => orderedMax1Cats.set(k, v));
+                } catch(e) { localStorage.removeItem('jun_max1cats'); }
             }
 
             // Mostra onboarding solo al primo accesso (nuovo scan QR), non al refresh
@@ -3058,6 +3074,8 @@
             if (code === VALID_CODE) {
                 // Nuova scansione QR valida → chiedi sempre quante persone
                 localStorage.removeItem('jun_ob');
+                localStorage.removeItem('jun_max1items');
+                localStorage.removeItem('jun_max1cats');
                 session = { start: now, table: tableParam };
                 localStorage.setItem(SESSION_KEY, JSON.stringify(session));
                 // Rimuovi k e t dall'URL senza reload
