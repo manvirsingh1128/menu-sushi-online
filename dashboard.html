@@ -231,18 +231,15 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 
 /* PRONTO — nascosto finché non tutti spuntati */
 .btn-pronto{
-  display:none;
+  display:block;
   width:100%;padding:14px;border:none;
   background:#16a34a;color:#fff;
   font-size:1em;font-weight:800;letter-spacing:.5px;
   cursor:pointer;font-family:inherit;text-align:center;
   transition:background .15s;
-  animation:prontoAppear .3s ease-out;
 }
-@keyframes prontoAppear{from{opacity:0;transform:scaleY(.6)}to{opacity:1;transform:scaleY(1)}}
 .btn-pronto:hover{background:#15803d;}
-.btn-pronto:disabled{background:#4b7a56;color:#a7d4b0;cursor:default;animation:none;}
-.btn-pronto.visible{display:block;}
+.btn-pronto:disabled{background:#4b7a56;color:#a7d4b0;cursor:default;}
 
 /* ── Richiesta cameriere ── */
 .req-card{
@@ -264,21 +261,6 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
   cursor:pointer;font-family:inherit;text-align:center;transition:background .15s;
 }
 .req-btn:hover{background:#15803d;}
-
-/* ── Ticket già pronti (rimangono visibili sul board) ── */
-.ticket.is-ready{
-  opacity:.45;
-  pointer-events:none;
-}
-.ticket.is-ready .tk-top{
-  background:#2e4a31 !important;
-  animation:none !important;
-}
-.ticket.is-ready .btn-pronto{
-  background:#2e4a31;
-  color:#7ab87f;
-  cursor:default;
-}
 
 /* ── Empty state board ── */
 #board-empty{
@@ -371,7 +353,7 @@ function shortestCol(){
 
 function updateEmptyState(){
   const board = document.getElementById('board');
-  const hasTickets = board.querySelectorAll('.ticket:not(.is-ready)').length > 0;
+  const hasTickets = board.querySelectorAll('.ticket').length > 0;
   // mostra/nasconde colonne masonry
   board.querySelectorAll('.mcol').forEach(c => c.style.display = hasTickets ? '' : 'none');
   // mostra/nasconde stato vuoto
@@ -540,11 +522,6 @@ function loadCronologia(){
 // ── Checkbox + logica PRONTO ───────────────────────────────────────────────
 function toggleDone(el){
   el.classList.toggle('done');
-  const ticket=el.closest('.ticket');
-  const all=ticket.querySelectorAll('.tk-item').length;
-  const done=ticket.querySelectorAll('.tk-item.done').length;
-  const btn=ticket.querySelector('.btn-pronto');
-  btn.classList.toggle('visible', all===done && all>0);
 }
 
 // ── Gestita ────────────────────────────────────────────────────────────────
@@ -587,14 +564,12 @@ async function pronto(btn, orderId){
   }));
   const nota=ticket.querySelector('.tk-nota')?.textContent||null;
   addLog('pronto',tav,items,nota);
-  btn.innerHTML='<i class="fa-solid fa-check"></i> Pronto';
+  btn.innerHTML='<i class="fa-solid fa-check"></i> Inviato';
   btn.style.background='#4b7a56';
   setTimeout(()=>{
-    ticket.classList.remove('urgent');
-    ticket.classList.add('is-ready');
-    updateEmptyState();
-    updateUrgIndicator();
-  }, 800);
+    ticket.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .35s,transform .35s;';
+    setTimeout(()=>{ ticket.remove(); updateEmptyState(); updateUrgIndicator(); },350);
+  },1000);
 }
 
 // ── Indicatore urgenza top-right ──────────────────────────────────────────
