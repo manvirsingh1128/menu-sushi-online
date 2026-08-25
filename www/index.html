@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jun — Cucina</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;}
+
+/* ── Header ── */
+#header{
+  background:#333;height:60px;
+  display:flex;align-items:center;
+  padding:0 12px;gap:10px;
+  position:fixed;top:0;left:0;right:0;z-index:100;
+}
+#btn-cronologia{
+  background:none;border:none;color:#aaa;font-size:1.2em;cursor:pointer;
+  padding:6px 8px;border-radius:6px;flex-shrink:0;
+}
+#btn-cronologia:hover{color:#fff;background:#444;}
+#logo{height:36px;object-fit:contain;margin:0 auto;}
+#hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#hd-clock{font-size:.85em;font-weight:600;color:#ccc;font-variant-numeric:tabular-nums;flex-shrink:0;}
+#online-dot{width:9px;height:9px;border-radius:50%;background:#dc2626;flex-shrink:0;}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.65)}}
+#online-dot{animation:dotPulse 1.8s ease-in-out infinite;}
+#online-dot.sos{animation:dotSOS .5s ease-in-out infinite;}
+@keyframes dotSOS{0%,100%{opacity:1;transform:scale(1.2)}50%{opacity:.1;transform:scale(.5)}}
+#offline-label{display:none;font-size:.6em;font-weight:800;color:#ef4444;letter-spacing:.6px;text-transform:uppercase;}
+
+/* ── Spinner caricamento ── */
+#loading-overlay{
+  position:fixed;inset:0;z-index:10000;
+  background:#111;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;transition:opacity .4s;
+}
+#loading-overlay.hidden{opacity:0;pointer-events:none;}
+.ld-spinner{
+  width:44px;height:44px;border-radius:50%;
+  border:4px solid #333;border-top-color:#fff;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-text{font-size:.75em;color:#666;letter-spacing:1px;font-weight:600;}
+
+/* ── Barra emergenza ── */
+#conn-bar{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:#dc2626;color:#fff;
+  text-align:center;font-size:.8em;font-weight:800;letter-spacing:.8px;
+  padding:10px 16px;
+  animation:connPulse 1.4s ease-in-out infinite;
+}
+#conn-bar.on{display:block;}
+@keyframes connPulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+/* ── Vignette emergenza offline ── */
+#conn-flash{
+  display:none;position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:radial-gradient(circle, transparent 40%, rgba(255,0,0,0.8) 100%);
+  animation:pulse-emergency 1s infinite alternate ease-in-out;
+}
+#conn-flash.on{display:block;}
+@keyframes pulse-emergency{0%{opacity:.3}100%{opacity:1}}
+
+/* ── Bordo ocra ordini mancati (offline) ── */
+.ticket.recovered{border:4px solid #d97706 !important;box-shadow:0 0 0 3px #d9770650,inset 0 0 0 1px #f59e0b60;}
+.req-card.recovered{border:4px solid #d97706 !important;box-shadow:0 0 0 3px #d9770650,inset 0 0 0 1px #f59e0b60;}
+
+/* ── Indicatore urgenza — dentro header ── */
+#urg-indicator{
+  display:flex;flex-direction:row;gap:6px;align-items:center;
+  flex-wrap:wrap;justify-content:flex-end;
+}
+.urg-tag{
+  background:#dc2626;color:#fff;
+  border-radius:5px;
+  padding:4px 9px;
+  font-size:.72em;font-weight:800;
+  display:flex;align-items:center;gap:5px;
+  white-space:nowrap;
+}
+@keyframes tagPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.urg-tag{animation:tagPulse 1.4s ease-in-out infinite;}
+.urg-tag-tav{font-size:1.1em;font-weight:900;}
+/* Badge ticket non visibili */
+#hidden-badge{
+  background:#555;color:#fff;
+  border-radius:5px;padding:4px 9px;
+  font-size:.72em;font-weight:700;
+  display:none;align-items:center;gap:5px;
+  white-space:nowrap;
+}
+#hidden-badge.on{display:flex;}
+
+/* ── Drawer cronologia ── */
+#cron-overlay{display:none;position:fixed;inset:0;z-index:89;background:rgba(0,0,0,.4);}
+#cron-overlay.open{display:block;}
+#cronologia{
+  position:fixed;top:60px;left:0;bottom:0;width:320px;
+  background:#1a1a1a;border-right:1px solid #2a2a2a;
+  z-index:90;display:flex;flex-direction:column;
+  transform:translateX(-100%);transition:transform .25s ease;
+}
+#cronologia.open{transform:translateX(0);}
+#cron-header{
+  padding:14px 16px;border-bottom:1px solid #2a2a2a;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+#cron-title{font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;}
+#cron-close{background:none;border:none;color:#555;font-size:1.1em;cursor:pointer;}
+#cron-close:hover{color:#fff;}
+#cron-reset{background:none;border:none;color:#555;font-size:.9em;cursor:pointer;padding:4px 6px;border-radius:4px;}
+#cron-reset:hover{color:#e63946;background:#2a1a1a;}
+#cron-list{overflow-y:auto;flex:1;}
+.cron-item{border-bottom:1px solid #1e1e1e;padding:12px 16px;}
+.cron-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.cron-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cron-dot.pronto{background:#16a34a;}
+.cron-dot.req{background:#b8860b;}
+.cron-dot.nuovo{background:#2563eb;}
+.cron-label{font-size:.88em;font-weight:700;color:#fff;flex:1;}
+.cron-ora{
+  font-size:.82em;font-weight:700;
+  color:#fff;background:#2a2a2a;
+  padding:2px 7px;border-radius:4px;white-space:nowrap;
+}
+.cron-dishes{padding-left:17px;margin-top:2px;}
+.cron-dish{font-size:.78em;color:#777;padding:1px 0;}
+.cron-nota-log{font-size:.76em;color:#b8860b;margin-top:4px;font-style:italic;padding-left:17px;}
+#cron-empty{padding:28px 16px;font-size:.82em;color:#3a3a3a;font-style:italic;text-align:center;}
+
+/* ── Layout ── */
+#layout{display:flex;padding-top:60px;height:100%;}
+
+/* Board — masonry JS con scroll verticale */
+#board-wrap{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+#board{
+  padding:16px;
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+}
+.mcol{
+  flex:1;
+  min-width:180px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* Divisore */
+#divider{width:3px;background:#fff;flex-shrink:0;}
+
+/* Sidebar */
+#sidebar{width:210px;flex-shrink:0;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:12px;}
+
+/* ── Ticket ── */
+.ticket{
+  display:block;
+  width:100%;
+  background:#f7f3ec;border-radius:3px;overflow:hidden;
+  box-shadow:3px 3px 10px rgba(0,0,0,.5);color:#111;
+  transition:opacity .35s,transform .35s;
+}
+@keyframes newFlash{
+  0%  {box-shadow:0 0 0 5px rgba(255,255,255,.9),3px 3px 10px rgba(0,0,0,.5);}
+  70% {box-shadow:0 0 0 14px rgba(255,255,255,.04),3px 3px 10px rgba(0,0,0,.5);}
+  100%{box-shadow:3px 3px 10px rgba(0,0,0,.5);}
+}
+.ticket.is-new{animation:newFlash .9s ease-out;}
+
+.tk-top{
+  color:#fff;padding:12px 16px;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+}
+.tk-tavolo-label{font-size:.7em;opacity:.8;text-transform:uppercase;letter-spacing:1px;font-weight:600;justify-self:start;}
+.tk-tavolo-num{font-size:3em;font-weight:900;line-height:1;text-align:center;}
+.tk-giorno{font-size:.28em;font-weight:600;opacity:.75;letter-spacing:.3px;}
+.tk-time{font-size:.72em;font-weight:700;justify-self:end;text-align:right;transition:color .5s;}
+.tk-time.warn{color:#ffe066;}
+.tk-time.urg{color:#ff4444;}
+
+@keyframes urgPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.ticket.urgent .tk-top{animation:urgPulse 1.2s ease-in-out infinite;}
+
+.c1 .tk-top{background:#e63946;}
+.c2 .tk-top{background:#2563eb;}
+.c3 .tk-top{background:#16a34a;}
+.c4 .tk-top{background:#d97706;}
+.c5 .tk-top{background:#7c3aed;}
+.c6 .tk-top{background:#0891b2;}
+
+.tk-sep{border:none;border-top:1px dashed #bbb;margin:0 12px;}
+
+.tk-items{padding:6px 0;}
+.tk-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;font-size:1em;font-weight:600;line-height:1.3;
+  border-bottom:1px solid #e0d9ce;cursor:pointer;user-select:none;
+}
+.tk-item:last-child{border-bottom:none;}
+.tk-item:active{background:#f0ebe0;}
+.tk-check{
+  width:26px;height:26px;border:2.5px solid #aaa;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1em;color:transparent;transition:all .15s;
+}
+.tk-item.done .tk-check{background:#16a34a;border-color:#16a34a;color:#fff;}
+.tk-item.done .tk-qty,.tk-item.done .tk-name{text-decoration:line-through;opacity:.4;}
+.tk-qty{
+  font-size:1.2em;font-weight:900;color:#111;
+  min-width:30px;flex-shrink:0;
+  background:#e8e2d8;border-radius:4px;text-align:center;padding:2px 5px;
+}
+.tk-name{color:#1a1a1a;}
+.tk-code{font-size:.8em;font-weight:700;color:#777;}
+
+.tk-nota{
+  font-size:.9em;font-weight:600;color:#111;
+  background:#fff8e1;border-top:2px solid #f0c040;
+  padding:10px 14px 12px;
+}
+
+/* PRONTO — nascosto finché non tutti spuntati */
+.btn-pronto{
+  display:block;
+  width:100%;padding:14px;border:none;
+  background:#16a34a;color:#fff;
+  font-size:1em;font-weight:800;letter-spacing:.5px;
+  cursor:pointer;font-family:inherit;text-align:center;
+  transition:background .15s;
+}
+.btn-pronto:hover{background:#15803d;}
+.btn-pronto:disabled{background:#4b7a56;color:#a7d4b0;cursor:default;}
+
+/* ── Richiesta cameriere ── */
+.req-card{
+  background:#f7f3ec;border-radius:3px;overflow:hidden;
+  box-shadow:3px 3px 10px rgba(0,0,0,.5);color:#111;
+  transition:opacity .3s,transform .3s;
+}
+.req-top{
+  background:#b8860b;color:#fff;padding:12px 14px;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+}
+.req-tavolo-label{font-size:.7em;opacity:.8;text-transform:uppercase;letter-spacing:1px;font-weight:600;justify-self:start;}
+.req-tavolo-num{font-size:2.4em;font-weight:900;line-height:1;text-align:center;}
+.req-time{font-size:.72em;opacity:.85;font-weight:600;justify-self:end;text-align:right;}
+.req-body{padding:12px 14px;font-size:1em;font-weight:600;color:#222;border-bottom:1px solid #e0d9ce;}
+.req-btn{
+  display:block;width:100%;padding:11px;border:none;
+  background:#16a34a;color:#fff;font-size:.82em;font-weight:700;
+  cursor:pointer;font-family:inherit;text-align:center;transition:background .15s;
+}
+.req-btn:hover{background:#15803d;}
+
+/* ── Empty state board ── */
+#board-empty{
+  padding:60px 24px;font-size:.9em;color:#2a2a2a;
+  font-style:italic;text-align:center;
+  flex:1;align-self:center;
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <button id="btn-cronologia" onclick="toggleCronologia()">
+    <i class="fa-solid fa-clock-rotate-left"></i>
+  </button>
+  <img id="logo" src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant">
+  <div id="hd-right">
+    <div id="urg-indicator"></div>
+    <div id="hidden-badge"><i class="fa-solid fa-arrow-down"></i><span id="hidden-count"></span></div>
+    <span id="hd-clock">--:--</span>
+    <div id="online-dot"></div>
+    <span id="offline-label">OFFLINE</span>
+  </div>
+</div>
+
+<div id="cron-overlay" onclick="toggleCronologia()"></div>
+<div id="cronologia">
+  <div id="cron-header">
+    <span id="cron-title">Cronologia turno</span>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button id="cron-reset" onclick="resetCronologia()" title="Nuovo turno — cancella storico">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+      <button id="cron-close" onclick="toggleCronologia()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+  <div id="cron-list">
+    <div id="cron-empty">Nessuna attività ancora.</div>
+  </div>
+</div>
+
+<div id="layout">
+  <div id="board-wrap">
+    <div id="board">
+      <div id="board-empty">Nessun ordine in attesa</div>
+    </div>
+  </div>
+
+  <div id="divider"></div>
+
+  <div id="sidebar">
+    <!-- richieste cameriere popolate dinamicamente -->
+  </div>
+</div>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────────────────────
+const SB_URL  = "https://mtjsxtdubfsqtyvwgdrt.supabase.co";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anN4dGR1YmZzcXR5dndnZHJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTE5MzcsImV4cCI6MjEwMjk4NzkzN30.P4ufwf0G111YKGxFpx9jyj5RTxRX10CsFUVfmWYZpmA";
+const sb = supabase.createClient(SB_URL, SB_ANON);
+
+// ── Masonry JS ────────────────────────────────────────────────────────────
+let _ncols = 0;
+
+function initMasonry(){
+  const wrap  = document.getElementById('board-wrap');
+  const board = document.getElementById('board');
+  const tickets = [...board.querySelectorAll('.ticket')];
+  const avail = wrap.clientWidth - 32;
+  const n = Math.max(2, Math.floor((avail + 14) / 194));
+  _ncols = n;
+  board.innerHTML = '';
+  for(let i=0;i<n;i++){
+    const c=document.createElement('div');
+    c.className='mcol'; c.id='mc'+i;
+    board.appendChild(c);
+  }
+  tickets.forEach((tk,i)=>document.getElementById('mc'+(i%n)).appendChild(tk));
+  updateEmptyState();
+}
+
+function shortestCol(){
+  let min=Infinity, idx=0;
+  for(let i=0;i<_ncols;i++){
+    const h=document.getElementById('mc'+i).offsetHeight;
+    if(h<min){min=h;idx=i;}
+  }
+  return document.getElementById('mc'+idx);
+}
+
+function updateEmptyState(){
+  const board = document.getElementById('board');
+  const hasTickets = board.querySelectorAll('.ticket').length > 0;
+  // mostra/nasconde colonne masonry
+  board.querySelectorAll('.mcol').forEach(c => c.style.display = hasTickets ? '' : 'none');
+  // mostra/nasconde stato vuoto
+  let emp = document.getElementById('board-empty');
+  if(!hasTickets){
+    if(!emp){
+      emp = document.createElement('div');
+      emp.id = 'board-empty';
+      emp.textContent = 'Nessun ordine in attesa';
+      board.appendChild(emp);
+    }
+    emp.style.display = '';
+  } else {
+    if(emp) emp.style.display = 'none';
+  }
+}
+
+window.addEventListener('resize',()=>{ clearTimeout(window._rt); window._rt=setTimeout(initMasonry,200); });
+
+// ── Orologio ───────────────────────────────────────────────────────────────
+function tickClock(){
+  document.getElementById('hd-clock').textContent=
+    new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+}
+tickClock(); setInterval(tickClock,1000);
+
+// ── Offline / snapshot ────────────────────────────────────────────────────
+const SNAP_KEY  = 'jun_kds_snap';
+const QUEUE_KEY = 'jun_kds_queue';
+const activeOrders     = new Map(); // id → order object
+let realOnline         = true;      // stato reale verificato via ping
+const newSinceReconnect = new Set(); // ID ordini arrivati MENTRE eravamo offline
+
+function snapSave(){
+  try{ localStorage.setItem(SNAP_KEY, JSON.stringify([...activeOrders.values()])); }catch(e){}
+}
+function snapLoad(){
+  try{ return JSON.parse(localStorage.getItem(SNAP_KEY)||'[]'); }catch{ return []; }
+}
+function queuePush(item){
+  try{
+    const q = JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');
+    q.push(item);
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+  }catch(e){}
+}
+async function queueFlush(){
+  try{
+    const q = JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');
+    if(!q.length) return;
+    for(const item of q){
+      await sb.from('orders').update({ status: item.status }).eq('id', item.id);
+    }
+    localStorage.removeItem(QUEUE_KEY);
+    console.log('[Jun KDS] coda offline sincronizzata:', q.length, 'aggiornamenti');
+  }catch(e){ console.warn('[Jun KDS] flush fallito:', e.message); }
+}
+function setOffline(offline){
+  const lbl   = document.getElementById('offline-label');
+  const bar   = document.getElementById('conn-bar');
+  const dot   = document.getElementById('online-dot');
+  const flash = document.getElementById('conn-flash');
+  if(lbl)   lbl.style.display = offline ? 'inline' : 'none';
+  if(bar)   bar.classList.toggle('on', offline);
+  if(flash) flash.classList.toggle('on', offline);
+  if(dot){  dot.classList.toggle('sos', offline); dot.style.background = offline ? '#dc2626' : '#16a34a'; }
+}
+
+async function onBackOnline(){
+  realOnline = true;
+  setOffline(false);
+  const wasKnown = new Set(activeOrders.keys()); // ID già in display prima del blackout
+  await queueFlush();
+  document.querySelectorAll('.ticket,.req-card').forEach(el => el.remove());
+  activeOrders.clear();
+  newSinceReconnect.clear();
+  _alerted.clear();
+  updateEmptyState();
+  await loadPending(wasKnown);
+  setTimeout(() => newSinceReconnect.clear(), 10000); // rimuovi ocra dopo 10s
+}
+
+let _pinging = false;
+async function pingLoop(){
+  if(_pinging) return;
+  _pinging = true;
+  if(!navigator.onLine){
+    if(realOnline){ realOnline=false; setOffline(true); }
+    _pinging = false; return;
+  }
+  try{
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 3000);
+    // Cloudflare trace: risponde in <100ms, no-cors, nessun problema CORS
+    await fetch('https://1.1.1.1/cdn-cgi/trace',{cache:'no-store',mode:'no-cors',signal:ctrl.signal});
+    clearTimeout(t);
+    if(!realOnline) await onBackOnline();
+    realOnline=true;
+    setOffline(false);
+  }catch(e){
+    if(realOnline){ realOnline=false; setOffline(true); }
+  }
+  _pinging = false;
+}
+
+// ── Cronologia (persistente in localStorage) ───────────────────────────────
+const CRON_KEY = 'jun_kds_cron';
+const CRON_MAX = 80;
+
+function cronSave(entry){
+  try{
+    const arr = JSON.parse(localStorage.getItem(CRON_KEY)||'[]');
+    arr.unshift(entry);
+    if(arr.length > CRON_MAX) arr.length = CRON_MAX;
+    localStorage.setItem(CRON_KEY, JSON.stringify(arr));
+  }catch(e){}
+}
+
+function cronLoad(){
+  try{ return JSON.parse(localStorage.getItem(CRON_KEY)||'[]'); }catch{ return []; }
+}
+
+function cronRender(entry){
+  const labels={pronto:'Ordine pronto',req:'Richiesta gestita',nuovo:'Nuovo ordine'};
+  document.getElementById('cron-empty').style.display='none';
+  const div=document.createElement('div');
+  div.className='cron-item';
+  div.innerHTML=`
+    <div class="cron-top">
+      <div class="cron-dot ${entry.tipo}"></div>
+      <span class="cron-label">T${entry.tavolo} — ${labels[entry.tipo]||entry.tipo}</span>
+      <span class="cron-ora">${entry.ora}</span>
+    </div>
+    ${entry.items?`<div class="cron-dishes">${entry.items.map(i=>`<div class="cron-dish">${i.qty} ${i.name}</div>`).join('')}</div>`:''}
+    ${entry.nota?`<div class="cron-nota-log">${entry.nota}</div>`:''}
+  `;
+  const list=document.getElementById('cron-list');
+  list.insertBefore(div, list.children[1]||null);
+}
+
+function resetCronologia(){
+  localStorage.removeItem(CRON_KEY);
+  const list=document.getElementById('cron-list');
+  list.innerHTML='<div id="cron-empty">Nessuna attività ancora.</div>';
+}
+
+function toggleCronologia(){
+  document.getElementById('cronologia').classList.toggle('open');
+  document.getElementById('cron-overlay').classList.toggle('open');
+}
+
+function addLog(tipo, tavolo, items, nota){
+  const ora=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const entry={tipo,tavolo,items,nota,ora};
+  cronSave(entry);
+  cronRender(entry);
+}
+
+function loadCronologia(){
+  const entries = cronLoad();
+  if(!entries.length) return;
+  document.getElementById('cron-empty').style.display='none';
+  entries.forEach(e => cronRender(e));
+}
+
+// ── Checkbox + logica PRONTO ───────────────────────────────────────────────
+function toggleDone(el){
+  el.classList.toggle('done');
+}
+
+// ── Gestita ────────────────────────────────────────────────────────────────
+async function gestita(btn, tipo, tavolo, orderId){
+  addLog('req', tavolo, null, tipo);
+  if(orderId){
+    if(navigator.onLine){
+      const { error } = await sb.from('orders').update({ status:'handled' }).eq('id', orderId);
+      if(error) console.warn('[Jun KDS] gestita:', error.message);
+    } else {
+      queuePush({ id: orderId, status: 'handled' });
+    }
+    activeOrders.delete(orderId);
+    snapSave();
+  }
+  const card=btn.closest('.req-card');
+  card.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .3s,transform .3s;';
+  setTimeout(()=>{ card.remove(); updateUrgIndicator(); },300);
+}
+
+// ── PRONTO ─────────────────────────────────────────────────────────────────
+async function pronto(btn, orderId){
+  if(btn.disabled) return;
+  btn.disabled=true;
+  if(orderId){
+    if(navigator.onLine){
+      const { error } = await sb.from('orders').update({ status:'ready' }).eq('id', orderId);
+      if(error) console.warn('[Jun KDS] pronto:', error.message);
+    } else {
+      queuePush({ id: orderId, status: 'ready' });
+    }
+    activeOrders.delete(orderId);
+    snapSave();
+  }
+  const ticket=btn.closest('.ticket');
+  const tav=ticket.querySelector('.tk-tavolo-num').textContent;
+  const items=[...ticket.querySelectorAll('.tk-item')].map(i=>({
+    qty:i.querySelector('.tk-qty').textContent,
+    name:i.querySelector('.tk-name').textContent
+  }));
+  const nota=ticket.querySelector('.tk-nota')?.textContent||null;
+  addLog('pronto',tav,items,nota);
+  btn.innerHTML='<i class="fa-solid fa-check"></i> Inviato';
+  btn.style.background='#4b7a56';
+  setTimeout(()=>{
+    ticket.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .35s,transform .35s;';
+    setTimeout(()=>{ ticket.remove(); updateEmptyState(); updateUrgIndicator(); },350);
+  },1000);
+}
+
+// ── Indicatore urgenza top-right ──────────────────────────────────────────
+const _alerted = new Set();
+
+function updateUrgIndicator(){
+  const ind = document.getElementById('urg-indicator');
+  ind.innerHTML = '';
+  document.querySelectorAll('.ticket.urgent[data-ts]').forEach(tk=>{
+    const tav = tk.querySelector('.tk-tavolo-num').textContent;
+    const m   = Math.floor((Date.now()-parseInt(tk.dataset.ts))/60000);
+    const tag = document.createElement('div');
+    tag.className = 'urg-tag';
+    tag.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span class="urg-tag-tav">T${tav}</span><span>${m}m</span>`;
+    ind.appendChild(tag);
+  });
+
+  const wrap = document.getElementById('board-wrap');
+  const wrapBottom = wrap.scrollTop + wrap.clientHeight;
+  let hidden = 0;
+  document.querySelectorAll('.ticket').forEach(tk=>{
+    if(tk.offsetTop + tk.offsetHeight > wrapBottom + 10) hidden++;
+  });
+  const badge = document.getElementById('hidden-badge');
+  const count = document.getElementById('hidden-count');
+  if(hidden > 0){
+    badge.classList.add('on');
+    count.textContent = hidden + ' non visibili';
+  } else {
+    badge.classList.remove('on');
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('board-wrap').addEventListener('scroll', updateUrgIndicator);
+});
+
+// ── Timer live ─────────────────────────────────────────────────────────────
+function elStr(m){return m<1?'<1 min':m<60?m+' min':Math.floor(m/60)+'h '+(m%60)+'m';}
+function updateTimers(){
+  document.querySelectorAll('.ticket[data-ts]').forEach(tk=>{
+    const m=Math.floor((Date.now()-parseInt(tk.dataset.ts))/60000);
+    const el=tk.querySelector('.tk-time');
+    el.textContent=elStr(m);
+    el.className='tk-time'+(m>=7?' urg':m>=4?' warn':'');
+    tk.classList.toggle('urgent',m>=7);
+    const id = tk.dataset.ts+'_'+tk.dataset.id;
+    if(m>=7 && !_alerted.has(id)){ _alerted.add(id); beep(); }
+  });
+  updateUrgIndicator();
+}
+setInterval(updateTimers,60000);
+
+// ── Beep ───────────────────────────────────────────────────────────────────
+let _ac = null;
+function _ensureAC(){
+  if(!_ac) _ac = new AudioContext();
+  if(_ac.state === 'suspended') _ac.resume();
+  return _ac;
+}
+document.addEventListener('pointerdown', () => _ensureAC(), { once: true });
+
+function beep(){
+  try{
+    const ac = _ensureAC();
+    [0,.2].forEach(t=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);
+      o.frequency.value=880;
+      g.gain.setValueAtTime(.35,ac.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.25);
+      o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.25);
+    });
+  }catch(e){}
+}
+
+// ── Colori per tavolo ─────────────────────────────────────────────────────
+const COLORS = ['c1','c2','c3','c4','c5','c6'];
+function tableColor(n){ return COLORS[(parseInt(n)||0) % COLORS.length]; }
+
+// ── Render ticket ordine ──────────────────────────────────────────────────
+function renderTicket(order, silent){
+  const items = JSON.parse(order.order_details || '[]');
+  if(!items.length) return;
+
+  activeOrders.set(order.id, order);
+  snapSave();
+
+  const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
+  const col   = tableColor(order.table_number);
+
+  const itemsHtml = items.map(it=>
+    `<div class="tk-item" onclick="toggleDone(this)">
+      <span class="tk-check">✓</span>
+      <span class="tk-qty">${it.qty}x</span>
+      <span class="tk-name">${it.name}${it.code ? ` <span class="tk-code">${it.code}</span>` : ''}</span>
+    </div>`
+  ).join('');
+
+  const notaHtml = order.customer_notes
+    ? `<div class="tk-nota">${order.customer_notes}</div>`
+    : '';
+
+  const div = document.createElement('div');
+  div.className = `ticket ${col}${silent ? '' : ' is-new'}${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
+  div.dataset.ts = tsVal;
+  div.dataset.id = order.id;
+  div.innerHTML = `
+    <div class="tk-top">
+      <span class="tk-tavolo-label">Tavolo</span>
+      <span class="tk-tavolo-num">${order.table_number}</span>
+      <span class="tk-time">-</span>
+    </div>
+    <hr class="tk-sep">
+    <div class="tk-items">${itemsHtml}</div>
+    ${notaHtml}
+    <button class="btn-pronto">PRONTO</button>
+  `;
+
+  div.querySelector('.btn-pronto').addEventListener('click', function(){
+    pronto(this, order.id);
+  });
+
+  shortestCol().appendChild(div);
+  updateTimers();
+  updateEmptyState();
+
+  if(!silent){
+    beep();
+    addLog('nuovo', order.table_number,
+      items.map(i=>({qty:i.qty+'x', name:i.name})),
+      order.customer_notes||null
+    );
+  }
+}
+
+// ── Render richiesta cameriere ─────────────────────────────────────────────
+const _waiterIta = {
+  explanation: 'Spiegazione sui piatti',
+  drinks:      'Ordine bevande',
+  bill:        'Richiesta conto',
+  other:       'Altra assistenza',
+  call:        'Chiamata cameriere'
+};
+
+function renderReqCard(order, silent){
+  activeOrders.set(order.id, order);
+  snapSave();
+
+  const ora = order.created_at
+    ? new Date(order.created_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
+    : '--:--';
+
+  const reqLabel = order.customer_notes || _waiterIta[order.waiter_request] || order.waiter_request;
+
+  const div = document.createElement('div');
+  div.className = `req-card${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
+  div.dataset.id = order.id;
+  div.innerHTML = `
+    <div class="req-top">
+      <span class="req-tavolo-label">Tavolo</span>
+      <span class="req-tavolo-num">${order.table_number}</span>
+      <span class="req-time">${ora}</span>
+    </div>
+    <hr class="tk-sep">
+    <div class="req-body">${reqLabel}</div>
+    <button class="req-btn">Gestita</button>
+  `;
+
+  div.querySelector('.req-btn').addEventListener('click', function(){
+    gestita(this, reqLabel, order.table_number, order.id);
+  });
+
+  document.getElementById('sidebar').appendChild(div);
+
+  if(!silent){
+    beep();
+    addLog('req', order.table_number, null, reqLabel);
+  }
+}
+
+// ── Carica ordini pendenti ─────────────────────────────────────────────────
+async function loadPending(wasKnown = null){
+  if(!realOnline){
+    console.warn('[Jun KDS] offline — carico snapshot locale');
+    snapLoad().forEach(order => {
+      if(order.waiter_request) renderReqCard(order, true);
+      else renderTicket(order, true);
+    });
+    return;
+  }
+  const { data, error } = await sb
+    .from('orders')
+    .select('*')
+    .eq('status','pending')
+    .order('created_at',{ ascending:true });
+
+  if(error){
+    console.warn('[Jun KDS] load fallito, uso snapshot:', error.message);
+    snapLoad().forEach(order => {
+      if(order.waiter_request) renderReqCard(order, true);
+      else renderTicket(order, true);
+    });
+    return;
+  }
+  activeOrders.clear();
+  data.forEach(order => {
+    // se wasKnown passato, segna solo gli ID che non erano in display prima del blackout
+    if(wasKnown && !wasKnown.has(order.id)) newSinceReconnect.add(order.id);
+    if(order.waiter_request) renderReqCard(order, true);
+    else renderTicket(order, true);
+  });
+}
+
+// ── Realtime ───────────────────────────────────────────────────────────────
+function subscribeRealtime(){
+  const dot = document.getElementById('online-dot');
+  sb.channel('kds-orders')
+    .on('postgres_changes',{ event:'INSERT', schema:'public', table:'orders' }, payload => {
+      const order = payload.new;
+      if(order.status !== 'pending') return;
+      if(order.waiter_request) renderReqCard(order, false);
+      else renderTicket(order, false);
+    })
+    .subscribe(status => {
+      dot.style.background = status === 'SUBSCRIBED' ? '#16a34a' : '#dc2626';
+    });
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  const ov = document.getElementById('loading-overlay');
+  loadCronologia();
+  initMasonry();
+  await loadPending();
+  subscribeRealtime();
+  updateTimers();
+  // nascondi spinner con fade
+  ov.classList.add('hidden');
+  setTimeout(() => ov.style.display = 'none', 420);
+  // ping parte solo dopo 2s: evita falsi offline durante il caricamento
+  setTimeout(() => setInterval(pingLoop, 1000), 2000);
+});
+</script>
+<div id="loading-overlay">
+  <div class="ld-spinner"></div>
+  <div class="ld-text">CARICAMENTO...</div>
+</div>
+<div id="conn-flash"></div>
+<div id="conn-bar">⚠ EMERGENZA — MANCA CONNESSIONE &nbsp;·&nbsp; gli ordini vengono salvati in locale</div>
+</body>
+</html>
