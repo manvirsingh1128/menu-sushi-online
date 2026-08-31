@@ -1,10 +1,9 @@
 {
   "cleanUrls": true,
-  "redirects": [
+  "rewrites": [
     {
       "source": "/",
-      "destination": "/menu-numerico.html",
-      "permanent": false
+      "destination": "/menu-numerico.html"
     }
   ]
 }

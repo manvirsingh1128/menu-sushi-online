@@ -1,0 +1,7 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+<rect width='200' height='200' rx='16' fill='#f2f2f0'/>
+<path d='M62 66 h66 v24 a33 33 0 0 1 -66 0 z' fill='#4a9e2f'/>
+<path d='M128 72 a16 16 0 0 1 0 30' fill='none' stroke='#4a9e2f' stroke-width='7'/>
+<ellipse cx='95' cy='66' rx='33' ry='9' fill='#ffffffb0'/>
+<text x='100' y='166' font-family='DM Sans,Arial,sans-serif' font-size='16' font-weight='700' fill='#222' text-anchor='middle'>Te Verde</text>
+</svg>

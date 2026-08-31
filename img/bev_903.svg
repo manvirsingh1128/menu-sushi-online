@@ -1,0 +1,8 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+<rect width='200' height='200' rx='16' fill='#f2f2f0'/>
+<rect x='76' y='30' width='48' height='108' rx='10' fill='#1a8f4a'/>
+<rect x='76' y='30' width='48' height='11' rx='5' fill='#ffffff55'/>
+<rect x='76' y='127' width='48' height='11' rx='5' fill='#00000030'/>
+<rect x='83' y='58' width='34' height='30' rx='4' fill='#ffffffd0'/>
+<text x='100' y='170' font-family='DM Sans,Arial,sans-serif' font-size='16' font-weight='700' fill='#222' text-anchor='middle'>Sprite</text>
+</svg>

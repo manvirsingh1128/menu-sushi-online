@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jun — Genera QR Tavoli</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{ --blu:#111; }
+  *{ box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    margin:0; background:#f4f4f5; color:#111; }
+  header{ background:#111; color:#fff; padding:18px 24px; display:flex; align-items:center; gap:14px; }
+  header img{ height:30px; }
+  header h1{ font-size:1.05rem; margin:0; font-weight:700; letter-spacing:.02em; }
+  .controls{ background:#fff; padding:18px 24px; display:flex; flex-wrap:wrap; gap:16px 22px; align-items:flex-end;
+    border-bottom:1px solid #e5e5e5; position:sticky; top:0; z-index:5; }
+  .fld{ display:flex; flex-direction:column; gap:5px; }
+  .fld label{ font-size:.72rem; font-weight:700; color:#666; text-transform:uppercase; letter-spacing:.05em; }
+  .fld input{ padding:10px 12px; border:1.5px solid #ddd; border-radius:9px; font-size:.95rem; font-family:inherit; outline:none; }
+  .fld input:focus{ border-color:#111; }
+  #f-url{ width:340px; }
+  #f-code{ width:120px; } #f-tables{ width:90px; text-align:center; }
+  .btn{ padding:11px 20px; border:none; border-radius:10px; font-size:.92rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn-primary{ background:#111; color:#fff; }
+  .btn-print{ background:#2563eb; color:#fff; }
+  .hint{ padding:12px 24px; font-size:.82rem; color:#666; background:#fffbe6; border-bottom:1px solid #f0e6a6; }
+  .hint b{ color:#111; }
+  #grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:18px; padding:24px; }
+  .card{ background:#fff; border:1px solid #e5e5e5; border-radius:16px; padding:20px 16px 16px; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:10px; page-break-inside:avoid; }
+  .card .tav{ font-size:1.35rem; font-weight:800; }
+  .card .tav small{ display:block; font-size:.62rem; font-weight:700; color:#999; text-transform:uppercase; letter-spacing:.12em; margin-bottom:2px; }
+  .card .qr{ background:#fff; padding:6px; }
+  .card .qr img, .card .qr canvas{ display:block; }
+  .card .scan{ font-size:.72rem; color:#555; font-weight:600; }
+  .card .logo{ font-weight:800; font-size:.95rem; letter-spacing:.02em; }
+  @media print{
+    header, .controls, .hint{ display:none !important; }
+    body{ background:#fff; }
+    #grid{ padding:0; gap:0; grid-template-columns:repeat(3,1fr); }
+    .card{ border:1px dashed #bbb; border-radius:0; margin:0; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun">
+  <h1>Generatore QR Tavoli</h1>
+</header>
+
+<div class="controls">
+  <div class="fld">
+    <label>Indirizzo del menu online</label>
+    <input id="f-url" placeholder="https://...">
+  </div>
+  <div class="fld">
+    <label>Codice accesso</label>
+    <input id="f-code" value="jun2025">
+  </div>
+  <div class="fld">
+    <label>Numero tavoli</label>
+    <input id="f-tables" type="number" min="1" max="99" value="10">
+  </div>
+  <button class="btn btn-primary" onclick="genera()">Genera</button>
+  <button class="btn btn-print" onclick="window.print()">🖨️ Stampa</button>
+</div>
+
+<div class="hint">
+  <b>Come si usa:</b> metti l'indirizzo del menu online (quando il sito è pubblicato), scegli quanti tavoli, premi <b>Genera</b>, poi <b>Stampa</b> e ritaglia.
+  Ogni QR apre il menu già impostato sul suo tavolo. &nbsp;·&nbsp; Ora l'indirizzo è provvisorio: <b>aggiornalo con quello definitivo</b> prima di stampare.
+</div>
+
+<div id="grid"></div>
+
+<script>
+  const DEFAULT_URL = 'https://manvirsingh1128.github.io/menu-sushi-online/';
+  const urlEl = document.getElementById('f-url');
+  const codeEl = document.getElementById('f-code');
+  const tabEl = document.getElementById('f-tables');
+
+  // ripristina ultimi valori usati
+  urlEl.value  = localStorage.getItem('jun_qr_url')  || DEFAULT_URL;
+  codeEl.value = localStorage.getItem('jun_qr_code') || 'jun2025';
+  tabEl.value  = localStorage.getItem('jun_qr_tables') || '10';
+
+  function buildUrl(base, code, table){
+    let u;
+    try{ u = new URL(base); }
+    catch(e){ u = new URL('https://' + base); }
+    u.searchParams.set('k', code);
+    u.searchParams.set('t', String(table));
+    return u.toString();
+  }
+
+  function genera(){
+    const base = (urlEl.value||'').trim();
+    const code = (codeEl.value||'jun2025').trim();
+    const n = Math.max(1, Math.min(99, parseInt(tabEl.value,10)||10));
+    if(!base){ urlEl.focus(); return; }
+    localStorage.setItem('jun_qr_url', base);
+    localStorage.setItem('jun_qr_code', code);
+    localStorage.setItem('jun_qr_tables', String(n));
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for(let t=1; t<=n; t++){
+      const url = buildUrl(base, code, t);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="logo">俊 JUN</div>
+        <div class="tav"><small>Tavolo</small>${t}</div>
+        <div class="qr" id="qr-${t}"></div>
+        <div class="scan">Inquadra per ordinare</div>`;
+      grid.appendChild(card);
+      new QRCode(document.getElementById('qr-'+t), {
+        text: url, width:180, height:180,
+        colorDark:'#000000', colorLight:'#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+  }
+
+  genera();
+</script>
+</body>
+</html>

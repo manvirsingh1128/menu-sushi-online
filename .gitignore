@@ -5,3 +5,9 @@ local.properties
 *.apk
 *.bak
 .DS_Store
+# archivio di sviluppo (backup/script/PDF/foto) e registrazioni schermo — non nel repo
+ARCHIVIO-sviluppo/
+*.mp4
+*.MP4
+*.mov
+*.MOV
