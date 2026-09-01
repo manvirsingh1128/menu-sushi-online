@@ -3573,11 +3573,11 @@
             setTimeout(() => { ob.style.display = 'none'; }, 300);
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('onboarding').style.display = 'none';
 
             // ── QR SESSION ──
-            if (!checkSession()) return;
+            if (!await checkSession()) return;
 
 
             // ripristina filtri allergeni (prima di renderMenu per usarli subito)
@@ -3776,7 +3776,7 @@
             }
         }
 
-        function checkSession() {
+        async function checkSession() {
             const params = new URLSearchParams(window.location.search);
             const code = params.get('k');
             const tableParam = parseInt(params.get('t'), 10) || null;
@@ -3785,14 +3785,29 @@
             try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch {}
 
             if (code === VALID_CODE) {
-                // Riscansione dello STESSO tavolo entro la durata → RIPRENDE la sessione precedente
-                // (non azzera il conto/persone/contatori: se chiudo e riapro col QR ritrovo tutto).
                 const sameTableActive = session && session.table === tableParam
                     && (now - session.start) < SESSION_DURATION;
-                if (sameTableActive) {
+
+                // Se la sessione locale sembra attiva, verifica sul server che il tavolo
+                // non sia stato pagato DOPO l'inizio di questa sessione (stesso dispositivo,
+                // nuovi clienti → forza onboarding di nuovo).
+                let forceNew = !sameTableActive;
+                if (sameTableActive && _sb) {
+                    try {
+                        const { data } = await _sb.from('sala_state')
+                            .select('paid_at')
+                            .eq('table_number', tableParam)
+                            .maybeSingle();
+                        if (data && data.paid_at && Number(data.paid_at) > session.start) {
+                            forceNew = true; // tavolo pagato e resettato dopo questa sessione
+                        }
+                    } catch (_) {}
+                }
+
+                if (!forceNew) {
                     scheduleExpiry(SESSION_DURATION - (now - session.start));
                 } else {
-                    // Nuovo tavolo o sessione scaduta → nuova sessione, chiedi quante persone
+                    // Nuovo tavolo, sessione scaduta, o tavolo pagato → nuova sessione pulita
                     localStorage.removeItem('jun_ob');
                     localStorage.removeItem('jun_max1items');
                     localStorage.removeItem('jun_max1cats');
