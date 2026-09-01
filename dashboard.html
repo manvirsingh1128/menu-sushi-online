@@ -1542,10 +1542,50 @@ function subscribeRealtime(){
     });
   }
 
+  let _prevStatus = null;
   ch.subscribe(status => {
     dot.style.background = status === 'SUBSCRIBED' ? '#16a34a' : '#dc2626';
+    // Se torna online dopo una disconnessione → ricarica per recuperare eventi persi
+    if(status === 'SUBSCRIBED' && _prevStatus && _prevStatus !== 'SUBSCRIBED'){
+      console.log('[Jun KDS] riconnesso — reload dati');
+      loadPending(new Set(activeOrders.keys()));
+    }
+    _prevStatus = status;
   });
 }
+
+// ── Sync silenzioso: controlla ordini già noti che ora sono handled ────────
+async function _silentSync(){
+  if(!realOnline || document.visibilityState !== 'visible') return;
+  if(!activeOrders.size) return;
+  const ids = [...activeOrders.keys()];
+  const { data } = await sb.from('orders').select('id,status').in('id', ids);
+  if(!data) return;
+  const stillActive = new Set(data.filter(r => r.status === 'pending' || r.status === 'ready').map(r => r.id));
+  let changed = false;
+  ids.forEach(id => {
+    if(stillActive.has(id)) return;
+    const order = activeOrders.get(id);
+    if(!order) return;
+    if(order.waiter_request){
+      const card = document.querySelector('.req-card[data-id="'+id+'"]');
+      if(card){ card.remove(); updateUrgIndicator(); }
+    } else {
+      expoRemoveRow(order);
+      changed = true;
+    }
+    activeOrders.delete(id);
+    snapSave();
+  });
+  if(changed && EXPO) expoRenderAll();
+}
+
+setInterval(_silentSync, 15000);
+
+// Al ritorno alla tab → reload completo (l'utente si aspetta dati freschi)
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') loadPending(new Set(activeOrders.keys()));
+});
 
 // ── VISTA SALA / CONTI ──────────────────────────────────────────────────────
 const PRICE_MENU = 26.90, PRICE_COVER = 2.00, PRICE_PP = PRICE_MENU + PRICE_COVER; // adulto 28,90
