@@ -65,7 +65,21 @@
         }
         .header-left { justify-content: flex-start; gap: 4px; }
         .header-right { justify-content: flex-end; gap: 4px; }
-        .logo { height: 36px; object-fit: contain; filter: brightness(0); }
+        .logo { height: 36px; object-fit: contain; filter: brightness(0); cursor: pointer; }
+        /* Scroll-to-top button */
+        #scroll-top {
+            position: fixed; right: 16px; z-index: 790;
+            bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: none; color: #fff; font-size: 1em; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            transform: translateY(8px);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+        }
+        #scroll-top.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .header-icon-wrapper { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
         .header-icon {
             background: none; border: none; color: #000; font-size: 1.25em;
@@ -1021,7 +1035,7 @@
     </div>
 
     <div id="sticky-header">
-        <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant Logo" class="logo">
+        <img src="https://www.junrestaurantbolgare.com/wp-content/uploads/2024/12/jun-logo-white.svg" alt="Jun Restaurant Logo" class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
         <div class="header-right">
             <div class="header-icon-wrapper" id="people-wrapper">
                 <button class="header-icon" id="people-toggle" title="Persone" style="display:flex;align-items:center;gap:3px;">
@@ -1069,6 +1083,10 @@
     </div>
 
     <main id="menu-content"></main>
+    <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Torna su">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <div id="madeby-credit">
         <a href="https://vomeri.it" target="_blank" rel="noopener">
             <span class="mb-main">Creato da <span>vomeri.it</span></span><span class="mb-sub"> · Siti web · App · Software aziendali</span>
@@ -1649,6 +1667,7 @@
                 }
                 _lastScrollY = y;
                 _ticking = false;
+                document.getElementById('scroll-top').classList.toggle('show', y > 300);
             });
         }, { passive: true });
 
