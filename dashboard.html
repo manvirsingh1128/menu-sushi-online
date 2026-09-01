@@ -1424,7 +1424,10 @@ function renderFromData(order, silent){
     if(order.station) expoUpsert(order, silent);                       // piatti → vista "Da servire"
     return;
   }
-  if(EXPO){ expoUpsert(order, silent); return; }
+  if(EXPO){
+    if(order.waiter_request){ renderReqCard(order, silent); return; }   // chiamata cliente → sidebar (owner + regia)
+    expoUpsert(order, silent); return;
+  }
   if(isKitchen){
     if(normStation(order.station) === STATION && !order.waiter_request) renderTicket(order, silent);
     return;
@@ -1446,7 +1449,7 @@ async function loadPending(wasKnown = null){
   if(STATION === 'cameriere'){
     q = q.in('status',['pending','ready']);   // piatti (station) + richieste (waiter_request)
   } else if(EXPO){
-    q = q.in('status',['pending','ready']).not('station','is',null);
+    q = q.in('status',['pending','ready']);   // include le chiamate "chiama cameriere" (station null) → sidebar owner/regia
   } else {
     q = q.eq('status','pending');
     if(isKitchen) q = (STATION === 'griglia') ? q.in('station',['griglia','freddi']) : q.eq('station', STATION);
@@ -1462,8 +1465,10 @@ async function loadPending(wasKnown = null){
   }
   activeOrders.clear();
   if(EXPO) expoGroups.clear();
+  if(EXPO){
+    const _side = document.getElementById('sidebar'); if(_side) _side.innerHTML = '';  // evita richieste "chiama cameriere" duplicate su reconnect (owner + cameriere)
+  }
   if(STATION === 'cameriere'){
-    const _side = document.getElementById('sidebar'); if(_side) _side.innerHTML = '';  // evita richieste duplicate su reconnect
     _serveInited = false; _lastServeCount = 0;                                          // no beep al ricaricamento
   }
   data.forEach(order => {
@@ -1488,6 +1493,8 @@ function subscribeRealtime(){
       return;
     }
     if(EXPO){
+      // chiamata "chiama cameriere" (station null) → sidebar owner/regia
+      if(order.waiter_request){ if(order.status === 'pending') renderReqCard(order, false); return; }
       // expo accetta pending+ready con station valorizzata
       if(!order.station) return;
       if(order.status !== 'pending' && order.status !== 'ready') return;
@@ -1511,8 +1518,8 @@ function subscribeRealtime(){
     ch = ch.on('postgres_changes',{ event:'UPDATE', schema:'public', table:'orders' }, payload => {
       const order = payload.new;
       salaOnEvent();
-      // Cameriere: richiesta "chiama cameriere" gestita altrove → togli la card (sync multi-tablet)
-      if(STATION === 'cameriere' && order.waiter_request){
+      // "chiama cameriere" gestita altrove → togli la card (sync multi-tablet: owner + cameriere)
+      if(order.waiter_request){
         if(order.status !== 'pending'){
           const card = document.querySelector('.req-card[data-id="'+order.id+'"]');
           if(card){ card.remove(); updateUrgIndicator(); }
@@ -1642,7 +1649,9 @@ async function fetchSalaRows(){
   try{
     const { data, error } = await sb.from('orders')
       .select('table_number,people,created_at,status,waiter_request,order_details')
-      .in('status',['pending','ready']);
+      // include 'handled': una bevanda già SERVITA deve restare nel conto fino al pagamento
+      // (il confine paidAt esclude comunque gli ordini di clienti precedenti già saldati)
+      .in('status',['pending','ready','handled']);
     if(error){ console.warn('[Jun Sala]', error.message); return []; }
     return data || [];
   }catch(e){ return []; }
