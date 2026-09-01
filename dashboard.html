@@ -24,10 +24,13 @@ html,body{height:100%;background:#111;color:#fff;font-family:'DM Sans',-apple-sy
 }
 #btn-cronologia:hover{color:#fff;background:#444;}
 #logo{height:36px;object-fit:contain;margin:0 auto;}
-#dash-credit{position:fixed;bottom:10px;right:12px;z-index:50;opacity:0.28;transition:opacity .2s;}
-#dash-credit a{color:#aaa;text-decoration:none;font-size:.68em;font-weight:600;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:5px 10px;}
-#dash-credit a strong{color:#ddd;}
-#dash-credit:hover{opacity:.65;}
+#dash-credit{position:fixed;bottom:10px;right:12px;z-index:50;}
+#dash-credit a{text-decoration:none;display:block;text-align:right;line-height:1.45;}
+#dash-credit .dc-main{display:block;color:rgba(255,255,255,.55);font-size:.72em;font-weight:700;}
+#dash-credit .dc-main span{color:#4fa3f7;}
+#dash-credit .dc-sub{display:block;color:rgba(255,255,255,.25);font-size:.6em;font-weight:500;}
+#dash-credit:hover .dc-main{color:rgba(255,255,255,.85);}
+#dash-credit:hover .dc-main span{color:#7dc3ff;}
 #hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 #hd-clock{font-size:.85em;font-weight:600;color:#ccc;font-variant-numeric:tabular-nums;flex-shrink:0;}
 #online-dot{width:9px;height:9px;border-radius:50%;background:#dc2626;flex-shrink:0;}
@@ -2137,8 +2140,8 @@ window.addEventListener('load', async () => {
 </div>
 <div id="dash-credit">
   <a href="https://vomeri.it" target="_blank" rel="noopener">
-    <i class="fas fa-tablet-screen-button"></i>
-    Software su misura per la tua attività · <strong>vomeri.it</strong>
+    <span class="dc-main">Creato da <span>vomeri.it</span></span>
+    <span class="dc-sub">Siti web · App · Software aziendali</span>
   </a>
 </div>
 </body>
