@@ -1358,6 +1358,12 @@ function renderTicket(order, silent){
   if(!items.length) return;
   if(items.every(it=>it.done)) return;   // tutti i piatti già inviati → niente card
 
+  // DEDUP: se esiste già una card per questo ordine (reconnect / auto-reload / redelivery
+  // realtime), rimuovila prima di ricrearla — evita card doppie "orfane" il cui PRONTO non
+  // fa nulla (activeOrders ha una sola voce per id).
+  const _dup = document.querySelector('#board .ticket[data-id="'+order.id+'"]');
+  if(_dup) _dup.remove();
+
   activeOrders.set(order.id, order);
   snapSave();
 
