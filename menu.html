@@ -3200,7 +3200,8 @@
                     waiter_request: null,
                     station,
                     ticket_group: _tg,
-                    people: tableSize     // stima persone dal telefono (per il conto in Sala)
+                    people: tableSize,    // persone che ordinano da QUESTO telefono
+                    session_id: _sessionSid()   // ID univoco del dispositivo — per sommare persone multi-telefono
                 }));
                 _sb.from('orders').insert(_rows).then(({ error }) => { if (error) console.warn('[Jun] ordine:', error.message); });
             }
@@ -3701,6 +3702,9 @@
         const VALID_CODE = 'jun2025';
         const ADMIN_PW = 'JUN321@';
 
+        function _uuid(){ return (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36); }
+        function _sessionSid(){ try{ const s=JSON.parse(localStorage.getItem(SESSION_KEY)); return s&&s.sid||null; }catch{ return null; } }
+
         // ── SUPABASE ──
         const _SB_URL  = "https://mtjsxtdubfsqtyvwgdrt.supabase.co";
         const _SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anN4dGR1YmZzcXR5dndnZHJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTE5MzcsImV4cCI6MjEwMjk4NzkzN30.P4ufwf0G111YKGxFpx9jyj5RTxRX10CsFUVfmWYZpmA";
@@ -3811,7 +3815,7 @@
                     localStorage.removeItem('jun_ob');
                     localStorage.removeItem('jun_max1items');
                     localStorage.removeItem('jun_max1cats');
-                    session = { start: now, table: tableParam };
+                    session = { start: now, table: tableParam, sid: _uuid() };
                     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
                     scheduleExpiry(SESSION_DURATION);
                 }

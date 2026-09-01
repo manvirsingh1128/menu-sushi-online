@@ -1697,7 +1697,7 @@ async function fetchSalaRows(){
   if(!realOnline) return [];
   try{
     const { data, error } = await sb.from('orders')
-      .select('table_number,people,created_at,status,waiter_request,order_details')
+      .select('table_number,people,created_at,status,waiter_request,order_details,session_id')
       // include 'handled': una bevanda già SERVITA deve restare nel conto fino al pagamento
       // (il confine paidAt esclude comunque gli ordini di clienti precedenti già saldati)
       .in('status',['pending','ready','handled']);
@@ -1727,8 +1727,14 @@ async function buildSalaData(){
     // più conteggiati, così i nuovi clienti non ereditano il conto dei precedenti.
     const bound = (salaState[t] && salaState[t].paidAt) ? salaState[t].paidAt : 0;
     if(ts && bound && ts <= bound) return;
-    const b = _salaByTable[t] = _salaByTable[t] || { people:0, latest:0, food:[], drinks:[], drinksTotal:0 };
-    if((r.people||0) > b.people) b.people = r.people || 0;
+    const b = _salaByTable[t] = _salaByTable[t] || { people:0, latest:0, food:[], drinks:[], drinksTotal:0, _sid:{} };
+    // Persone: somma sessioni distinte (ogni telefono ha il suo session_id e conta le sue persone).
+    // Stesso telefono con più ordini → prende il max di quel telefono, non somma di nuovo.
+    // Ordini senza session_id (legacy) → un unico bucket, stessa logica.
+    const sid = r.session_id || '__legacy__';
+    const prev = b._sid[sid] || 0;
+    const inc  = r.people || 0;
+    if(inc > prev){ b.people += (inc - prev); b._sid[sid] = inc; }
     if(ts > b.latest) b.latest = ts;
     let items=[]; try{ items = JSON.parse(r.order_details||'[]'); }catch(e){}
     items.forEach(it=>{
