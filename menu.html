@@ -253,6 +253,30 @@
         }
         .max1-divider::before, .max1-divider::after { content: ''; flex: 1; height: 1px; background: #f0f0f0; }
 
+        /* MADE BY CREDIT */
+        #madeby-credit {
+            text-align: center;
+            padding: 20px 20px 8px;
+            opacity: 0.32;
+            transition: opacity 0.25s;
+        }
+        #madeby-credit:active { opacity: 0.72; }
+        #madeby-credit a {
+            color: #555;
+            text-decoration: none;
+            font-size: 0.74em;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #madeby-credit a i { font-size: 0.9em; color: #888; }
+        #madeby-credit a strong { color: #333; }
+        @media (hover: hover) {
+            #madeby-credit:hover { opacity: 0.65; }
+        }
+
         /* FOOTER BAR */
         #footer-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
@@ -878,6 +902,49 @@
             transition: opacity 0.15s; letter-spacing: -0.02em;
         }
         #ob-enter:active { opacity: 0.85; }
+        #ob-enter:disabled { opacity: 0.4; cursor: not-allowed; }
+        #ob-ayce-pop i { margin-right: 5px; }
+
+        /* ── Checkbox consenso All You Can Eat (obbligatorio) ── */
+        .ob-ayce {
+            display: flex; align-items: center; gap: 16px;
+            cursor: pointer; padding: 4px 0;
+            -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+        }
+        .ob-ayce input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .ob-ayce-box {
+            width: 48px; height: 48px; border-radius: 14px;
+            border: 2.5px solid #555; background: #2a2a2a; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: transparent; font-size: 1.5em; transition: all 0.15s;
+        }
+        .ob-ayce input:checked + .ob-ayce-box {
+            background: #16a34a; border-color: #16a34a; color: #fff;
+        }
+        .ob-ayce-txt { color: #fff; font-size: 1.08em; font-weight: 700; line-height: 1.35; }
+        .ob-ayce-txt b { font-weight: 800; }
+        .ob-ayce-sub { display: block; color: #8a8a8a; font-size: 0.72em; font-weight: 600; margin-top: 4px; }
+        /* popup "accetta le regole" sopra la checkbox */
+        #ob-ayce-wrap { position: relative; }
+        #ob-ayce-pop {
+            position: absolute; bottom: calc(100% + 12px); left: 0; right: 0;
+            background: #dc2626; color: #fff; padding: 12px 16px; border-radius: 14px;
+            font-size: 0.95em; font-weight: 800; text-align: center; line-height: 1.3;
+            opacity: 0; transform: translateY(8px); pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s; z-index: 6;
+            box-shadow: 0 8px 22px rgba(220,38,38,0.45);
+        }
+        #ob-ayce-pop.show { opacity: 1; transform: translateY(0); }
+        #ob-ayce-pop::after {
+            content: ''; position: absolute; top: 100%; left: 22px;
+            border: 8px solid transparent; border-top-color: #dc2626;
+        }
+        @keyframes obShake {
+            0%,100% { transform: translateX(0); }
+            20%,60% { transform: translateX(-7px); }
+            40%,80% { transform: translateX(7px); }
+        }
+        .ob-ayce.shake { animation: obShake 0.4s; }
 
         /* ── PICCOLI TELEFONI 360px- ── */
         @media (max-width: 360px) {
@@ -931,6 +998,18 @@
                         <span class="ob-step-num" id="ob-people-num">1</span>
                         <button class="ob-step-btn" id="ob-people-plus">+</button>
                     </div>
+                </div>
+                <div class="ob-divider"></div>
+                <div id="ob-ayce-wrap">
+                    <div id="ob-ayce-pop"><i class="fas fa-hand-point-down"></i> Accetta le regole per ordinare</div>
+                    <label id="ob-ayce" class="ob-ayce">
+                        <input type="checkbox" id="ob-ayce-check">
+                        <span class="ob-ayce-box"><i class="fas fa-check"></i></span>
+                        <span class="ob-ayce-txt">
+                            Accetto le regole dell'<b>All You Can Eat</b>
+                            <span class="ob-ayce-sub">I accept the All You Can Eat rules · 我接受自助餐规则</span>
+                        </span>
+                    </label>
                 </div>
             </div>
             <button id="ob-enter">Entra nel menu</button>
@@ -986,6 +1065,12 @@
     </div>
 
     <main id="menu-content"></main>
+    <div id="madeby-credit">
+        <a href="https://vomeri.it" target="_blank" rel="noopener">
+            <i class="fas fa-code"></i>
+            menu digitale by <strong>vomeri.it</strong>
+        </a>
+    </div>
 
     <!-- FILTRO -->
     <div id="filter-overlay" onclick="if(event.target===this)_closeFilterCancel()">
@@ -3434,9 +3519,21 @@
             ob.style.transition = 'none';
             ob.style.opacity = '1';
             ob.style.display = 'flex';
+            // reset consenso: checkbox vuota + popup nascosto ad ogni apertura (pulsante resta bianco)
+            const _ayce = document.getElementById('ob-ayce-check');
+            if (_ayce) _ayce.checked = false;
+            document.getElementById('ob-ayce-pop').classList.remove('show');
         }
 
         function _obStartMenu() {
+            // guardia: senza consenso mostra il popup + fa "tremare" la checkbox
+            const _ayce = document.getElementById('ob-ayce-check');
+            if (_ayce && !_ayce.checked) {
+                document.getElementById('ob-ayce-pop').classList.add('show');
+                const _lbl = document.getElementById('ob-ayce');
+                _lbl.classList.remove('shake'); void _lbl.offsetWidth; _lbl.classList.add('shake');
+                return;
+            }
             tableSize   = _obPeople;
             tableNumber = _obTable;
             localStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
@@ -3550,6 +3647,10 @@
                 if (_obTable < 99) { _obTable++; _obUpdate(); }
             });
             document.getElementById('ob-enter').addEventListener('click', _obStartMenu);
+            // il pulsante resta sempre bianco; quando spunta il consenso nascondo solo il popup
+            document.getElementById('ob-ayce-check').addEventListener('change', (e) => {
+                if (e.target.checked) document.getElementById('ob-ayce-pop').classList.remove('show');
+            });
 
             // Admin lock tavolo
             document.getElementById('ob-table-lock-btn').addEventListener('click', () => {
