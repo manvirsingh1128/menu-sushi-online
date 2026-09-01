@@ -819,132 +819,157 @@ function loadCronologia(){
   entries.forEach(e => cronRender(e));
 }
 
-// ── Checkbox + logica PRONTO ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// MOTORE ORDINI — magazzino unico + render = funzione pura dello stato.
+// activeOrders (id → riga) è l'UNICA fonte di verità. Ogni vista si RIDISEGNA
+// sempre intera dal magazzino → niente card doppie né bloccate per costruzione.
+// ═══════════════════════════════════════════════════════════════════════════
+function ordItems(row){ try{ return JSON.parse(row.order_details || '[]'); }catch(e){ return []; } }
+
+// La riga appartiene a QUESTA vista?
+function relevant(row){
+  if(!row) return false;
+  if(row.waiter_request) return (STATION === 'cameriere' || EXPO) && row.status === 'pending';
+  if(!row.station) return false;
+  if(isKitchen) return normStation(row.station) === STATION && row.status === 'pending';
+  if(STATION === 'cameriere' || EXPO) return row.status === 'pending' || row.status === 'ready';
+  return false;
+}
+// Applica una riga al magazzino (da load o realtime). Idempotente.
+function applyRow(row){
+  if(!row) return;
+  if(relevant(row)) activeOrders.set(row.id, row);
+  else activeOrders.delete(row.id);
+}
+
+let _engineInited = false;
+const _flash = new Set();          // id nuovi → animazione is-new una volta
+let _renderTimer = null;
+function scheduleRender(){ clearTimeout(_renderTimer); _renderTimer = setTimeout(renderAll, 60); }
+function renderAll(){
+  if(isKitchen)                    renderKitchen();
+  else if(STATION === 'cameriere') renderServe();
+  else if(EXPO)                    renderOwner();
+  renderWaiterCalls();
+}
+
+// Selezione piatti (stato DOM effimero) → aggiorna label del tasto invio/servi
 function toggleDone(el){
   el.classList.toggle('done');
   const ticket = el.closest('.ticket');
   if(ticket) updateSendBtn(ticket);
 }
-
-// Aggiorna il tasto del ticket: "PRONTO" (niente selezionato = manda tutto) / "INVIA (N)" (manda i selezionati)
 function updateSendBtn(ticket){
   const btn = ticket.querySelector('.btn-pronto');
   if(!btn) return;
   const sel = ticket.querySelectorAll('.tk-item.done').length;
-  btn.textContent = sel > 0 ? `INVIA (${sel})` : 'PRONTO';
+  if(btn.classList.contains('serve-all')) btn.textContent = sel > 0 ? `✓ SERVI (${sel})` : '✓ PORTA TUTTO';
+  else                                     btn.textContent = sel > 0 ? `INVIA (${sel})` : 'PRONTO';
   btn.classList.toggle('partial', sel > 0);
 }
 
-// ── Gestita ────────────────────────────────────────────────────────────────
-async function gestita(btn, tipo, tavolo, orderId){
-  addLog('req', tavolo, null, tipo);
-  if(orderId){
-    if(navigator.onLine){
-      const { error } = await sb.from('orders').update({ status:'handled' }).eq('id', orderId);
-      if(error) console.warn('[Jun KDS] gestita:', error.message);
-    } else {
-      queuePush({ id: orderId, status: 'handled' });
-    }
-    activeOrders.delete(orderId);
-    snapSave();
-  }
-  const card=btn.closest('.req-card');
-  card.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .3s,transform .3s;';
-  setTimeout(()=>{ card.remove(); updateUrgIndicator(); },300);
+// ── Chiamate cameriere (sidebar) — cameriere + owner ─────────────────────────
+const _waiterIta = { explanation:'Spiegazione sui piatti', drinks:'Ordine bevande', bill:'Richiesta conto', other:'Altra assistenza', call:'Chiamata cameriere' };
+function renderWaiterCalls(){
+  if(STATION !== 'cameriere' && !EXPO) return;
+  const side = document.getElementById('sidebar');
+  if(!side) return;
+  side.innerHTML = '';
+  [...activeOrders.values()]
+    .filter(r => r.waiter_request && r.status === 'pending')
+    .sort((a,b)=> new Date(a.created_at||0) - new Date(b.created_at||0))
+    .forEach(r => side.appendChild(buildReqCard(r)));
+  updateUrgIndicator();
+}
+function buildReqCard(order){
+  const div = document.createElement('div');
+  div.className = `req-card${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
+  const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
+  div.dataset.id = order.id; div.dataset.ts = tsVal;
+  const label = order.customer_notes || _waiterIta[order.waiter_request] || 'Assistenza';
+  const ora = new Date(tsVal).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  div.innerHTML = `
+    <div class="req-top"><span class="req-tavolo-label">Tavolo</span><span class="req-tavolo-num">${order.table_number}</span><span class="req-time">${ora}</span></div>
+    <hr class="tk-sep">
+    <div class="req-body">${label}</div>
+    <button class="req-btn">Gestita</button>`;
+  div.querySelector('.req-btn').addEventListener('click', ()=> waiterHandled(order.id, order.table_number, label));
+  return div;
+}
+async function waiterHandled(id, tav, label){
+  activeOrders.delete(id); snapSave();
+  addLog('req', tav, null, label);
+  renderWaiterCalls();
+  if(navigator.onLine){ const { error } = await sb.from('orders').update({status:'handled'}).eq('id', id); if(error) console.warn('[Jun KDS] gestita:', error.message); }
+  else queuePush({ id, status:'handled' });
 }
 
-// ── PRONTO ─────────────────────────────────────────────────────────────────
-async function pronto(btn, orderId){
-  if(btn.disabled) return;
-  btn.disabled=true;
-  const ord = orderId ? activeOrders.get(orderId) : null;   // serve il ticket_group per l'ordine completo
-  const ticketGroup = ord ? ord.ticket_group : null;
-  if(orderId){
-    if(navigator.onLine){
-      const { error } = await sb.from('orders').update({ status:'ready' }).eq('id', orderId);
-      if(error) console.warn('[Jun KDS] pronto:', error.message);
-    } else {
-      queuePush({ id: orderId, status: 'ready' });
-    }
-    activeOrders.delete(orderId);
-    snapSave();
-  }
-  const ticket=btn.closest('.ticket');
-  const tav=ticket.querySelector('.tk-tavolo-num').textContent;
-  const items=[...ticket.querySelectorAll('.tk-item')].map(i=>({
-    qty:i.querySelector('.tk-qty').textContent,
-    name:i.querySelector('.tk-name').textContent
-  }));
-  const nota=ticket.querySelector('.tk-nota')?.textContent||null;
-  // Cronologia = ordine COMPLETO diviso per postazione (fallback: solo i propri piatti)
-  const full = await buildFullOrderGroups(ticketGroup);
-  if(full && full.groups && full.groups.length) addLog('pronto', tav, null, full.nota || nota, full.groups);
-  else addLog('pronto', tav, items, nota);
-  btn.innerHTML='<i class="fa-solid fa-check"></i> Inviato';
-  btn.style.background='#4b7a56';
-  setTimeout(()=>{
-    ticket.style.cssText='opacity:0;transform:scale(0.95);transition:opacity .35s,transform .35s;';
-    setTimeout(()=>{ ticket.remove(); updateEmptyState(); updateUrgIndicator(); },350);
-  },1000);
+// ── CUCINA: le mie righe pending, invio a scaglioni (seleziona → INVIA) ──────
+let _kitchenCount = 0;
+function renderKitchen(){
+  const board = document.getElementById('board');
+  if(!board) return;
+  board.querySelectorAll('.ticket').forEach(t => t.remove());
+  const rows = [...activeOrders.values()]
+    .filter(r => !r.waiter_request && normStation(r.station) === STATION && r.status === 'pending')
+    .filter(r => ordItems(r).some(it => !it.done))
+    .sort((a,b)=> new Date(a.created_at||0) - new Date(b.created_at||0));
+  rows.forEach(r => board.appendChild(buildKitchenCard(r)));
+  initMasonry();
+  updateEmptyState();
+  if(_engineInited && rows.length > _kitchenCount) beep();
+  _kitchenCount = rows.length;
 }
-
-// ── INVIO piatti (parziale o totale) ───────────────────────────────────────
-// Niente selezionato → manda TUTTI i piatti rimasti (PRONTO). Selezionati → manda solo quelli.
-// I piatti non inviati restano sulla card; la card sparisce solo quando è tutto inviato.
-async function sendReady(btn, orderId){
-  if(btn.disabled) return;
-  const order = activeOrders.get(orderId);
-  if(!order) return;
-  const ticket = btn.closest('.ticket');
-  let items = [];
-  try{ items = JSON.parse(order.order_details || '[]'); }catch(e){}
-
-  const shown    = [...ticket.querySelectorAll('.tk-item')];        // piatti ancora da inviare
-  const selected = shown.filter(el => el.classList.contains('done'));
-  const toSend   = selected.length ? selected : shown;             // niente selezionato = tutti
-  if(!toSend.length) return;
-  btn.disabled = true;
-
-  // segna 'done' nei dati reali (per indice)
-  toSend.forEach(el => { const i = +el.dataset.idx; if(items[i]) items[i].done = true; });
-  const remaining = items.filter(it => !it.done).length;
-  const complete  = remaining === 0;
-  order.order_details = JSON.stringify(items);
-  activeOrders.set(orderId, order);
-
-  // persisti su Supabase (o coda se offline)
-  const patch = { order_details: order.order_details };
+function buildKitchenCard(row){
+  const items = ordItems(row);
+  const col = tableColor(row.table_number);
+  const div = document.createElement('div');
+  div.className = `ticket ${col}${_flash.has(row.id) ? ' is-new' : ''}${newSinceReconnect.has(row.id) ? ' recovered' : ''}`;
+  div.dataset.ts = row.created_at ? new Date(row.created_at).getTime() : Date.now();
+  div.dataset.id = row.id;
+  const itemsHtml = items.map((it,idx)=> it.done ? '' :
+    `<div class="tk-item" data-idx="${idx}" onclick="toggleDone(this)">
+      <span class="tk-check">✓</span>
+      <span class="tk-qty">${it.qty}x</span>
+      <span class="tk-name">${it.name || ''}${it.code ? ` <span class="tk-code">${it.code}</span>` : ''}</span>
+    </div>`).join('');
+  const notaHtml = row.customer_notes ? `<div class="tk-nota">${row.customer_notes}</div>` : '';
+  div.innerHTML = `
+    <div class="tk-top">
+      <span class="tk-tavolo-label">Tavolo</span>
+      <span class="tk-tavolo-num">${row.table_number}</span>
+      <span class="tk-time">-</span>
+    </div>
+    <hr class="tk-sep">
+    <div class="tk-items">${itemsHtml}</div>
+    ${notaHtml}
+    <button class="btn-pronto">PRONTO</button>`;
+  div.querySelector('.btn-pronto').addEventListener('click', function(){ kitchenSend(row.id, div); });
+  return div;
+}
+// Invia i piatti selezionati (o tutti). done=true; se tutti done → riga 'ready'.
+async function kitchenSend(rowId, ticketEl){
+  const row = activeOrders.get(rowId);
+  if(!row) return;
+  const items = ordItems(row);
+  const shown = [...ticketEl.querySelectorAll('.tk-item')];
+  const sel = shown.filter(el => el.classList.contains('done'));
+  const idxs = (sel.length ? sel : shown).map(el => +el.dataset.idx).filter(i => !isNaN(i));
+  if(!idxs.length) return;
+  idxs.forEach(i => { if(items[i]) items[i].done = true; });
+  const complete = items.every(it => it.done);
+  row.order_details = JSON.stringify(items);
+  if(complete) row.status = 'ready';
+  applyRow(row); snapSave();
+  addLog('pronto', row.table_number, idxs.map(i=>({qty:items[i].qty+'x', name:items[i].name})), row.customer_notes||null);
+  renderKitchen();
+  const patch = { order_details: row.order_details };
   if(complete) patch.status = 'ready';
-  if(navigator.onLine){
-    const { error } = await sb.from('orders').update(patch).eq('id', orderId);
-    if(error) console.warn('[Jun KDS] invio:', error.message);
-  } else {
-    queuePush({ id: orderId, ...patch });
-  }
-
-  // togli dalla card i piatti inviati
-  toSend.forEach(el => {
-    el.style.cssText = 'opacity:0;transform:translateX(10px);transition:opacity .25s,transform .25s;';
-    setTimeout(()=> el.remove(), 250);
-  });
-
-  if(complete){
-    activeOrders.delete(orderId);
-    snapSave();
-    // cronologia = ordine completo diviso per postazione
-    const tav  = order.table_number;
-    const full = await buildFullOrderGroups(order.ticket_group);
-    if(full && full.groups && full.groups.length) addLog('pronto', tav, null, full.nota || order.customer_notes || null, full.groups);
-    else addLog('pronto', tav, items.map(i=>({qty:i.qty+'x', name:i.name})), order.customer_notes || null);
-    setTimeout(()=>{
-      ticket.style.cssText = 'opacity:0;transform:scale(0.95);transition:opacity .35s,transform .35s;';
-      setTimeout(()=>{ ticket.remove(); updateEmptyState(); updateUrgIndicator(); }, 350);
-    }, 280);
-  } else {
-    snapSave();                       // salva lo stato: al reload restano solo i piatti da fare
-    setTimeout(()=>{ btn.disabled = false; updateSendBtn(ticket); }, 260);
-  }
+  if(navigator.onLine){ const { error } = await sb.from('orders').update(patch).eq('id', rowId); if(error) console.warn('[Jun KDS] invio:', error.message); }
+  else queuePush({ id: rowId, ...patch });
 }
+
+// (invio piatti cucina: vedi kitchenSend sopra — motore ordini unico)
 
 // ── Indicatore urgenza top-right ──────────────────────────────────────────
 const _alerted = new Set();
@@ -1046,192 +1071,141 @@ function beep(){
 const COLORS = ['c1','c2','c3','c4','c5','c6'];
 function tableColor(n){ return COLORS[(parseInt(n)||0) % COLORS.length]; }
 
-// ── REGIA / EXPO (vista aggregata per ticket_group) ────────────────────────
-// groups: ticket_group -> { table, created, rows: Map(orderId -> order) }
-const expoGroups = new Map();
-const _expoReady = new Set(); // gruppi già segnalati come pronti (per beep una-tantum)
-
-function expoKey(order){ return order.ticket_group || ('legacy-' + order.id); }
-
-function expoUpsert(order, silent){
-  if(!order || !order.station) return;
-  if(order.status === 'handled'){ expoRemoveRow(order); return; }
-  const key = expoKey(order);
-  let g = expoGroups.get(key);
-  if(!g){
-    g = { table: order.table_number, created: order.created_at ? new Date(order.created_at).getTime() : Date.now(), rows: new Map() };
-    expoGroups.set(key, g);
-  }
-  g.rows.set(order.id, order);
-  activeOrders.set(order.id, order);
-  snapSave();
-}
-
-function expoRemoveRow(order){
-  if(!order) return;
-  const key = expoKey(order);
-  const g = expoGroups.get(key);
-  if(g){
-    g.rows.delete(order.id);
-    if(g.rows.size === 0){ expoGroups.delete(key); _expoReady.delete(key); }
-  }
-  activeOrders.delete(order.id);
-  snapSave();
-}
-
-function expoRenderAll(){
-  if(STATION === 'cameriere'){ renderServe(); return; }   // il cameriere ha la vista "Da servire"
-  const board = document.getElementById('board');
-  if(!board) return;
-  // pulisci le card esistenti (mantiene struttura, rimuove solo i ticket)
-  board.querySelectorAll('.ticket').forEach(t => t.remove());
-  expoGroups.forEach((g, key) => {
-    const card = buildExpoCard(key, g);
-    if(card) board.appendChild(card);
-  });
-  initMasonry(); // ridistribuisce i .ticket nelle colonne masonry
-  updateEmptyState();
-  // se il dettaglio è aperto, aggiornalo dal vivo (o chiudilo se il tavolo è sparito)
-  if(_xdOpen){ if(expoGroups.has(_xdOpen)) openExpoDetail(_xdOpen); else closeExpoDetail(); }
-}
-
-// ── CAMERIERE: vista "Da servire" ──────────────────────────────────────────
-// Mostra i piatti che la cucina ha mandato PRONTI (it.done) e non ancora portati (it.served),
-// raggruppati per tavolo, a scaglioni. Tap sul piatto = servito singolo; "PORTA TUTTO" = tutti.
-let _lastServeCount = 0, _serveInited = false;
-
-function findOrderInGroups(oid){
-  for(const g of expoGroups.values()){ if(g.rows.has(oid)) return g.rows.get(oid); }
-  return null;
-}
-
+// ── CAMERIERE: piatti PRONTI da servire (done && !served), a scaglioni ───────
+const _expoReady = new Set();      // tavoli già segnalati pronti (beep una-tantum, owner)
+let _xdOpen = null;
+let _serveCount = 0;
 function renderServe(){
   const board = document.getElementById('board');
   if(!board) return;
   board.querySelectorAll('.ticket').forEach(t => t.remove());
-  // raccogli i piatti pronti-da-servire per tavolo
   const byTable = {};
-  expoGroups.forEach(g => {
-    g.rows.forEach((order, oid) => {
-      let items=[]; try{ items = JSON.parse(order.order_details||'[]'); }catch(e){}
-      const note = order.customer_notes || null;
-      const st = normStation(order.station);
-      items.forEach((it, idx) => {
-        if(it.done && !it.served){
-          const t = g.table;
-          (byTable[t] = byTable[t] || { plates:[], notes:new Set(), created:g.created });
-          byTable[t].plates.push({ oid, idx, qty:it.qty, name:it.name, station:st });
-          if(note) byTable[t].notes.add(note);
-        }
-      });
+  [...activeOrders.values()].filter(r => !r.waiter_request && r.station).forEach(r => {
+    ordItems(r).forEach((it, idx) => {
+      if(it.done && !it.served){
+        const t = r.table_number;
+        (byTable[t] = byTable[t] || { plates:[], notes:new Set(), created:new Date(r.created_at||Date.now()).getTime() });
+        byTable[t].plates.push({ oid:r.id, idx, qty:it.qty, name:it.name, station:normStation(r.station) });
+        if(r.customer_notes) byTable[t].notes.add(r.customer_notes);
+      }
     });
   });
-  const tables = Object.keys(byTable).sort((a,b)=> (+a) - (+b));
+  const tables = Object.keys(byTable).sort((a,b)=>(+a)-(+b));
   let total = 0;
-  tables.forEach(t => {
-    const info = byTable[t];
-    total += info.plates.length;
-    const col = tableColor(t);
-    const notaHtml = info.notes.size ? `<div class="tk-nota">📝 ${[...info.notes].join(' · ')}</div>` : '';
-    // raggruppa i piatti per POSTAZIONE così il cameriere sa DA DOVE ritirarli
-    const byStation = {};
-    info.plates.forEach(p => { const s = p.station || '?'; (byStation[s] = byStation[s] || []).push(p); });
-    const stOrder = ['crudo','frittura','caldo','griglia'];
-    const stationsSorted = Object.keys(byStation).sort((a,b)=> (stOrder.indexOf(a)+1||99) - (stOrder.indexOf(b)+1||99));
-    const itemsHtml = stationsSorted.map(s => `
-      <div class="serve-grp">
-        <div class="serve-grp-lbl">${STATION_ICON[s]||'📍'} ${STATION_LABELS[s]||s}</div>
-        ${byStation[s].map(p=>`
-          <div class="tk-item serve-it" data-oid="${p.oid}" data-idx="${p.idx}">
-            <span class="tk-check">✓</span><span class="tk-qty">${p.qty}x</span><span class="tk-name">${p.name}</span>
-          </div>`).join('')}
-      </div>`).join('');
-    const div = document.createElement('div');
-    div.className = `ticket ${col} serve-card`;
-    div.dataset.ts = info.created;
-    div.innerHTML = `
-      <div class="tk-top">
-        <span class="tk-tavolo-label">Tavolo</span>
-        <span class="tk-tavolo-num">${t}</span>
-        <span class="tk-serve-badge">${info.plates.length} da servire</span>
-      </div>
-      <hr class="tk-sep">
-      <div class="tk-items">${itemsHtml}</div>
-      ${notaHtml}
-      <button class="btn-pronto serve-all">✓ PORTA TUTTO</button>
-    `;
-    div.querySelectorAll('.serve-it').forEach(el=>{
-      el.addEventListener('click', function(){ markServed([{ oid:+el.dataset.oid, idx:+el.dataset.idx }]); });
-    });
-    div.querySelector('.serve-all').addEventListener('click', function(){
-      markServed(info.plates.map(p=>({ oid:p.oid, idx:p.idx })));
-    });
-    board.appendChild(div);
-  });
+  tables.forEach(t => { total += byTable[t].plates.length; board.appendChild(buildServeCard(t, byTable[t])); });
   initMasonry();
   updateEmptyState();
-  // beep quando arrivano NUOVI piatti da servire (non al primo render, non quando si servono)
-  if(_serveInited && total > _lastServeCount) beep();
-  _lastServeCount = total; _serveInited = true;
+  if(_engineInited && total > _serveCount) beep();
+  _serveCount = total;
 }
-
-async function markServed(list){
-  if(!list || !list.length) return;
+function buildServeCard(t, info){
+  const col = tableColor(t);
+  const notaHtml = info.notes.size ? `<div class="tk-nota">📝 ${[...info.notes].join(' · ')}</div>` : '';
+  const byStation = {};
+  info.plates.forEach(p => { const s = p.station || '?'; (byStation[s] = byStation[s] || []).push(p); });
+  const ord = ['crudo','frittura','caldo','griglia'];
+  const sts = Object.keys(byStation).sort((a,b)=>(ord.indexOf(a)+1||99)-(ord.indexOf(b)+1||99));
+  const itemsHtml = sts.map(s => `
+    <div class="serve-grp">
+      <div class="serve-grp-lbl">${STATION_ICON[s]||'📍'} ${STATION_LABELS[s]||s}</div>
+      ${byStation[s].map(p=>`
+        <div class="tk-item serve-it" data-oid="${p.oid}" data-idx="${p.idx}" onclick="toggleDone(this)">
+          <span class="tk-check">✓</span><span class="tk-qty">${p.qty}x</span><span class="tk-name">${p.name}</span>
+        </div>`).join('')}
+    </div>`).join('');
+  const div = document.createElement('div');
+  div.className = `ticket ${col} serve-card`;
+  div.dataset.ts = info.created;
+  div.innerHTML = `
+    <div class="tk-top">
+      <span class="tk-tavolo-label">Tavolo</span>
+      <span class="tk-tavolo-num">${t}</span>
+      <span class="tk-serve-badge">${info.plates.length} da servire</span>
+    </div>
+    <hr class="tk-sep">
+    <div class="tk-items">${itemsHtml}</div>
+    ${notaHtml}
+    <button class="btn-pronto serve-all">✓ PORTA TUTTO</button>`;
+  div.querySelector('.btn-pronto').addEventListener('click', function(){ serveSend(div); });
+  return div;
+}
+// Serve i piatti selezionati (o tutti). served=true; se tutta la riga servita → 'handled'.
+async function serveSend(cardEl){
+  const shown = [...cardEl.querySelectorAll('.serve-it')];
+  const sel = shown.filter(el => el.classList.contains('done'));
+  const list = (sel.length ? sel : shown).map(el => ({ oid:+el.dataset.oid, idx:+el.dataset.idx }));
+  if(!list.length) return;
   const byOrder = {};
   list.forEach(x => { (byOrder[x.oid] = byOrder[x.oid] || []).push(x.idx); });
+  const updates = [];
   for(const oidStr in byOrder){
     const oid = +oidStr;
-    const order = findOrderInGroups(oid);
-    if(!order) continue;
-    let items=[]; try{ items = JSON.parse(order.order_details||'[]'); }catch(e){}
+    const row = activeOrders.get(oid);
+    if(!row) continue;
+    const items = ordItems(row);
     byOrder[oidStr].forEach(i => { if(items[i]) items[i].served = true; });
-    order.order_details = JSON.stringify(items);
-    const complete = items.length>0 && items.every(it => it.served);   // riga chiusa solo se TUTTO servito
-    const patch = { order_details: order.order_details };
+    const complete = items.length>0 && items.every(it => it.served);
+    row.order_details = JSON.stringify(items);
+    if(complete) row.status = 'handled';
+    applyRow(row);
+    const patch = { order_details: row.order_details };
     if(complete) patch.status = 'handled';
-    if(navigator.onLine){
-      const { error } = await sb.from('orders').update(patch).eq('id', oid);
-      if(error) console.warn('[Jun Cameriere] servito:', error.message);
-    } else {
-      queuePush({ id: oid, ...patch });
-    }
-    if(complete) expoRemoveRow(order);
+    updates.push({ oid, patch });
   }
+  snapSave();
   renderServe();
+  for(const u of updates){
+    if(navigator.onLine){ const { error } = await sb.from('orders').update(u.patch).eq('id', u.oid); if(error) console.warn('[Jun Cameriere] servito:', error.message); }
+    else queuePush({ id:u.oid, ...u.patch });
+  }
 }
 
-function buildExpoCard(key, g){
-  const rows = [...g.rows.values()];
-  if(!rows.length) return null;
+// ── OWNER / REGIA: SOLA LETTURA, una card per TAVOLO, stato per postazione ────
+// Nessun pulsante "Servito": serve solo il cameriere. Le card spariscono da sole
+// quando il cameriere serve (riga → handled → realtime → magazzino).
+function renderOwner(){
+  const board = document.getElementById('board');
+  if(!board) return;
+  board.querySelectorAll('.ticket').forEach(t => t.remove());
+  const byTable = {};
+  [...activeOrders.values()].filter(r => !r.waiter_request && r.station).forEach(r => {
+    const t = r.table_number;
+    const g = (byTable[t] = byTable[t] || { table:t, rows:[], created:new Date(r.created_at||Date.now()).getTime() });
+    g.rows.push(r);
+    const c = new Date(r.created_at||Date.now()).getTime(); if(c < g.created) g.created = c;
+  });
+  const tables = Object.keys(byTable).sort((a,b)=>(+a)-(+b));
+  tables.forEach(t => board.appendChild(buildOwnerCard(byTable[t])));
+  initMasonry();
+  updateEmptyState();
+  tables.forEach(t => {
+    const allReady = byTable[t].rows.every(r => r.status === 'ready');
+    if(allReady && !_expoReady.has(t)){ _expoReady.add(t); if(_engineInited) beep(); }
+    if(!allReady) _expoReady.delete(t);
+  });
+  if(_xdOpen != null){ if(byTable[_xdOpen]) openExpoDetail(_xdOpen); else closeExpoDetail(); }
+}
+function buildOwnerCard(g){
   const col = tableColor(g.table);
-  const allReady = rows.every(r => r.status === 'ready');
-
-  // stato per postazione
-  const rowsHtml = rows
-    .slice()
-    .sort((a,b)=> (a.station||'').localeCompare(b.station||''))
-    .map(r => {
-      const lbl = STATION_LABELS[r.station] || r.station || '?';
-      const icon = r.status === 'ready' ? '✅' : '⏳';
-      let items=[]; try{ items=JSON.parse(r.order_details||'[]'); }catch(e){}
-      const dishes = items.length
-        ? `<div class="tk-subs">${items.map(it=>`<div class="tk-sub${it.done?' done':''}"><span class="tk-sub-q">${it.qty}x</span><span>${it.name||''}</span></div>`).join('')}</div>`
-        : '';
-      return `<div class="tk-item"><span class="tk-qty">${icon}</span><span class="tk-name">${lbl}</span></div>${dishes}`;
-    }).join('');
-
-  // nota cliente dedup (una volta per gruppo)
-  const notes = [...new Set(rows.map(r=>r.customer_notes).filter(Boolean))];
+  const allReady = g.rows.every(r => r.status === 'ready');
+  const ord = ['crudo','frittura','caldo','griglia'];
+  const rows = g.rows.slice().sort((a,b)=>(ord.indexOf(normStation(a.station))+1||99)-(ord.indexOf(normStation(b.station))+1||99));
+  const rowsHtml = rows.map(r=>{
+    const s = normStation(r.station);
+    const lbl = STATION_LABELS[s] || s || '?';
+    const items = ordItems(r);
+    const stReady = items.length>0 && items.every(it=>it.done);
+    const icon = stReady ? '✅' : '⏳';
+    const dishes = items.length ? `<div class="tk-subs">${items.map(it=>`<div class="tk-sub${it.served?' done':''}"><span class="tk-sub-q">${it.qty}x</span><span>${it.name||''}</span></div>`).join('')}</div>` : '';
+    return `<div class="tk-item"><span class="tk-qty">${icon}</span><span class="tk-name">${lbl}</span></div>${dishes}`;
+  }).join('');
+  const notes = [...new Set(g.rows.map(r=>r.customer_notes).filter(Boolean))];
   const notaHtml = notes.length ? `<div class="tk-nota">${notes.join(' · ')}</div>` : '';
-
-  const bannerHtml = allReady
-    ? `<div class="tk-nota" style="background:#16a34a;color:#fff;font-weight:800;text-align:center;">PRONTO DA SERVIRE</div>`
-    : '';
-
+  const banner = allReady ? `<div class="tk-nota" style="background:#16a34a;color:#fff;font-weight:800;text-align:center;">PRONTO DA SERVIRE</div>` : '';
   const div = document.createElement('div');
   div.className = `ticket ${col} expo-card`;
   div.dataset.ts = g.created;
-  div.dataset.tg = key;
+  div.dataset.table = g.table;
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo · tocca per dettaglio</span>
@@ -1241,347 +1215,95 @@ function buildExpoCard(key, g){
     <hr class="tk-sep">
     <div class="tk-items">${rowsHtml}</div>
     ${notaHtml}
-    ${bannerHtml}
-    <button class="btn-pronto" ${allReady ? '' : 'disabled'} style="${allReady ? 'background:#16a34a;' : 'opacity:.4;cursor:not-allowed;'}">Servito</button>
-  `;
-  div.querySelector('.btn-pronto').addEventListener('click', function(e){ e.stopPropagation(); servito(this, key); });
-  // clic sulla card (non sul bottone) → apre il dettaglio con i piatti
-  div.addEventListener('click', function(e){ if(e.target.closest('.btn-pronto')) return; openExpoDetail(key); });
-
-  // beep una-tantum quando il gruppo diventa pronto
-  if(allReady && !_expoReady.has(key)){ _expoReady.add(key); beep(); }
-  if(!allReady) _expoReady.delete(key);
-
+    ${banner}`;
+  div.addEventListener('click', ()=> openExpoDetail(g.table));
   return div;
 }
 
-async function servito(btn, key){
-  if(btn.disabled) return;
-  const g = expoGroups.get(key);
-  if(!g) return;
-  const rows = [...g.rows.values()];
-  if(!rows.every(r => r.status === 'ready')) return; // guardia: solo se tutto pronto
-  btn.disabled = true;
-  const tg = rows[0].ticket_group;
-  if(navigator.onLine){
-    if(tg){
-      const { error } = await sb.from('orders').update({ status:'handled' }).eq('ticket_group', tg);
-      if(error) console.warn('[Jun KDS] servito:', error.message);
-    } else {
-      // legacy senza ticket_group: chiudi per id
-      for(const r of rows){ await sb.from('orders').update({ status:'handled' }).eq('id', r.id); }
-    }
-  } else {
-    rows.forEach(r => queuePush({ id: r.id, status: 'handled' }));
-  }
-  // Cronologia = ordine COMPLETO diviso per postazione (righe già disponibili localmente)
-  const byStation = {}; const notes = new Set();
-  rows.forEach(r=>{
-    if(r.customer_notes) notes.add(r.customer_notes);
-    let items=[]; try{ items=JSON.parse(r.order_details||'[]'); }catch(e){}
-    const s = normStation(r.station) || '?';
-    (byStation[s] = byStation[s] || []).push(...items.map(it=>({qty:it.qty||1, name:it.name})));
-  });
-  const _ord=['crudo','frittura','caldo','griglia'];
-  const groups = Object.keys(byStation)
-    .sort((a,b)=> (_ord.indexOf(a)+1||99) - (_ord.indexOf(b)+1||99))
-    .map(s=>({ station:s, label:STATION_LABELS[s]||s, items:byStation[s] }));
-  addLog('pronto', g.table, null, [...notes].join(' · ')||null, groups.length?groups:null);
-  expoGroups.delete(key); _expoReady.delete(key);
-  rows.forEach(r => activeOrders.delete(r.id));
-  snapSave();
-  if(_xdOpen === key) closeExpoDetail();
-  expoRenderAll();
-}
-
-// ── Dettaglio ordine Regia: clic su card → tutti i piatti per postazione ────
-let _xdOpen = null;
-
-function openExpoDetail(key){
-  const g = expoGroups.get(key);
-  if(!g) return;
-  _xdOpen = key;
-  const rows = [...g.rows.values()].slice()
-    .sort((a,b)=> (a.station||'').localeCompare(b.station||''));
-
-  const stationsHtml = rows.map(r=>{
-    let items = [];
-    try{ items = JSON.parse(r.order_details||'[]'); }catch(e){}
-    const icon = r.status === 'ready' ? '✅' : '⏳';
-    const lbl  = STATION_LABELS[r.station] || r.station || '?';
-    const itemsHtml = items.length
-      ? items.map(it=>`<div class="xd-it${it.done?' done':''}"><span class="xd-q">${it.qty}x</span><span>${it.name||''}</span></div>`).join('')
+// ── Dettaglio tavolo (owner, sola lettura): tutti i piatti divisi per postazione
+function openExpoDetail(t){
+  _xdOpen = t;
+  const rows = [...activeOrders.values()].filter(r => !r.waiter_request && r.station && r.table_number == t);
+  if(!rows.length){ closeExpoDetail(); return; }
+  const ord = ['crudo','frittura','caldo','griglia'];
+  const byStation = {};
+  rows.forEach(r => { const s = normStation(r.station); const b = (byStation[s] = byStation[s] || { ready:true, items:[] }); if(r.status !== 'ready') b.ready = false; b.items.push(...ordItems(r)); });
+  const sts = Object.keys(byStation).sort((a,b)=>(ord.indexOf(a)+1||99)-(ord.indexOf(b)+1||99));
+  const stHtml = sts.map(s => {
+    const icon = byStation[s].ready ? '✅' : '⏳';
+    const itemsHtml = byStation[s].items.length
+      ? byStation[s].items.map(it=>`<div class="xd-it${it.served?' done':''}"><span class="xd-q">${it.qty}x</span><span>${it.name||''}</span></div>`).join('')
       : `<div class="xd-it xd-empty">— nessun piatto —</div>`;
-    return `<div class="xd-st"><span class="xd-st-h">${icon} ${lbl}</span>${itemsHtml}</div>`;
+    return `<div class="xd-st"><span class="xd-st-h">${icon} ${STATION_ICON[s]||''} ${STATION_LABELS[s]||s}</span>${itemsHtml}</div>`;
   }).join('');
-
   const notes = [...new Set(rows.map(r=>r.customer_notes).filter(Boolean))];
   const notaHtml = notes.length ? `<div class="xd-nota">📝 ${notes.join(' · ')}</div>` : '';
-  const col = tableColor(g.table);
-
+  const col = tableColor(t);
+  const colorMap = {c1:'#e63946',c2:'#2563eb',c3:'#16a34a',c4:'#d97706',c5:'#7c3aed',c6:'#0891b2'};
   let ov = document.getElementById('xd-overlay');
-  if(!ov){
-    ov = document.createElement('div');
-    ov.id = 'xd-overlay';
-    ov.addEventListener('click', e=>{ if(e.target === ov) closeExpoDetail(); });
-    document.body.appendChild(ov);
-  }
+  if(!ov){ ov = document.createElement('div'); ov.id = 'xd-overlay'; ov.addEventListener('click', e=>{ if(e.target === ov) closeExpoDetail(); }); document.body.appendChild(ov); }
   ov.innerHTML = `
     <div id="xd-box">
-      <div id="xd-head" class="${col}" style="background:var(--none);">
-        <div id="xd-head-l">
-          <span id="xd-tav-lbl">Tavolo</span>
-          <span id="xd-tav-num">${g.table}</span>
-        </div>
+      <div id="xd-head" style="background:${colorMap[col]||'#333'};">
+        <div id="xd-head-l"><span id="xd-tav-lbl">Tavolo</span><span id="xd-tav-num">${t}</span></div>
         <button id="xd-close" onclick="closeExpoDetail()">✕</button>
       </div>
-      ${stationsHtml}
+      ${stHtml}
       ${notaHtml}
-    </div>
-  `;
-  // colore header uguale alla card del tavolo (riusa le classi c1..c6 via .tk-top)
-  const head = ov.querySelector('#xd-head');
-  const colorMap = {c1:'#e63946',c2:'#2563eb',c3:'#16a34a',c4:'#d97706',c5:'#7c3aed',c6:'#0891b2'};
-  head.style.background = colorMap[col] || '#333';
+    </div>`;
   ov.classList.add('open');
 }
-
-function closeExpoDetail(){
-  _xdOpen = null;
-  const ov = document.getElementById('xd-overlay');
-  if(ov) ov.classList.remove('open');
-}
-
-// ── Render ticket ordine ──────────────────────────────────────────────────
-function renderTicket(order, silent){
-  const items = JSON.parse(order.order_details || '[]');
-  if(!items.length) return;
-  if(items.every(it=>it.done)) return;   // tutti i piatti già inviati → niente card
-
-  // DEDUP: se esiste già una card per questo ordine (reconnect / auto-reload / redelivery
-  // realtime), rimuovila prima di ricrearla — evita card doppie "orfane" il cui PRONTO non
-  // fa nulla (activeOrders ha una sola voce per id).
-  const _dup = document.querySelector('#board .ticket[data-id="'+order.id+'"]');
-  if(_dup) _dup.remove();
-
-  activeOrders.set(order.id, order);
-  snapSave();
-
-  const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
-  const col   = tableColor(order.table_number);
-
-  // solo i piatti NON ancora inviati (data-idx = posizione reale nell'array)
-  const itemsHtml = items.map((it,idx)=> it.done ? '' :
-    `<div class="tk-item" data-idx="${idx}" onclick="toggleDone(this)">
-      <span class="tk-check">✓</span>
-      <span class="tk-qty">${it.qty}x</span>
-      <span class="tk-name">${it.name}${it.code ? ` <span class="tk-code">${it.code}</span>` : ''}</span>
-    </div>`
-  ).join('');
-
-  const notaHtml = order.customer_notes
-    ? `<div class="tk-nota">${order.customer_notes}</div>`
-    : '';
-
-  const div = document.createElement('div');
-  div.className = `ticket ${col}${silent ? '' : ' is-new'}${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
-  div.dataset.ts = tsVal;
-  div.dataset.id = order.id;
-  div.innerHTML = `
-    <div class="tk-top">
-      <span class="tk-tavolo-label">Tavolo</span>
-      <span class="tk-tavolo-num">${order.table_number}</span>
-      <span class="tk-time">-</span>
-    </div>
-    <hr class="tk-sep">
-    <div class="tk-items">${itemsHtml}</div>
-    ${notaHtml}
-    <button class="btn-pronto">PRONTO</button>
-  `;
-
-  div.querySelector('.btn-pronto').addEventListener('click', function(){
-    sendReady(this, order.id);
-  });
-
-  shortestCol().appendChild(div);
-  updateTimers();
-  updateEmptyState();
-
-  if(!silent){
-    beep();
-    addLog('nuovo', order.table_number,
-      items.map(i=>({qty:i.qty+'x', name:i.name})),
-      order.customer_notes||null
-    );
-  }
-}
-
-// ── Render richiesta cameriere ─────────────────────────────────────────────
-const _waiterIta = {
-  explanation: 'Spiegazione sui piatti',
-  drinks:      'Ordine bevande',
-  bill:        'Richiesta conto',
-  other:       'Altra assistenza',
-  call:        'Chiamata cameriere'
-};
-
-function renderReqCard(order, silent){
-  activeOrders.set(order.id, order);
-  snapSave();
-
-  const ora = order.created_at
-    ? new Date(order.created_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
-    : '--:--';
-
-  const reqLabel = order.customer_notes || _waiterIta[order.waiter_request] || order.waiter_request;
-
-  const div = document.createElement('div');
-  div.className = `req-card${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
-  div.dataset.id = order.id;
-  div.innerHTML = `
-    <div class="req-top">
-      <span class="req-tavolo-label">Tavolo</span>
-      <span class="req-tavolo-num">${order.table_number}</span>
-      <span class="req-time">${ora}</span>
-    </div>
-    <hr class="tk-sep">
-    <div class="req-body">${reqLabel}</div>
-    <button class="req-btn">Gestita</button>
-  `;
-
-  div.querySelector('.req-btn').addEventListener('click', function(){
-    gestita(this, reqLabel, order.table_number, order.id);
-  });
-
-  document.getElementById('sidebar').appendChild(div);
-
-  if(!silent){
-    beep();
-    addLog('req', order.table_number, null, reqLabel);
-  }
-}
+function closeExpoDetail(){ _xdOpen = null; const ov = document.getElementById('xd-overlay'); if(ov) ov.classList.remove('open'); }
 
 // ── Carica ordini pendenti ─────────────────────────────────────────────────
-// Renderizza una riga da snapshot/dati rispettando la vista corrente
-function renderFromData(order, silent){
-  if(STATION === 'cameriere'){
-    if(order.waiter_request){ renderReqCard(order, silent); return; }  // chiamata cliente → sidebar
-    if(order.station) expoUpsert(order, silent);                       // piatti → vista "Da servire"
-    return;
-  }
-  if(EXPO){
-    if(order.waiter_request){ renderReqCard(order, silent); return; }   // chiamata cliente → sidebar (owner + regia)
-    expoUpsert(order, silent); return;
-  }
-  if(isKitchen){
-    if(normStation(order.station) === STATION && !order.waiter_request) renderTicket(order, silent);
-    return;
-  }
-  // vista generale legacy: tutto
-  if(order.waiter_request) renderReqCard(order, silent);
-  else renderTicket(order, silent);
-}
-
 async function loadPending(wasKnown = null){
   if(!realOnline){
-    console.warn('[Jun KDS] offline — carico snapshot locale');
-    snapLoad().forEach(order => renderFromData(order, true));
-    if(EXPO) expoRenderAll();
+    activeOrders.clear();
+    snapLoad().forEach(r => applyRow(r));
+    renderAll(); _engineInited = true;
     return;
   }
-  // Query base dipendente dalla vista
   let q = sb.from('orders').select('*');
-  if(STATION === 'cameriere'){
-    q = q.in('status',['pending','ready']);   // piatti (station) + richieste (waiter_request)
-  } else if(EXPO){
-    q = q.in('status',['pending','ready']);   // include le chiamate "chiama cameriere" (station null) → sidebar owner/regia
-  } else {
-    q = q.eq('status','pending');
-    if(isKitchen) q = (STATION === 'griglia') ? q.in('station',['griglia','freddi']) : q.eq('station', STATION);
-  }
+  if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
+  else if(isKitchen){ q = q.eq('status','pending'); q = (STATION === 'griglia') ? q.in('station',['griglia','freddi']) : q.eq('station', STATION); }
+  else { q = q.eq('status','pending'); }
   q = q.order('created_at',{ ascending:true });
   const { data, error } = await q;
-
   if(error){
     console.warn('[Jun KDS] load fallito, uso snapshot:', error.message);
-    snapLoad().forEach(order => renderFromData(order, true));
-    if(EXPO) expoRenderAll();
+    activeOrders.clear();
+    snapLoad().forEach(r => applyRow(r));
+    renderAll(); _engineInited = true;
     return;
   }
   activeOrders.clear();
-  if(EXPO) expoGroups.clear();
-  if(EXPO){
-    const _side = document.getElementById('sidebar'); if(_side) _side.innerHTML = '';  // evita richieste "chiama cameriere" duplicate su reconnect (owner + cameriere)
-  }
-  if(STATION === 'cameriere'){
-    _serveInited = false; _lastServeCount = 0;                                          // no beep al ricaricamento
-  }
-  data.forEach(order => {
-    // se wasKnown passato, segna solo gli ID che non erano in display prima del blackout
-    if(wasKnown && !wasKnown.has(order.id)) newSinceReconnect.add(order.id);
-    renderFromData(order, true);
-  });
-  if(EXPO) expoRenderAll();
+  _kitchenCount = 0; _serveCount = 0;
+  data.forEach(r => { if(wasKnown && !wasKnown.has(r.id)) newSinceReconnect.add(r.id); applyRow(r); });
+  renderAll();
+  _engineInited = true;
 }
 
 // ── Realtime ───────────────────────────────────────────────────────────────
+// UN solo handler per INSERT/UPDATE/DELETE → applyRow nel magazzino → ridisegno.
 function subscribeRealtime(){
   const dot = document.getElementById('online-dot');
-  let ch = sb.channel('kds-orders_' + (STATION||'all'));
-
-  ch = ch.on('postgres_changes',{ event:'INSERT', schema:'public', table:'orders' }, payload => {
-    const order = payload.new;
-    salaOnEvent(); // aggiorna la vista Sala se aperta
-    if(STATION === 'cameriere'){
-      if(order.waiter_request){ if(order.status === 'pending') renderReqCard(order, false); return; }   // chiamata → sidebar
-      if(order.station && (order.status === 'pending' || order.status === 'ready')){ expoUpsert(order, false); expoRenderAll(); cronNewOrder(order); }  // piatti → serve + cronologia con postazione
-      return;
+  let ch = sb.channel('kds_' + (STATION||'all'));
+  ch = ch.on('postgres_changes', { event:'*', schema:'public', table:'orders' }, payload => {
+    salaOnEvent();
+    if(payload.eventType === 'DELETE'){ const old = payload.old; if(old){ activeOrders.delete(old.id); scheduleRender(); } return; }
+    const r = payload.new;
+    if(!r) return;
+    const wasKnown = activeOrders.has(r.id);
+    applyRow(r);
+    if(payload.eventType === 'INSERT' && !wasKnown && relevant(r)){
+      _flash.add(r.id); setTimeout(()=>{ _flash.delete(r.id); }, 1200);
+      if(!r.waiter_request) cronNewOrder(r);
     }
-    if(EXPO){
-      // chiamata "chiama cameriere" (station null) → sidebar owner/regia
-      if(order.waiter_request){ if(order.status === 'pending') renderReqCard(order, false); return; }
-      // expo accetta pending+ready con station valorizzata
-      if(!order.station) return;
-      if(order.status !== 'pending' && order.status !== 'ready') return;
-      expoUpsert(order, false); expoRenderAll(); cronNewOrder(order);
-      return;
-    }
-    if(isKitchen){
-      if(order.status !== 'pending') return;
-      if(normStation(order.station) !== STATION) return;
-      renderTicket(order, false);   // niente req card in cucina
-      return;
-    }
-    // vista generale legacy: comportamento originale
-    if(order.status !== 'pending') return;
-    if(order.waiter_request) renderReqCard(order, false);
-    else renderTicket(order, false);
+    scheduleRender();
   });
-
-  // UPDATE: expo/owner/cameriere lo ascoltano (cucina NO, per non far ricomparire card chiuse)
-  if(EXPO){
-    ch = ch.on('postgres_changes',{ event:'UPDATE', schema:'public', table:'orders' }, payload => {
-      const order = payload.new;
-      salaOnEvent();
-      // "chiama cameriere" gestita altrove → togli la card (sync multi-tablet: owner + cameriere)
-      if(order.waiter_request){
-        if(order.status !== 'pending'){
-          const card = document.querySelector('.req-card[data-id="'+order.id+'"]');
-          if(card){ card.remove(); updateUrgIndicator(); }
-          activeOrders.delete(order.id); snapSave();
-        }
-        return;
-      }
-      if(!order.station) return;
-      if(order.status === 'handled'){ expoRemoveRow(order); expoRenderAll(); return; }
-      if(order.status === 'pending' || order.status === 'ready'){ expoUpsert(order, false); expoRenderAll(); }
-    });
-  }
-
   let _prevStatus = null;
   ch.subscribe(status => {
     dot.style.background = status === 'SUBSCRIBED' ? '#16a34a' : '#dc2626';
-    // Se torna online dopo una disconnessione → ricarica per recuperare eventi persi
     if(status === 'SUBSCRIBED' && _prevStatus && _prevStatus !== 'SUBSCRIBED'){
       console.log('[Jun KDS] riconnesso — reload dati');
       loadPending(new Set(activeOrders.keys()));
@@ -1590,30 +1312,25 @@ function subscribeRealtime(){
   });
 }
 
-// ── Sync silenzioso: controlla ordini già noti che ora sono handled ────────
+// ── Sync silenzioso: allinea gli ordini noti allo stato reale (rete di sicurezza) ──
 async function _silentSync(){
-  if(!realOnline || document.visibilityState !== 'visible') return;
-  if(!activeOrders.size) return;
+  if(!realOnline || document.visibilityState !== 'visible' || !activeOrders.size) return;
   const ids = [...activeOrders.keys()];
-  const { data } = await sb.from('orders').select('id,status').in('id', ids);
+  const { data } = await sb.from('orders').select('id,status,order_details').in('id', ids);
   if(!data) return;
-  const stillActive = new Set(data.filter(r => r.status === 'pending' || r.status === 'ready').map(r => r.id));
+  const fresh = new Map(data.map(r => [r.id, r]));
   let changed = false;
   ids.forEach(id => {
-    if(stillActive.has(id)) return;
-    const order = activeOrders.get(id);
-    if(!order) return;
-    if(order.waiter_request){
-      const card = document.querySelector('.req-card[data-id="'+id+'"]');
-      if(card){ card.remove(); updateUrgIndicator(); }
-    } else {
-      expoRemoveRow(order);
+    const cur = activeOrders.get(id);
+    const r = fresh.get(id);
+    if(!r){ activeOrders.delete(id); changed = true; return; }
+    if(cur.status !== r.status || cur.order_details !== r.order_details){
+      cur.status = r.status; cur.order_details = r.order_details;
+      if(!relevant(cur)) activeOrders.delete(id);
       changed = true;
     }
-    activeOrders.delete(id);
-    snapSave();
   });
-  if(changed && EXPO) expoRenderAll();
+  if(changed){ snapSave(); scheduleRender(); }
 }
 
 setInterval(_silentSync, 15000);
