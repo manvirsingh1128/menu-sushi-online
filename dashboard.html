@@ -851,6 +851,7 @@ function renderAll(){
   else if(STATION === 'cameriere') renderServe();
   else if(EXPO)                    renderOwner();
   renderWaiterCalls();
+  updateTimers();   // mostra subito il tempo trascorso (niente "-" iniziale)
 }
 
 // Selezione piatti (stato DOM effimero) → aggiorna label del tasto invio/servi
@@ -1006,14 +1007,21 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('board-wrap').addEventListener('scroll', updateUrgIndicator);
 });
 
-// ── Timer live ─────────────────────────────────────────────────────────────
-function elStr(m){return m<1?'<1 min':m<60?m+' min':Math.floor(m/60)+'h '+(m%60)+'m';}
+// ── Timer live (scorre ogni secondo, formato minuti:secondi) ────────────────
+function elStr(sec){
+  const m=Math.floor(sec/60), s=sec%60;
+  if(m<60) return m+':'+String(s).padStart(2,'0');
+  const h=Math.floor(m/60);
+  return h+':'+String(m%60).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
 function updateTimers(){
+  const now=Date.now();
   document.querySelectorAll('.ticket[data-ts]').forEach(tk=>{
     const el=tk.querySelector('.tk-time');
-    if(!el) return;   // le card "da servire" (cameriere) non hanno il timer nell'header
-    const m=Math.floor((Date.now()-parseInt(tk.dataset.ts))/60000);
-    el.textContent=elStr(m);
+    if(!el) return;   // le card "da servire" (cameriere) hanno il badge, non il timer
+    const sec=Math.max(0,Math.floor((now-parseInt(tk.dataset.ts))/1000));
+    const m=Math.floor(sec/60);
+    el.textContent=elStr(sec);
     el.className='tk-time'+(m>=7?' urg':m>=4?' warn':'');
     tk.classList.toggle('urgent',m>=7);
     const id = tk.dataset.ts+'_'+tk.dataset.id;
@@ -1021,7 +1029,7 @@ function updateTimers(){
   });
   updateUrgIndicator();
 }
-setInterval(updateTimers,60000);
+setInterval(updateTimers,1000);   // ticchetta ogni secondo
 
 // ── Beep ───────────────────────────────────────────────────────────────────
 let _ac = null;
