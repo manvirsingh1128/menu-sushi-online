@@ -374,7 +374,8 @@ body.kfull #divider, body.kfull #sidebar{display:none;}
   box-shadow:0 3px 10px rgba(0,0,0,.4);display:flex;flex-direction:column;
   border:3px solid transparent;transition:opacity .2s;}
 .sala-tile.libero{opacity:.32;}
-.sala-tile.pagato{opacity:.4;filter:grayscale(1);border-color:#888;}
+.sala-tile.pagato{border-color:#888;}
+.sala-faded{opacity:.4;filter:grayscale(1);}
 .sala-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;}
 .sala-tav{display:flex;align-items:baseline;gap:7px;}
 .sala-tav-lbl{font-size:.62em;text-transform:uppercase;letter-spacing:1px;font-weight:600;opacity:.85;}
@@ -399,6 +400,15 @@ body.kfull #divider, body.kfull #sidebar{display:none;}
 .sala-btn.paga:disabled{background:#cfcabf;color:#999;cursor:not-allowed;}
 .sala-btn.riapri{background:#e8e2d8;color:#555;}
 .sala-btn.riapri:hover{background:#ddd6c9;}
+.sala-libera-outer{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:13px;
+  border:none;border-radius:8px;background:#2563eb;color:#fff;font-family:inherit;
+  font-size:1em;font-weight:800;letter-spacing:.3px;cursor:pointer;text-align:center;}
+.sala-libera-outer:hover{background:#1d4ed8;}
+/* Allarme bevande su tavolo già pagato */
+.sala-tile.allarme-bev{border-color:#ef4444 !important;animation:pulse-bev 1s ease-in-out infinite alternate;}
+@keyframes pulse-bev{from{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.2);}to{border-color:#dc2626;box-shadow:0 0 10px rgba(239,68,68,.55);}}
+.sala-allarme-lbl{background:#dc2626;color:#fff;font-size:.75em;font-weight:800;text-align:center;
+  padding:5px 8px;border-radius:6px;margin-bottom:8px;letter-spacing:.4px;}
 
 /* ── Popup dettaglio conto tavolo (Sala) ── */
 #sd-overlay{display:none;position:fixed;inset:0;z-index:2100;
@@ -440,6 +450,26 @@ body.kfull #divider, body.kfull #sidebar{display:none;}
   letter-spacing:.5px;cursor:pointer;}
 .sd-pay:hover{background:#15803d;}
 .sd-pay.riapri{background:#e8e2d8;color:#555;}
+.sd-reset{display:block;width:calc(100% - 36px);margin:4px 18px 14px;padding:10px;border:1px solid #444;
+  border-radius:10px;background:#2a2f38;color:#f87171;font-family:inherit;font-size:.82em;font-weight:700;
+  letter-spacing:.3px;cursor:pointer;}
+.sd-reset:hover{background:#333;color:#fca5a5;}
+.cron-dot.reset{background:#f59e0b;}
+/* Overlay conferma reset tavolo */
+#reset-confirm{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.72);
+  display:none;align-items:center;justify-content:center;padding:16px;}
+#reset-confirm.open{display:flex;}
+#reset-box{background:#1b1e24;color:#eee;width:min(400px,94vw);border-radius:18px;padding:26px 24px;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+#reset-box-h{font-size:1.1rem;font-weight:700;margin-bottom:10px;}
+#reset-box-sub{font-size:.84rem;color:#9aa;margin-bottom:22px;line-height:1.55;}
+#reset-box-btns{display:flex;gap:12px;}
+#reset-cancel{flex:1;padding:13px;border:1px solid #444;border-radius:8px;background:#2a2f38;
+  color:#ccc;font-family:inherit;font-size:.95em;font-weight:700;cursor:pointer;}
+#reset-cancel:hover{background:#333;}
+#reset-ok{flex:1;padding:13px;border:none;border-radius:8px;background:#b91c1c;
+  color:#fff;font-family:inherit;font-size:.95em;font-weight:700;cursor:pointer;}
+#reset-ok:hover{background:#991b1b;}
 </style>
 </head>
 <body>
@@ -707,7 +737,7 @@ function cronLoad(){
 }
 
 function cronRender(entry){
-  const labels={pronto:'Ordine pronto',req:'Richiesta gestita',nuovo:'Nuovo ordine',pagato:'Conto pagato'};
+  const labels={pronto:'Ordine pronto',req:'Richiesta gestita',nuovo:'Nuovo ordine',pagato:'Conto pagato',reset:'Tavolo liberato'};
   document.getElementById('cron-empty').style.display='none';
   const div=document.createElement('div');
   div.className='cron-item';
@@ -1774,26 +1804,44 @@ async function renderSala(){
   for(let t=1; t<=NUM_TABLES; t++){
     const info = _salaByTable[t];
     const st = salaGet(t);
-    // reset automatico: pagato ma arriva un ordine PIÙ RECENTE del confine → nuovi clienti.
-    // Tengo paidAt come confine (così gli ordini vecchi restano esclusi) e azzero il resto.
-    if(st.paid && info && st.paidAt && info.latest > st.paidAt){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
+    // Reset automatico: se arriva CIBO dopo il pagamento → nuovo gruppo → reset completo.
+    // Se arrivano SOLO bevande → non resettare, mostra allarme rosso (stesso gruppo che ha aggiunto bevande).
+    if(st.paid && info && st.paidAt && info.latest > st.paidAt){
+      const hasNewFood = !!(info.food && info.food.length > 0);
+      if(hasNewFood){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
+    }
     const T = salaTotals(t);
+    // Allarme: tavolo PAGATO ma ha bevande ordinate dopo il pagamento (non ancora saldate)
+    const alarmeBev = !!(st.paid && info && info.drinksTotal > 0);
     const topBg = st.paid ? '#888' : (_salaColors[tableColor(t)]||'#333');
     let cls = 'sala-tile';
     if(st.paid) cls += ' pagato';
     else if(!T.occupied) cls += ' libero';
+    if(alarmeBev) cls += ' allarme-bev';
     const stateLbl = st.paid ? 'Pagato' : (T.occupied ? 'Da pagare' : 'Libero');
     const isStima = (st.adults==null && T.est>0);
-    const btn = st.paid
-      ? `<button class="sala-btn riapri" onclick="salaTogglePaid(${t},event)">Riapri</button>`
-      : `<button class="sala-btn paga"${T.occupied?'':' disabled'} onclick="salaTogglePaid(${t},event)">PAGATO</button>`;
     // stepper bloccati quando il conto è pagato (congelato)
     const adStepCard = st.paid ? `<span class="sala-lock">${T.adults}</span>`
       : `<button onclick="salaAdults(${t},-1,event)">−</button><span>${T.adults}</span><button onclick="salaAdults(${t},1,event)">+</button>`;
     const kdStepCard = st.paid ? `<span class="sala-lock">${T.kids}</span>`
       : `<button onclick="salaKids(${t},-1,event)">−</button><span>${T.kids}</span><button onclick="salaKids(${t},1,event)">+</button>`;
+    const mainBtn = st.paid
+      ? `<button class="sala-btn riapri" onclick="salaTogglePaid(${t},event)">Riapri</button>`
+      : `<button class="sala-btn paga"${T.occupied?'':' disabled'} onclick="salaTogglePaid(${t},event)">PAGATO</button>`;
+    // Tile: se PAGATO, il contenuto grigio va dentro .sala-faded (opacity/grayscale).
+    // L'allarme bevande e il tasto Libera Tavolo stanno FUORI da .sala-faded → piena visibilità.
+    const fadeOpen  = st.paid ? '<div class="sala-faded">' : '';
+    const fadeClose = st.paid ? '</div>' : '';
+    const liberaHtml = st.paid
+      ? `<button class="sala-libera-outer" onclick="salaAskReset(${t},event)">♻️ Libera Tavolo</button>`
+      : '';
+    const alarmeHtml = alarmeBev
+      ? `<div class="sala-allarme-lbl" onclick="event.stopPropagation();openSalaDetail(${t})">⚠️ BEVANDE NON SALDATE · ${eur(info.drinksTotal)}</div>`
+      : '';
     html += `
       <div class="${cls}" data-t="${t}" onclick="openSalaDetail(${t})">
+        ${alarmeHtml}
+        ${fadeOpen}
         <div class="sala-top" style="background:${topBg};">
           <div class="sala-tav"><span class="sala-tav-lbl">Tavolo</span><span class="sala-tav-num">${t}</span></div>
           <span class="sala-state">${stateLbl}</span>
@@ -1809,8 +1857,10 @@ async function renderSala(){
           </div>
           <div class="sala-total">${T.total? eur(T.total) : '—'}</div>
           <div class="sala-breakdown">${T.occupied ? (T.adults+' ad'+(T.kids?' + '+T.kids+' bmb':'')+(T.drinks?' + bev '+eur(T.drinks):'')+(T.extras?' + extra '+eur(T.extras):'')+' · tocca') : 'nessun ordine'}</div>
-          ${btn}
+          ${mainBtn}
         </div>
+        ${fadeClose}
+        ${liberaHtml}
       </div>`;
   }
   grid.innerHTML = html;
@@ -1851,7 +1901,12 @@ function salaConfirmPay(){
               food: info ? info.food.slice() : [], extras:(st.extras||[]).slice() };
   st.paid = true;
   salaPersist(t);
-  addLog('pagato', t, null, 'Incassato ' + eur(T.total));   // cronologia (questo tablet)
+  addLog('pagato', t, null, 'Incassato ' + eur(T.total));
+  // Fix 1: pulisci la cucina — gli ordini pending/ready di questo tavolo escono dai board
+  if(realOnline){
+    sb.from('orders').update({status:'handled'}).eq('table_number',t).in('status',['pending','ready'])
+      .then(({error})=>{ if(error) console.warn('[Jun Pay] clean cucina:', error.message); });
+  }
   renderSala();
 }
 // Riapri: annulla l'incasso e ripristina il confine precedente → riappare il conto
@@ -1862,6 +1917,39 @@ function salaReopen(t){
   st.paidAt = st.prevPaidAt || null;
   st.prevPaidAt = null;
   salaPersist(t);
+  renderSala();
+}
+
+// Fix 2: Libera Tavolo — reset completo (gruppo partito senza pagare o pulizia manuale)
+let _resetAsk = null;
+function salaAskReset(t, e){
+  if(e) e.stopPropagation();
+  closeSalaDetail();
+  _resetAsk = t;
+  const ov = document.getElementById('reset-confirm');
+  document.getElementById('reset-confirm-tav').textContent = t;
+  if(ov) ov.classList.add('open');
+}
+function salaCloseReset(){ _resetAsk=null; const ov=document.getElementById('reset-confirm'); if(ov) ov.classList.remove('open'); }
+async function salaConfirmReset(){
+  const t = _resetAsk; if(t==null) return;
+  salaCloseReset();
+  // Chiudi tutti gli ordini pending/ready in cucina
+  if(realOnline){
+    const {error} = await sb.from('orders').update({status:'handled'}).eq('table_number',t).in('status',['pending','ready']);
+    if(error) console.warn('[Jun Reset] cucina:', error.message);
+  }
+  // Azzera stato sala. Il confine (paidAt) va all'orario dell'ultimo ordine (server):
+  // così gli ordini del gruppo appena uscito (ora 'handled' ma ancora letti da fetchSalaRows)
+  // restano ESCLUSI → il tavolo torna LIBERO e si riattiva SOLO quando il prossimo cliente
+  // fa un ordine nuovo (created_at successivo al confine).
+  const info = _salaByTable[t];
+  const st = salaGet(t);
+  st.paid = false; st.prevPaidAt = null;
+  st.paidAt = (info && info.latest) ? info.latest : Date.now();
+  st.bill = null; st.adults = null; st.kids = 0; st.extras = [];
+  salaPersist(t);
+  addLog('reset', t, null, 'Tavolo liberato manualmente');
   renderSala();
 }
 
@@ -1949,6 +2037,7 @@ function openSalaDetail(t){
       ${paid
         ? `<button class="sd-pay riapri" onclick="salaTogglePaid(${t})">Riapri (annulla incasso)</button>`
         : `<button class="sd-pay" onclick="salaTogglePaid(${t})">Incassa · Segna PAGATO</button>`}
+      <button class="sd-reset" onclick="salaAskReset(${t})">♻️ Libera Tavolo (reset completo)</button>
     </div>`;
   ov.classList.add('open');
 }
@@ -2172,6 +2261,16 @@ window.addEventListener('load', async () => {
     </div>
   </div>
 </div>
+<div id="reset-confirm">
+  <div id="reset-box">
+    <div id="reset-box-h">Liberare il Tavolo <span id="reset-confirm-tav"></span>?</div>
+    <div id="reset-box-sub">Gli ordini ancora in cucina saranno chiusi.<br>Il conto sarà azzerato completamente.<br>Azione irreversibile.</div>
+    <div id="reset-box-btns">
+      <button id="reset-cancel" onclick="salaCloseReset()">Annulla</button>
+      <button id="reset-ok" onclick="salaConfirmReset()">♻️ Libera Tavolo</button>
+    </div>
+  </div>
+</div>
 <div id="so-overlay">
   <div id="so-box">
     <div id="so-head"><b>🔴 Piatti esauriti (86)</b><button id="so-close" onclick="closeSoldOut()">✕</button></div>
@@ -2183,11 +2282,6 @@ window.addEventListener('load', async () => {
     <div id="so-hint">Scrivi solo il numero del piatto (come sul menu) e premi Invio. Sparisce subito dal menu dei clienti e torna disponibile da solo il giorno dopo.</div>
     <div id="so-list"></div>
   </div>
-</div>
-<div id="dash-credit">
-  <a href="https://vomeri.it" target="_blank" rel="noopener">
-    <span class="dc-main">Creato da <span>vomeri.it</span></span><span class="dc-sub"> · Siti web · App · Software aziendali</span>
-  </a>
 </div>
 </body>
 </html>
