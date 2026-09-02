@@ -409,6 +409,9 @@ body.kfull #divider, body.kfull #sidebar{display:none;}
 @keyframes pulse-bev{from{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.2);}to{border-color:#dc2626;box-shadow:0 0 10px rgba(239,68,68,.55);}}
 .sala-allarme-lbl{background:#dc2626;color:#fff;font-size:.75em;font-weight:800;text-align:center;
   padding:5px 8px;border-radius:6px;margin-bottom:8px;letter-spacing:.4px;}
+/* Avviso informativo: nuovo ordine di CIBO dopo il pagamento (incluso AYCE, niente da saldare) */
+.sala-postpaid-lbl{background:#1e3a8a;color:#dbeafe;font-size:.72em;font-weight:700;text-align:center;
+  padding:5px 8px;border-radius:6px;margin-bottom:8px;letter-spacing:.3px;cursor:pointer;}
 
 /* ── Popup dettaglio conto tavolo (Sala) ── */
 #sd-overlay{display:none;position:fixed;inset:0;z-index:2100;
@@ -1320,28 +1323,30 @@ function subscribeRealtime(){
   });
 }
 
-// ── Sync silenzioso: allinea gli ordini noti allo stato reale (rete di sicurezza) ──
-async function _silentSync(){
-  if(!realOnline || document.visibilityState !== 'visible' || !activeOrders.size) return;
-  const ids = [...activeOrders.keys()];
-  const { data } = await sb.from('orders').select('id,status,order_details').in('id', ids);
-  if(!data) return;
-  const fresh = new Map(data.map(r => [r.id, r]));
-  let changed = false;
-  ids.forEach(id => {
-    const cur = activeOrders.get(id);
-    const r = fresh.get(id);
-    if(!r){ activeOrders.delete(id); changed = true; return; }
-    if(cur.status !== r.status || cur.order_details !== r.order_details){
-      cur.status = r.status; cur.order_details = r.order_details;
-      if(!relevant(cur)) activeOrders.delete(id);
-      changed = true;
-    }
-  });
-  if(changed){ snapSave(); scheduleRender(); }
+// ── Refresh periodico: ri-scarica TUTTI gli ordini della vista OGNI SECONDO ──
+// (come premere F5, ma senza ricaricare la pagina). Ridisegna SOLO se qualcosa è
+// cambiato → nessuno sfarfallio e non cancella le selezioni in corso quando tutto è uguale.
+let _lastSig = '';
+let _suppressPollUntil = 0;   // dopo un'azione locale: non revertire l'update ottimistico
+function markLocalAction(){ _suppressPollUntil = Date.now() + 2000; }
+async function periodicRefresh(){
+  if(!realOnline || document.visibilityState !== 'visible') return;
+  if(Date.now() < _suppressPollUntil) return;
+  let q = sb.from('orders').select('*');
+  if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
+  else if(isKitchen){ q = q.eq('status','pending'); q = (STATION === 'griglia') ? q.in('station',['griglia','freddi']) : q.eq('station', STATION); }
+  else { q = q.eq('status','pending'); }
+  q = q.order('created_at',{ ascending:true });
+  const { data, error } = await q;
+  if(error || !data) return;
+  const sig = JSON.stringify(data.map(r => [r.id, r.status, r.order_details, r.waiter_request]));
+  if(sig === _lastSig) return;   // niente cambiato → non ridisegnare (preserva selezioni)
+  _lastSig = sig;
+  activeOrders.clear();
+  data.forEach(r => applyRow(r));
+  renderAll();
 }
-
-setInterval(_silentSync, 15000);
+setInterval(periodicRefresh, 1000);   // OGNI SECONDO
 
 // Al ritorno alla tab → reload completo (l'utente si aspetta dati freschi)
 document.addEventListener('visibilitychange', () => {
@@ -1386,6 +1391,7 @@ function _salaRowToState(r){
 const _salaPersistTimers = {};
 function salaPersist(t){
   salaSave();
+  markSalaLocalAction();   // non far revertire l'update ottimistico al refresh da 1s
   if(!salaEnabled) return;
   clearTimeout(_salaPersistTimers[t]);
   _salaPersistTimers[t] = setTimeout(async ()=>{
@@ -1457,11 +1463,17 @@ function salaOnEvent(){ if(!salaEnabled || !salaMode) return; clearTimeout(_sala
 async function fetchSalaRows(){
   if(!realOnline) return [];
   try{
+    // Limite temporale: una sessione dura al massimo ~5h, quindi guardiamo solo le ultime 8h.
+    // Evita di riscaricare OGNI SECONDO tutto lo storico 'handled' che si accumula per giorni
+    // (la pulizia DB gira solo la domenica). I tavoli attivi non ne risentono: i loro ordini
+    // sono comunque recenti; quelli vecchi sono già esclusi dal confine paidAt.
+    const _since = new Date(Date.now() - 8*60*60*1000).toISOString();
     const { data, error } = await sb.from('orders')
       .select('table_number,people,created_at,status,waiter_request,order_details,session_id')
       // include 'handled': una bevanda già SERVITA deve restare nel conto fino al pagamento
       // (il confine paidAt esclude comunque gli ordini di clienti precedenti già saldati)
-      .in('status',['pending','ready','handled']);
+      .in('status',['pending','ready','handled'])
+      .gte('created_at', _since);
     if(error){ console.warn('[Jun Sala]', error.message); return []; }
     return data || [];
   }catch(e){ return []; }
@@ -1535,12 +1547,19 @@ async function renderSala(){
   for(let t=1; t<=NUM_TABLES; t++){
     const info = _salaByTable[t];
     const st = salaGet(t);
-    // Reset automatico: se arriva CIBO dopo il pagamento → nuovo gruppo → reset completo.
-    // Se arrivano SOLO bevande → non resettare, mostra allarme rosso (stesso gruppo che ha aggiunto bevande).
+    // Dopo il pagamento il tavolo RESTA "Pagato" se ordina ANCORA lo STESSO gruppo:
+    //  · CIBO nuovo (stesso telefono) → incluso nell'AYCE già pagato → solo avviso, niente da saldare.
+    //  · BEVANDE nuove → NON incluse → allarme rosso "da saldare".
+    // RETE DI SICUREZZA: se ordina un GRUPPO NUOVO (session_id sconosciuto) a un tavolo che il
+    // cameriere ha scordato di liberare, il conto si RIAPRE da solo (come prima del punto ④).
     if(st.paid && info && st.paidAt && info.latest > st.paidAt){
+      const knownSids = (st.bill && st.bill.sessionIds) || [];
+      const postSids  = Object.keys(info._sid || {});
+      const newGroup  = postSids.some(sid => sid !== '__legacy__' && !knownSids.includes(sid));
       const hasNewFood = !!(info.food && info.food.length > 0);
-      if(hasNewFood){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
+      if(newGroup && hasNewFood){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
     }
+    const newFoodAfterPaid = !!(st.paid && info && info.food && info.food.length > 0);
     const T = salaTotals(t);
     // Allarme: tavolo PAGATO ma ha bevande ordinate dopo il pagamento (non ancora saldate)
     const alarmeBev = !!(st.paid && info && info.drinksTotal > 0);
@@ -1569,9 +1588,13 @@ async function renderSala(){
     const alarmeHtml = alarmeBev
       ? `<div class="sala-allarme-lbl" onclick="event.stopPropagation();openSalaDetail(${t})">⚠️ BEVANDE NON SALDATE · ${eur(info.drinksTotal)}</div>`
       : '';
+    const postPaidHtml = newFoodAfterPaid
+      ? `<div class="sala-postpaid-lbl" onclick="event.stopPropagation();openSalaDetail(${t})">🔁 Nuovo ordine dopo il pagamento · incluso</div>`
+      : '';
     html += `
       <div class="${cls}" data-t="${t}" onclick="openSalaDetail(${t})">
         ${alarmeHtml}
+        ${postPaidHtml}
         ${fadeOpen}
         <div class="sala-top" style="background:${topBg};">
           <div class="sala-tav"><span class="sala-tav-lbl">Tavolo</span><span class="sala-tav-num">${t}</span></div>
@@ -1597,6 +1620,34 @@ async function renderSala(){
   grid.innerHTML = html;
   salaSave();
   if(_sdOpen!=null){ const ov=document.getElementById('sd-overlay'); if(ov && ov.classList.contains('open')) openSalaDetail(_sdOpen); }
+}
+
+// ── Refresh LIVE della Sala: OGNI SECONDO ri-scarica sala_state + ordini dal DB e
+// ridisegna SOLO se qualcosa è cambiato (nessuno sfarfallio, non chiude il dettaglio aperto).
+// Sostituisce il vecchio refresh di sicurezza a 15s. ──
+let _lastSalaSig = '';
+let _suppressSalaUntil = 0;   // dopo un'azione locale non revertire l'update ottimistico
+function markSalaLocalAction(){ _suppressSalaUntil = Date.now() + 2500; }
+async function periodicSalaRefresh(){
+  if(!salaEnabled || !salaMode) return;
+  if(!realOnline || document.visibilityState !== 'visible') return;
+  if(Date.now() < _suppressSalaUntil) return;
+  // 1) stato condiviso dei tavoli (persone/pagato/conto) fresco dal DB
+  try{
+    const { data, error } = await sb.from('sala_state').select('*');
+    if(!error && data) data.forEach(r => { salaState[r.table_number] = _salaRowToState(r); });
+  }catch(_){}
+  // 2) ordini freschi → firma leggera per capire se è cambiato qualcosa
+  await buildSalaData();
+  const sig = JSON.stringify(Object.keys(salaState).sort().map(t => {
+      const s = salaState[t]; return [t, !!s.paid, s.paidAt, s.adults, s.kids, (s.extras||[]).length];
+    }))
+    + '|' + JSON.stringify(Object.keys(_salaByTable).sort().map(t => {
+      const b = _salaByTable[t]; return [t, b.people, b.latest, Math.round((b.drinksTotal||0)*100), b.food.length, b.drinks.length];
+    }));
+  if(sig === _lastSalaSig) return;   // niente di nuovo → non ridisegnare (preserva le selezioni)
+  _lastSalaSig = sig;
+  renderSala();
 }
 
 let _payAsk = null;
@@ -1629,7 +1680,8 @@ function salaConfirmPay(){
   st.adults = T.adults; st.kids = T.kids;                         // blocca i coperti
   st.bill = { total:T.total, adults:T.adults, kids:T.kids, coperti:T.coperti,
               drinks: info ? info.drinks.slice() : [], drinksTotal:T.drinks,
-              food: info ? info.food.slice() : [], extras:(st.extras||[]).slice() };
+              food: info ? info.food.slice() : [], extras:(st.extras||[]).slice(),
+              sessionIds: info ? Object.keys(info._sid||{}) : [] }; // telefoni del gruppo che ha pagato
   st.paid = true;
   salaPersist(t);
   addLog('pagato', t, null, 'Incassato ' + eur(T.total));
@@ -1842,10 +1894,17 @@ async function refresh86Count(){
     render86Badge();
   }catch(e){}
 }
+function _so86LiveTick(){
+  // se il pannello "esauriti" è aperto, aggiorna anche la lista (non solo il badge)
+  const ov = document.getElementById('so-overlay');
+  if(ov && ov.classList.contains('open')) soLoadList();
+}
 function subscribe86Count(){
   sb.channel('sold-out-count')
-    .on('postgres_changes', { event:'*', schema:'public', table:'sold_out' }, ()=>refresh86Count())
+    .on('postgres_changes', { event:'*', schema:'public', table:'sold_out' }, ()=>{ refresh86Count(); _so86LiveTick(); })
     .subscribe();
+  // rete di sicurezza (come ordini/sala): ri-conta ogni 20s anche se il realtime buca
+  setInterval(()=>{ if(realOnline && document.visibilityState==='visible'){ refresh86Count(); _so86LiveTick(); } }, 20000);
 }
 
 async function soLoadList(){
@@ -1902,7 +1961,9 @@ window.addEventListener('load', async () => {
     if(vt) vt.classList.add('on');
     await loadSalaState();   // stato condiviso dal DB (persone/pagato/extra)
     subscribeSala();         // aggiornamenti realtime dagli altri tablet
-    setInterval(() => { if(salaMode) renderSala(); }, 15000); // refresh di sicurezza
+    // Il live ISTANTANEO della Sala lo fa il realtime (subscribeSala). Questo è solo la rete di
+    // sicurezza per quando il realtime cade: a 4s (non 1s) per non riscaricare troppi dati inutilmente.
+    setInterval(periodicSalaRefresh, 4000);
   }
   // NB: il Cameriere ora usa la vista Ordini come Owner/Regia (EXPO). Le richieste "chiama cameriere"
   // verranno reintegrate quando miglioreremo questa schermata.

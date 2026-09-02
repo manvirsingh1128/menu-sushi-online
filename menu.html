@@ -1706,13 +1706,20 @@
         document.getElementById('pp-minus').addEventListener('click', () => { if (ppTempSize > 1) { ppTempSize--; ppUpdateNum(); } });
         document.getElementById('pp-plus').addEventListener('click', () => { if (ppTempSize < 12) { ppTempSize++; ppUpdateNum(); } });
         document.getElementById('pp-save').addEventListener('click', () => {
+            const prevSize = tableSize;
             tableSize = ppTempSize;
             document.getElementById('people-label').textContent = tableSize;
             localStorage.setItem('jun_ob', JSON.stringify({ people: tableSize, table: tableNumber }));
             ppOverlay.style.display = 'none';
             pendingMax1Id = null;
+            // Se ho RIDOTTO le persone, i limiti "max a persona" si abbassano:
+            // tolgo dal carrello i piatti in eccesso e avviso il cliente.
+            const trimmed = (tableSize < prevSize) ? reconcileCartToLimits() : false;
+            updateCartBadge();
             renderMenu();
             restoreCartUI();
+            if (typeof refreshCartList === 'function') { try { refreshCartList(); } catch (_) {} }
+            if (trimmed) showInfoToast('<i class="fas fa-circle-info" style="margin-right:7px;"></i>Ho aggiornato il carrello al nuovo numero di persone');
         });
         function openPeoplePicker() {
             ppTempSize = tableSize;
@@ -2720,6 +2727,25 @@
         function itemOrdered(id) { return orderedMax1Items.get(parseInt(id)) || 0; }
         function itemRemaining(id) { const pp = dishMaxPP(id) || 1; return tableSize * pp - itemOrdered(id) - (cart[parseInt(id)] || 0); }
 
+        // Quando le persone DIMINUISCONO, i limiti "max a persona" si abbassano: taglia dal
+        // carrello le quantità che superano il nuovo limite (tableSize * pp - già ordinati).
+        // Gli articoli senza limite (pp = 0) non si toccano. Ritorna true se ha tagliato qualcosa.
+        function reconcileCartToLimits() {
+            let trimmed = false;
+            Object.keys(cart).forEach(k => {
+                const id = parseInt(k);
+                const pp = dishMaxPP(id);            // 0 = illimitato
+                if (!pp) return;
+                const maxInCart = Math.max(0, tableSize * pp - itemOrdered(id));
+                if ((cart[id] || 0) > maxInCart) {
+                    if (maxInCart <= 0) delete cart[id];
+                    else cart[id] = maxInCart;
+                    trimmed = true;
+                }
+            });
+            return trimmed;
+        }
+
         const isWeekend = () => { const d = new Date().getDay(); return d === 0 || d === 6; };
         function getTabLabel(cat) {
             let name = getLang(cat, 'name');
@@ -3004,6 +3030,32 @@
             }, 2500);
         }
 
+        // Toast informativo generico (riusa lo stile di showLimitToast, colore neutro)
+        function showInfoToast(msg) {
+            let toast = document.getElementById('limit-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'limit-toast';
+                toast.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%) translateY(-12px);background:#111;color:#fff;padding:10px 20px;border-radius:50px;font-size:0.88em;font-weight:600;z-index:9999;opacity:0;transition:top 0s,opacity 0.25s,transform 0.25s;pointer-events:none;white-space:nowrap;';
+                document.body.appendChild(toast);
+            }
+            const hdr = document.getElementById('sticky-header');
+            const tabs = document.getElementById('sticky-tabs');
+            const hdrH = hdr ? hdr.offsetHeight : 70;
+            const tabsH = tabs ? tabs.offsetHeight : 60;
+            const headerHidden = hdr && hdr.classList.contains('header-hidden');
+            toast.style.background = '#111';
+            toast.style.top = (headerHidden ? tabsH : hdrH + tabsH) + 10 + 'px';
+            toast.innerHTML = msg;
+            clearTimeout(toast._timer);
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            toast._timer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-12px)';
+            }, 3000);
+        }
+
         function addItem(id) {
             if (soldOut.has(Number(id))) return;
             if (dishMaxPP(id) && itemRemaining(id) <= 0) { openMax1Explain(id); return; }
@@ -3203,7 +3255,10 @@
                     people: tableSize,    // persone che ordinano da QUESTO telefono
                     session_id: _sessionSid()   // ID univoco del dispositivo — per sommare persone multi-telefono
                 }));
-                _sb.from('orders').insert(_rows).then(({ error }) => { if (error) console.warn('[Jun] ordine:', error.message); });
+                _sb.from('orders').insert(_rows).select('created_at').then(({ data, error }) => {
+                    if (error) { console.warn('[Jun] ordine:', error.message); return; }
+                    _anchorSessionStartServer(data); // ancora la sessione all'ora del SERVER (primo ordine)
+                });
             }
             // Svuota nota
             const _npText = document.getElementById('np-text');
@@ -3616,6 +3671,8 @@
             // 86ing: carica piatti esauriti + ascolta cambiamenti in tempo reale
             loadSoldOut();
             subscribeSoldOut();
+            // Blocco tavolo liberato: realtime (istantaneo) + poll 4s di sicurezza
+            subscribeTableFreed();
 
             // Se QR ha fornito il tavolo → mostra numero bloccato (admin per sbloccare)
             if (_qrTable) {
@@ -3884,6 +3941,58 @@
                 video.srcObject.getTracks().forEach(t => t.stop());
                 video.srcObject = null;
             }
+        }
+
+        // Ancora l'inizio sessione all'ora del SERVER (created_at del primo ordine del cliente),
+        // una sola volta. Così il blocco "Tavolo liberato" non dipende dall'orologio del telefono
+        // (che potrebbe essere impostato male): confronta due orari che vengono ENTRAMBI dal server.
+        function _anchorSessionStartServer(rows) {
+            try {
+                if (!rows || !rows.length) return;
+                const s = JSON.parse(localStorage.getItem(SESSION_KEY)); if (!s) return;
+                if (s.startServer) return; // già ancorata al primo ordine
+                const ms = Math.min(...rows.map(r => new Date(r.created_at).getTime()).filter(n => !isNaN(n)));
+                if (!isFinite(ms)) return;
+                s.startServer = ms;
+                localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+            } catch (_) {}
+        }
+
+        // ── BLOCCO LIVE: il cameriere ha premuto "Libera Tavolo" → schermata QR (non si ordina più) ──
+        // Controlla sala_state ogni pochi secondi. Blocca SOLO se il tavolo è stato LIBERATO
+        // (paid = false E paid_at >= ora del PRIMO ordine di questa sessione).
+        // Usa startServer (ora del server), NON l'orologio del telefono. Se il cliente non ha ancora
+        // ordinato (startServer assente) non c'è niente da bloccare. Dopo "Pagato" (paid = true) NON blocca.
+        async function _pollTableFreed() {
+            if (!_sb) return;
+            const qr = document.getElementById('qr-screen');
+            if (qr && qr.style.display === 'block') return; // già bloccato / in attesa di scan
+            let session; try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return; }
+            if (!session || !session.table) return;
+            const anchor = session.startServer;      // ora del SERVER; se manca → nessun ordine → niente da bloccare
+            if (!anchor) return;
+            try {
+                const { data } = await _sb.from('sala_state')
+                    .select('paid,paid_at')
+                    .eq('table_number', session.table)
+                    .maybeSingle();
+                if (data && !data.paid && data.paid_at && Number(data.paid_at) >= anchor) {
+                    showQRScreen(); // tavolo liberato dopo l'inizio sessione → stop ordini finché non si riscansiona
+                }
+            } catch (_) {}
+        }
+        setInterval(_pollTableFreed, 4000); // rete di sicurezza
+
+        // Realtime: reagisce QUASI ISTANTANEAMENTE quando il cameriere libera il tavolo
+        // (filtrato sul solo tavolo di questa sessione → nessun evento inutile).
+        function subscribeTableFreed() {
+            if (!_sb) return;
+            let session; try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch {}
+            const opts = { event: '*', schema: 'public', table: 'sala_state' };
+            if (session && session.table) opts.filter = 'table_number=eq.' + session.table;
+            _sb.channel('table-freed')
+               .on('postgres_changes', opts, () => _pollTableFreed())
+               .subscribe();
         }
 
         // ── FUNZIONI GLOBALI QR SCREEN (chiamate da onclick inline, fuori da DOMContentLoaded) ──
