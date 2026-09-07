@@ -11,3 +11,10 @@ ARCHIVIO-sviluppo/
 *.MP4
 *.mov
 *.MOV
+# sorgenti menu del ristorante — NON pubblicare sul web (Vercel)
+*.pdf
+*.docx
+*.txt
+# tooling di deploy e progetto Android — non servono sul sito
+Sviluppo-Deploy/
+App-Android/

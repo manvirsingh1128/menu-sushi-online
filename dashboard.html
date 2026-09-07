@@ -251,6 +251,17 @@ body.kfull #divider, body.kfull #sidebar{display:none;}
 }
 .tk-name{color:#1a1a1a;}
 .tk-code{font-size:.8em;font-weight:700;color:#777;}
+/* Nota PER-PIATTO: agganciata sotto il piatto a cui si riferisce */
+.tk-item-note{
+  font-size:.92em;font-weight:700;color:#8a5a00;
+  background:#fff8e1;border-left:4px solid #f0c040;
+  margin:-2px 14px 8px 40px;padding:7px 11px;border-radius:0 8px 8px 0;line-height:1.3;
+}
+.tk-sub-note{
+  font-size:.85em;font-weight:700;color:#8a5a00;
+  background:#fff8e1;border-left:4px solid #f0c040;
+  margin:1px 14px 4px 40px;padding:5px 9px;border-radius:0 6px 6px 0;line-height:1.25;
+}
 /* Regia/Owner: piatti veri sotto ogni postazione nella card */
 .tk-sub{display:flex;gap:8px;font-size:.92em;color:#555;padding:2px 14px 2px 40px;line-height:1.3;}
 .tk-sub-q{font-weight:800;color:#111;min-width:22px;}
@@ -545,21 +556,36 @@ const SB_URL  = "https://mtjsxtdubfsqtyvwgdrt.supabase.co";
 const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anN4dGR1YmZzcXR5dndnZHJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTE5MzcsImV4cCI6MjEwMjk4NzkzN30.P4ufwf0G111YKGxFpx9jyj5RTxRX10CsFUVfmWYZpmA";
 const sb = supabase.createClient(SB_URL, SB_ANON);
 
+// ── TAVOLI REALI + SPLIT A/B ───────────────────────────────────────────────
+// Tavoli fisici del ristorante: 2-15, 18-21, 30-40 (i 30-40 esterni). NON esistono 1, 16-17, 22-29.
+const REAL_TABLES = (()=>{ const a=[]; for(let i=2;i<=15;i++)a.push(i); for(let i=18;i<=21;i++)a.push(i); for(let i=30;i<=40;i++)a.push(i); return a; })();
+// Split A/B: il gruppo B di un tavolo N è codificato come N+1000 (es. 18/B = 1018).
+// table_number resta INTERO (nessuna modifica al DB); il vecchio sito, che non manda mai ≥1000, resta compatibile.
+const TBL_B_OFFSET = 1000;
+function tblBase(t){ t=+t||0; return t>=TBL_B_OFFSET ? t-TBL_B_OFFSET : t; }   // 1018 -> 18
+function tblIsB(t){ return (+t||0) >= TBL_B_OFFSET; }                          // 1018 -> true
+function tblDisp(t){ return tblBase(t) + (tblIsB(t) ? ' · B' : ''); }          // 1018 -> "18 · B"
+
 // ── Postazione (vista decisa da ?station=) ─────────────────────────────────
 const STATION = new URLSearchParams(location.search).get('station');
 // Vista "Regia/Owner" (Ordini ⏳/✅ + Sala/Conti). Owner e Cameriere sono istanze separate della stessa vista (le faremo divergere dopo).
-const EXPO = ['expo','owner','cameriere'].includes(STATION);
-const KITCHEN = ['crudo','frittura','caldo','griglia'];
-const STATION_LABELS = { crudo:'Crudo', frittura:'Frittura', caldo:'Caldo / Wok', griglia:'Griglia / Freddi', freddi:'Griglia / Freddi', cameriere:'Cameriere', expo:'Regia', owner:'Owner' };
-// 'freddi' è stata accorpata in 'griglia': le vecchie righe freddi vanno mostrate su Griglia
-const STATION_ALIAS = { freddi:'griglia' };
+// ── STRUTTURA POSTAZIONI (2 aree) ────────────────────────────────────────────
+// CUCINA {cuoco · griglia · tempura} · SUSHI {maki1 · maki2 · chef-sushi} · BAR {bevande/dolci}
+const KITCHEN = ['cuoco','griglia','tempura','maki1','maki2','chef-sushi'];
+const STATION_AREA = { cuoco:'cucina', griglia:'cucina', tempura:'cucina', maki1:'sushi', maki2:'sushi', 'chef-sushi':'sushi', bar:'bar' };
+// Camerieri: uno per area (vista "servi" aggregata, ma filtrata sulla sola area)
+const CAM_AREA = ({ 'cameriere-cucina':'cucina', 'cameriere-sushi':'sushi' })[STATION] || null;
+const IS_BAR = (STATION === 'bar');
+const EXPO = ['expo','owner','cameriere'].includes(STATION) || CAM_AREA !== null || IS_BAR;
+const STATION_LABELS = { cuoco:'Cuoco', griglia:'Griglia', tempura:'Tempura', maki1:'Maki 1', maki2:'Maki 2', 'chef-sushi':'Chef Sushi', 'cameriere-cucina':'Cameriere Cucina', 'cameriere-sushi':'Cameriere Sushi', bar:'Bar', cameriere:'Cameriere', expo:'Regia', owner:'Owner' };
+const STATION_ALIAS = {};
 const normStation = s => STATION_ALIAS[s] || s;
 const isKitchen = KITCHEN.includes(STATION);
 // Cucina = solo ordini a tutto schermo: nasconde divider + sidebar richieste
 if(isKitchen && document.body) document.body.classList.add('kfull');
 
-// Favicon emoji per postazione (resta dopo il redirect dei file crudo/frittura/…)
-const STATION_ICON = { crudo:'🍣', frittura:'🍤', caldo:'🍜', griglia:'🔥', cameriere:'🛎️', expo:'🧭', owner:'📊' };
+// Favicon emoji per postazione (resta dopo il redirect dei file delle postazioni)
+const STATION_ICON = { cuoco:'🍜', griglia:'🔥', tempura:'🍤', maki1:'🍣', maki2:'🍙', 'chef-sushi':'🍱', 'cameriere-cucina':'🛎️', 'cameriere-sushi':'🛎️', bar:'🍹', cameriere:'🛎️', expo:'🧭', owner:'📊' };
 (function(){
   const emoji = STATION_ICON[STATION] || '🍽️';
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
@@ -747,7 +773,7 @@ function cronRender(entry){
   div.innerHTML=`
     <div class="cron-top">
       <div class="cron-dot ${entry.tipo}"></div>
-      <span class="cron-label">T${entry.tavolo} — ${labels[entry.tipo]||entry.tipo}</span>
+      <span class="cron-label">T${tblDisp(entry.tavolo)} — ${labels[entry.tipo]||entry.tipo}</span>
       <span class="cron-ora">${entry.ora}</span>
     </div>
     ${entry.groups?`<div class="cron-groups">${entry.groups.map(g=>`
@@ -807,7 +833,7 @@ async function buildFullOrderGroups(ticketGroup){
       const s = normStation(r.station) || '?';
       (byStation[s] = byStation[s] || []).push(...items.map(it=>({qty:it.qty||1, name:it.name})));
     });
-    const order = ['crudo','frittura','caldo','griglia'];
+    const order = ['cuoco','griglia','tempura','maki1','maki2','chef-sushi','bar'];
     const groups = Object.keys(byStation)
       .sort((a,b)=> (order.indexOf(a)+1||99) - (order.indexOf(b)+1||99))
       .map(s=>({ station:s, label:STATION_LABELS[s]||s, items:byStation[s] }));
@@ -828,13 +854,18 @@ function loadCronologia(){
 // sempre intera dal magazzino → niente card doppie né bloccate per costruzione.
 // ═══════════════════════════════════════════════════════════════════════════
 function ordItems(row){ try{ return JSON.parse(row.order_details || '[]'); }catch(e){ return []; } }
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // La riga appartiene a QUESTA vista?
 function relevant(row){
   if(!row) return false;
   if(row.waiter_request) return (STATION === 'cameriere' || EXPO) && row.status === 'pending';
   if(!row.station) return false;
-  if(isKitchen) return normStation(row.station) === STATION && row.status === 'pending';
+  const _st = normStation(row.station);
+  if(isKitchen) return _st === STATION && row.status === 'pending';
+  // Cameriere d'area / Bar: solo le righe della propria area (in preparazione o pronte)
+  if(CAM_AREA) return STATION_AREA[_st] === CAM_AREA && (row.status === 'pending' || row.status === 'ready');
+  if(IS_BAR)   return STATION_AREA[_st] === 'bar' && (row.status === 'pending' || row.status === 'ready');
   if(STATION === 'cameriere' || EXPO) return row.status === 'pending' || row.status === 'ready';
   return false;
 }
@@ -850,9 +881,9 @@ const _flash = new Set();          // id nuovi → animazione is-new una volta
 let _renderTimer = null;
 function scheduleRender(){ clearTimeout(_renderTimer); _renderTimer = setTimeout(renderAll, 60); }
 function renderAll(){
-  if(isKitchen)                    renderKitchen();
-  else if(STATION === 'cameriere') renderServe();
-  else if(EXPO)                    renderOwner();
+  if(isKitchen)                                renderKitchen();
+  else if(STATION === 'cameriere' || CAM_AREA) renderServe();
+  else if(EXPO)                                renderOwner();
   renderWaiterCalls();
   updateTimers();   // mostra subito il tempo trascorso (niente "-" iniziale)
 }
@@ -893,7 +924,7 @@ function buildReqCard(order){
   const label = order.customer_notes || _waiterIta[order.waiter_request] || 'Assistenza';
   const ora = new Date(tsVal).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   div.innerHTML = `
-    <div class="req-top"><span class="req-tavolo-label">Tavolo</span><span class="req-tavolo-num">${order.table_number}</span><span class="req-time">${ora}</span></div>
+    <div class="req-top"><span class="req-tavolo-label">Tavolo</span><span class="req-tavolo-num">${tblDisp(order.table_number)}</span><span class="req-time">${ora}</span></div>
     <hr class="tk-sep">
     <div class="req-body">${label}</div>
     <button class="req-btn">Gestita</button>`;
@@ -902,6 +933,7 @@ function buildReqCard(order){
 }
 async function waiterHandled(id, tav, label){
   activeOrders.delete(id); snapSave();
+  markLocalAction();   // non far riapparire la richiesta gestita al poll da 1s
   addLog('req', tav, null, label);
   renderWaiterCalls();
   if(navigator.onLine){ const { error } = await sb.from('orders').update({status:'handled'}).eq('id', id); if(error) console.warn('[Jun KDS] gestita:', error.message); }
@@ -936,12 +968,12 @@ function buildKitchenCard(row){
       <span class="tk-check">✓</span>
       <span class="tk-qty">${it.qty}x</span>
       <span class="tk-name">${it.name || ''}${it.code ? ` <span class="tk-code">${it.code}</span>` : ''}</span>
-    </div>`).join('');
+    </div>${it.note ? `<div class="tk-item-note">📝 ${escHtml(it.note)}</div>` : ''}`).join('');
   const notaHtml = row.customer_notes ? `<div class="tk-nota">${row.customer_notes}</div>` : '';
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo</span>
-      <span class="tk-tavolo-num">${row.table_number}</span>
+      <span class="tk-tavolo-num">${tblDisp(row.table_number)}</span>
       <span class="tk-time">-</span>
     </div>
     <hr class="tk-sep">
@@ -965,6 +997,7 @@ async function kitchenSend(rowId, ticketEl){
   row.order_details = JSON.stringify(items);
   if(complete) row.status = 'ready';
   applyRow(row); snapSave();
+  markLocalAction();   // non far revertire l'invio ottimistico al poll da 1s (finché il DB non conferma)
   addLog('pronto', row.table_number, idxs.map(i=>({qty:items[i].qty+'x', name:items[i].name})), row.customer_notes||null);
   renderKitchen();
   const patch = { order_details: row.order_details };
@@ -1080,11 +1113,12 @@ function beep(){
 
 // ── Colori per tavolo ─────────────────────────────────────────────────────
 const COLORS = ['c1','c2','c3','c4','c5','c6'];
-function tableColor(n){ return COLORS[(parseInt(n)||0) % COLORS.length]; }
+function tableColor(n){ return COLORS[(tblBase(n)||0) % COLORS.length]; }
 
 // ── CAMERIERE: piatti PRONTI da servire (done && !served), a scaglioni ───────
 const _expoReady = new Set();      // tavoli già segnalati pronti (beep una-tantum, owner)
 let _xdOpen = null;
+let _xdSig = '';                   // firma del contenuto del popup regia (evita ricostruzioni inutili ogni secondo)
 let _serveCount = 0;
 function renderServe(){
   const board = document.getElementById('board');
@@ -1096,12 +1130,12 @@ function renderServe(){
       if(it.done && !it.served){
         const t = r.table_number;
         (byTable[t] = byTable[t] || { plates:[], notes:new Set(), created:new Date(r.created_at||Date.now()).getTime() });
-        byTable[t].plates.push({ oid:r.id, idx, qty:it.qty, name:it.name, station:normStation(r.station) });
+        byTable[t].plates.push({ oid:r.id, idx, qty:it.qty, name:it.name, note:it.note||null, station:normStation(r.station) });
         if(r.customer_notes) byTable[t].notes.add(r.customer_notes);
       }
     });
   });
-  const tables = Object.keys(byTable).sort((a,b)=>(+a)-(+b));
+  const tables = Object.keys(byTable).sort((a,b)=> tblBase(a)-tblBase(b) || (+a)-(+b));
   let total = 0;
   tables.forEach(t => { total += byTable[t].plates.length; board.appendChild(buildServeCard(t, byTable[t])); });
   initMasonry();
@@ -1114,7 +1148,7 @@ function buildServeCard(t, info){
   const notaHtml = info.notes.size ? `<div class="tk-nota">📝 ${[...info.notes].join(' · ')}</div>` : '';
   const byStation = {};
   info.plates.forEach(p => { const s = p.station || '?'; (byStation[s] = byStation[s] || []).push(p); });
-  const ord = ['crudo','frittura','caldo','griglia'];
+  const ord = ['cuoco','griglia','tempura','maki1','maki2','chef-sushi','bar'];
   const sts = Object.keys(byStation).sort((a,b)=>(ord.indexOf(a)+1||99)-(ord.indexOf(b)+1||99));
   const itemsHtml = sts.map(s => `
     <div class="serve-grp">
@@ -1122,7 +1156,7 @@ function buildServeCard(t, info){
       ${byStation[s].map(p=>`
         <div class="tk-item serve-it" data-oid="${p.oid}" data-idx="${p.idx}" onclick="toggleDone(this)">
           <span class="tk-check">✓</span><span class="tk-qty">${p.qty}x</span><span class="tk-name">${p.name}</span>
-        </div>`).join('')}
+        </div>${p.note ? `<div class="tk-sub-note">📝 ${escHtml(p.note)}</div>` : ''}`).join('')}
     </div>`).join('');
   const div = document.createElement('div');
   div.className = `ticket ${col} serve-card`;
@@ -1130,7 +1164,7 @@ function buildServeCard(t, info){
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo</span>
-      <span class="tk-tavolo-num">${t}</span>
+      <span class="tk-tavolo-num">${tblDisp(t)}</span>
       <span class="tk-serve-badge">${info.plates.length} da servire</span>
     </div>
     <hr class="tk-sep">
@@ -1164,6 +1198,7 @@ async function serveSend(cardEl){
     updates.push({ oid, patch });
   }
   snapSave();
+  markLocalAction();   // non far revertire il servito ottimistico al poll da 1s
   renderServe();
   for(const u of updates){
     if(navigator.onLine){ const { error } = await sb.from('orders').update(u.patch).eq('id', u.oid); if(error) console.warn('[Jun Cameriere] servito:', error.message); }
@@ -1185,7 +1220,7 @@ function renderOwner(){
     g.rows.push(r);
     const c = new Date(r.created_at||Date.now()).getTime(); if(c < g.created) g.created = c;
   });
-  const tables = Object.keys(byTable).sort((a,b)=>(+a)-(+b));
+  const tables = Object.keys(byTable).sort((a,b)=> tblBase(a)-tblBase(b) || (+a)-(+b));
   tables.forEach(t => board.appendChild(buildOwnerCard(byTable[t])));
   initMasonry();
   updateEmptyState();
@@ -1199,7 +1234,7 @@ function renderOwner(){
 function buildOwnerCard(g){
   const col = tableColor(g.table);
   const allReady = g.rows.every(r => r.status === 'ready');
-  const ord = ['crudo','frittura','caldo','griglia'];
+  const ord = ['cuoco','griglia','tempura','maki1','maki2','chef-sushi','bar'];
   const rows = g.rows.slice().sort((a,b)=>(ord.indexOf(normStation(a.station))+1||99)-(ord.indexOf(normStation(b.station))+1||99));
   const rowsHtml = rows.map(r=>{
     const s = normStation(r.station);
@@ -1207,7 +1242,7 @@ function buildOwnerCard(g){
     const items = ordItems(r);
     const stReady = items.length>0 && items.every(it=>it.done);
     const icon = stReady ? '✅' : '⏳';
-    const dishes = items.length ? `<div class="tk-subs">${items.map(it=>`<div class="tk-sub${it.served?' done':''}"><span class="tk-sub-q">${it.qty}x</span><span>${it.name||''}</span></div>`).join('')}</div>` : '';
+    const dishes = items.length ? `<div class="tk-subs">${items.map(it=>`<div class="tk-sub${it.served?' done':''}"><span class="tk-sub-q">${it.qty}x</span><span>${it.name||''}${it.note?` <span style="color:#8a5a00;font-weight:700;">· 📝 ${escHtml(it.note)}</span>`:''}</span></div>`).join('')}</div>` : '';
     return `<div class="tk-item"><span class="tk-qty">${icon}</span><span class="tk-name">${lbl}</span></div>${dishes}`;
   }).join('');
   const notes = [...new Set(g.rows.map(r=>r.customer_notes).filter(Boolean))];
@@ -1220,7 +1255,7 @@ function buildOwnerCard(g){
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo · tocca per dettaglio</span>
-      <span class="tk-tavolo-num">${g.table}</span>
+      <span class="tk-tavolo-num">${tblDisp(g.table)}</span>
       <span class="tk-time">-</span>
     </div>
     <hr class="tk-sep">
@@ -1236,14 +1271,19 @@ function openExpoDetail(t){
   _xdOpen = t;
   const rows = [...activeOrders.values()].filter(r => !r.waiter_request && r.station && r.table_number == t);
   if(!rows.length){ closeExpoDetail(); return; }
-  const ord = ['crudo','frittura','caldo','griglia'];
+  // Se il contenuto non è cambiato e il popup è già aperto, NON ricostruirlo (niente flicker ogni secondo)
+  const _sig = t + '|' + JSON.stringify(rows.map(r => [r.id, r.status, r.order_details]).sort());
+  const _ov0 = document.getElementById('xd-overlay');
+  if(_sig === _xdSig && _ov0 && _ov0.classList.contains('open')) return;
+  _xdSig = _sig;
+  const ord = ['cuoco','griglia','tempura','maki1','maki2','chef-sushi','bar'];
   const byStation = {};
   rows.forEach(r => { const s = normStation(r.station); const b = (byStation[s] = byStation[s] || { ready:true, items:[] }); if(r.status !== 'ready') b.ready = false; b.items.push(...ordItems(r)); });
   const sts = Object.keys(byStation).sort((a,b)=>(ord.indexOf(a)+1||99)-(ord.indexOf(b)+1||99));
   const stHtml = sts.map(s => {
     const icon = byStation[s].ready ? '✅' : '⏳';
     const itemsHtml = byStation[s].items.length
-      ? byStation[s].items.map(it=>`<div class="xd-it${it.served?' done':''}"><span class="xd-q">${it.qty}x</span><span>${it.name||''}</span></div>`).join('')
+      ? byStation[s].items.map(it=>`<div class="xd-it${it.served?' done':''}"><span class="xd-q">${it.qty}x</span><span>${it.name||''}${it.note?` <span style="color:#8a5a00;font-weight:700;">· 📝 ${escHtml(it.note)}</span>`:''}</span></div>`).join('')
       : `<div class="xd-it xd-empty">— nessun piatto —</div>`;
     return `<div class="xd-st"><span class="xd-st-h">${icon} ${STATION_ICON[s]||''} ${STATION_LABELS[s]||s}</span>${itemsHtml}</div>`;
   }).join('');
@@ -1256,7 +1296,7 @@ function openExpoDetail(t){
   ov.innerHTML = `
     <div id="xd-box">
       <div id="xd-head" style="background:${colorMap[col]||'#333'};">
-        <div id="xd-head-l"><span id="xd-tav-lbl">Tavolo</span><span id="xd-tav-num">${t}</span></div>
+        <div id="xd-head-l"><span id="xd-tav-lbl">Tavolo</span><span id="xd-tav-num">${tblDisp(t)}</span></div>
         <button id="xd-close" onclick="closeExpoDetail()">✕</button>
       </div>
       ${stHtml}
@@ -1276,7 +1316,7 @@ async function loadPending(wasKnown = null){
   }
   let q = sb.from('orders').select('*');
   if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
-  else if(isKitchen){ q = q.eq('status','pending'); q = (STATION === 'griglia') ? q.in('station',['griglia','freddi']) : q.eq('station', STATION); }
+  else if(isKitchen){ q = q.eq('status','pending').eq('station', STATION); }
   else { q = q.eq('status','pending'); }
   q = q.order('created_at',{ ascending:true });
   const { data, error } = await q;
@@ -1288,7 +1328,8 @@ async function loadPending(wasKnown = null){
     return;
   }
   activeOrders.clear();
-  _kitchenCount = 0; _serveCount = 0;
+  // NB: NON azzerare _kitchenCount/_serveCount qui: al riconnetti farebbe suonare un falso
+  // "nuovo ordine" per ordini già noti. renderKitchen/renderServe aggiornano i contatori da soli.
   data.forEach(r => { if(wasKnown && !wasKnown.has(r.id)) newSinceReconnect.add(r.id); applyRow(r); });
   renderAll();
   _engineInited = true;
@@ -1334,7 +1375,7 @@ async function periodicRefresh(){
   if(Date.now() < _suppressPollUntil) return;
   let q = sb.from('orders').select('*');
   if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
-  else if(isKitchen){ q = q.eq('status','pending'); q = (STATION === 'griglia') ? q.in('station',['griglia','freddi']) : q.eq('station', STATION); }
+  else if(isKitchen){ q = q.eq('status','pending').eq('station', STATION); }
   else { q = q.eq('status','pending'); }
   q = q.order('created_at',{ ascending:true });
   const { data, error } = await q;
@@ -1355,11 +1396,11 @@ document.addEventListener('visibilitychange', () => {
 
 // ── VISTA SALA / CONTI ──────────────────────────────────────────────────────
 const PRICE_MENU = 26.90, PRICE_COVER = 2.00, PRICE_PP = PRICE_MENU + PRICE_COVER; // adulto 28,90
-const PRICE_KID = PRICE_MENU/2 + PRICE_COVER; // bambino 4-8: metà menu (13,45) + coperto = 15,45
-const NUM_TABLES = 10;
+const PRICE_KID = PRICE_MENU/2; // bambino 4-8: SOLO metà menu (13,45), NIENTE coperto
+const PRICE_TODDLER = PRICE_COVER; // bimbo 2-3 anni: SOLO coperto (2,00), niente menu
 const SALA_KEY = 'jun_sala_state';
 // La Sala/Conti è riservata SOLO a Cameriere e Proprietario (owner). La Regia (expo) non la vede.
-const salaEnabled = (STATION === 'owner' || STATION === 'cameriere');
+const salaEnabled = (STATION === 'owner' || STATION === 'cameriere' || IS_BAR);
 let salaMode = false;
 // Stato locale = cache/offline; la fonte di verità è la tabella Supabase `sala_state` (condivisa tra tablet).
 let salaState = (()=>{ try{ return JSON.parse(localStorage.getItem(SALA_KEY)||'{}'); }catch{ return {}; } })();
@@ -1380,6 +1421,7 @@ function _salaRowToState(r){
   return {
     adults: (r.adults===null||r.adults===undefined) ? null : r.adults,
     kids: r.kids || 0,
+    toddlers: r.toddlers || 0,
     paid: !!r.paid,
     paidAt: r.paid_at ? Number(r.paid_at) : null,
     prevPaidAt: r.prev_paid_at ? Number(r.prev_paid_at) : null,
@@ -1402,6 +1444,7 @@ function salaPersist(t){
         table_number: t,
         adults: (s.adults===null||s.adults===undefined) ? null : s.adults,
         kids: s.kids || 0,
+        toddlers: s.toddlers || 0,
         paid: !!s.paid,
         paid_at: s.paidAt || null,
         prev_paid_at: s.prevPaidAt || null,
@@ -1433,11 +1476,12 @@ function subscribeSala(){
     .subscribe();
 }
 function salaGet(t){
-  if(!salaState[t]) salaState[t] = { adults:null, kids:0, paid:false, paidAt:null, prevPaidAt:null, bill:null, extras:[] };
+  if(!salaState[t]) salaState[t] = { adults:null, kids:0, toddlers:0, paid:false, paidAt:null, prevPaidAt:null, bill:null, extras:[] };
   const s = salaState[t];
   if(!s.extras) s.extras = [];
   if(s.adults===undefined) s.adults = (s.people!=null ? s.people : null); // migrazione vecchio 'people'
   if(s.kids===undefined) s.kids = 0;
+  if(s.toddlers===undefined) s.toddlers = 0;
   if(s.prevPaidAt===undefined) s.prevPaidAt = null;
   if(s.bill===undefined) s.bill = null;
   return s;
@@ -1524,19 +1568,22 @@ function salaTotals(t){
   if(st.paid && st.bill){
     const b = st.bill;
     const extras = (b.extras||[]).reduce((s,e)=>s+(+e.amount||0),0);
-    return { adults:b.adults||0, kids:b.kids||0, people:(b.adults||0)+(b.kids||0), est:b.adults||0,
+    const tod = b.toddlers||0;
+    return { adults:b.adults||0, kids:b.kids||0, toddlers:tod, people:(b.adults||0)+(b.kids||0)+tod, est:b.adults||0,
              coperti:b.coperti||0, drinks:b.drinksTotal||0, extras, total:b.total||0, occupied:true };
   }
   const info = _salaByTable[t];
   const est = info ? info.people : 0;
   const adults = (st.adults!=null) ? st.adults : est;   // stima = tutti adulti di default
   const kids = st.kids || 0;
-  const people = adults + kids;
+  const toddlers = st.toddlers || 0;
+  const people = adults + kids + toddlers;
   const drinks = info ? info.drinksTotal : 0;
   const extras = (st.extras||[]).reduce((s,e)=>s+(+e.amount||0),0);
-  const coperti = adults * PRICE_PP + kids * PRICE_KID;   // coperto incluso per tutti (anche bambini)
-  const occupied = !!info || st.adults!=null || (st.kids>0) || st.paid || (st.extras&&st.extras.length>0);
-  return { adults, kids, people, est, coperti, drinks, extras, total: coperti + drinks + extras, occupied };
+  // Adulto = menu+coperto (28,90) · Bimbo 4-8 = metà menu, NIENTE coperto (13,45) · Bimbo 2-3 = SOLO coperto (2,00)
+  const coperti = adults * PRICE_PP + kids * PRICE_KID + toddlers * PRICE_TODDLER;
+  const occupied = !!info || st.adults!=null || (st.kids>0) || (st.toddlers>0) || st.paid || (st.extras&&st.extras.length>0);
+  return { adults, kids, toddlers, people, est, coperti, drinks, extras, total: coperti + drinks + extras, occupied };
 }
 
 async function renderSala(){
@@ -1544,7 +1591,13 @@ async function renderSala(){
   if(!grid) return;
   await buildSalaData();
   let html = '';
-  for(let t=1; t<=NUM_TABLES; t++){
+  // Tavoli da mostrare: TUTTI i reali (card A sempre visibili, anche vuote) + eventuali
+  // gruppi B attivi o altri id non-standard che hanno ordini/stato (così nessun tavolo resta invisibile).
+  const _extra = new Set();
+  Object.keys(_salaByTable).forEach(k=>{ const n=+k; if(!REAL_TABLES.includes(n)) _extra.add(n); });
+  Object.keys(salaState).forEach(k=>{ const n=+k; if(!REAL_TABLES.includes(n) && salaTotals(n).occupied) _extra.add(n); });
+  const _ids = [...REAL_TABLES, ..._extra].sort((a,b)=> tblBase(a)-tblBase(b) || (tblIsB(a)?1:0)-(tblIsB(b)?1:0));
+  for(const t of _ids){
     const info = _salaByTable[t];
     const st = salaGet(t);
     // Dopo il pagamento il tavolo RESTA "Pagato" se ordina ANCORA lo STESSO gruppo:
@@ -1557,7 +1610,7 @@ async function renderSala(){
       const postSids  = Object.keys(info._sid || {});
       const newGroup  = postSids.some(sid => sid !== '__legacy__' && !knownSids.includes(sid));
       const hasNewFood = !!(info.food && info.food.length > 0);
-      if(newGroup && hasNewFood){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
+      if(newGroup && hasNewFood){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.toddlers=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
     }
     const newFoodAfterPaid = !!(st.paid && info && info.food && info.food.length > 0);
     const T = salaTotals(t);
@@ -1575,6 +1628,8 @@ async function renderSala(){
       : `<button onclick="salaAdults(${t},-1,event)">−</button><span>${T.adults}</span><button onclick="salaAdults(${t},1,event)">+</button>`;
     const kdStepCard = st.paid ? `<span class="sala-lock">${T.kids}</span>`
       : `<button onclick="salaKids(${t},-1,event)">−</button><span>${T.kids}</span><button onclick="salaKids(${t},1,event)">+</button>`;
+    const tdStepCard = st.paid ? `<span class="sala-lock">${T.toddlers}</span>`
+      : `<button onclick="salaToddlers(${t},-1,event)">−</button><span>${T.toddlers}</span><button onclick="salaToddlers(${t},1,event)">+</button>`;
     const mainBtn = st.paid
       ? `<button class="sala-btn riapri" onclick="salaTogglePaid(${t},event)">Riapri</button>`
       : `<button class="sala-btn paga"${T.occupied?'':' disabled'} onclick="salaTogglePaid(${t},event)">PAGATO</button>`;
@@ -1597,7 +1652,7 @@ async function renderSala(){
         ${postPaidHtml}
         ${fadeOpen}
         <div class="sala-top" style="background:${topBg};">
-          <div class="sala-tav"><span class="sala-tav-lbl">Tavolo</span><span class="sala-tav-num">${t}</span></div>
+          <div class="sala-tav"><span class="sala-tav-lbl">Tavolo</span><span class="sala-tav-num">${ tblIsB(t) ? (tblBase(t)+' · B') : (_ids.includes(t+TBL_B_OFFSET) ? (t+' · A') : t) }</span></div>
           <span class="sala-state">${stateLbl}</span>
         </div>
         <div class="sala-body">
@@ -1606,11 +1661,15 @@ async function renderSala(){
             <div class="sala-step" onclick="event.stopPropagation()">${adStepCard}</div>
           </div>
           <div class="sala-people">
-            <span class="sala-people-lbl">Bambini 4-8</span>
+            <span class="sala-people-lbl">Bimbi 4-8</span>
             <div class="sala-step" onclick="event.stopPropagation()">${kdStepCard}</div>
           </div>
+          <div class="sala-people">
+            <span class="sala-people-lbl">Bimbi 2-3</span>
+            <div class="sala-step" onclick="event.stopPropagation()">${tdStepCard}</div>
+          </div>
           <div class="sala-total">${T.total? eur(T.total) : '—'}</div>
-          <div class="sala-breakdown">${T.occupied ? (T.adults+' ad'+(T.kids?' + '+T.kids+' bmb':'')+(T.drinks?' + bev '+eur(T.drinks):'')+(T.extras?' + extra '+eur(T.extras):'')+' · tocca') : 'nessun ordine'}</div>
+          <div class="sala-breakdown">${T.occupied ? (T.adults+' ad'+(T.kids?' + '+T.kids+' bmb':'')+(T.toddlers?' + '+T.toddlers+' picc':'')+(T.drinks?' + bev '+eur(T.drinks):'')+(T.extras?' + extra '+eur(T.extras):'')+' · tocca') : 'nessun ordine'}</div>
           ${mainBtn}
         </div>
         ${fadeClose}
@@ -1640,7 +1699,7 @@ async function periodicSalaRefresh(){
   // 2) ordini freschi → firma leggera per capire se è cambiato qualcosa
   await buildSalaData();
   const sig = JSON.stringify(Object.keys(salaState).sort().map(t => {
-      const s = salaState[t]; return [t, !!s.paid, s.paidAt, s.adults, s.kids, (s.extras||[]).length];
+      const s = salaState[t]; return [t, !!s.paid, s.paidAt, s.adults, s.kids, s.toddlers, (s.extras||[]).length];
     }))
     + '|' + JSON.stringify(Object.keys(_salaByTable).sort().map(t => {
       const b = _salaByTable[t]; return [t, b.people, b.latest, Math.round((b.drinksTotal||0)*100), b.food.length, b.drinks.length];
@@ -1663,7 +1722,7 @@ function salaAskPay(t){
   if(!T.occupied) return;      // niente da incassare su tavolo vuoto
   _payAsk = t;
   const ov = document.getElementById('pay-confirm');
-  document.getElementById('pay-confirm-tav').textContent = t;
+  document.getElementById('pay-confirm-tav').textContent = tblDisp(t);
   document.getElementById('pay-confirm-tot').textContent = eur(T.total);
   if(ov) ov.classList.add('open');
 }
@@ -1677,20 +1736,36 @@ function salaConfirmPay(){
   const T = salaTotals(t);
   st.prevPaidAt = st.paidAt || null;                              // per l'annulla (Riapri)
   st.paidAt = (info && info.latest) ? info.latest : Date.now();   // confine = orario server dell'ultimo ordine
-  st.adults = T.adults; st.kids = T.kids;                         // blocca i coperti
-  st.bill = { total:T.total, adults:T.adults, kids:T.kids, coperti:T.coperti,
+  st.adults = T.adults; st.kids = T.kids; st.toddlers = T.toddlers; // blocca i coperti
+  st.bill = { total:T.total, adults:T.adults, kids:T.kids, toddlers:T.toddlers, coperti:T.coperti,
               drinks: info ? info.drinks.slice() : [], drinksTotal:T.drinks,
               food: info ? info.food.slice() : [], extras:(st.extras||[]).slice(),
               sessionIds: info ? Object.keys(info._sid||{}) : [] }; // telefoni del gruppo che ha pagato
   st.paid = true;
   salaPersist(t);
   addLog('pagato', t, null, 'Incassato ' + eur(T.total));
-  // Fix 1: pulisci la cucina — gli ordini pending/ready di questo tavolo escono dai board
-  if(realOnline){
-    sb.from('orders').update({status:'handled'}).eq('table_number',t).in('status',['pending','ready'])
-      .then(({error})=>{ if(error) console.warn('[Jun Pay] clean cucina:', error.message); });
-  }
+  // Pulisci la cucina al pagamento MA lascia al cameriere i piatti GIÀ PRONTI e non ancora serviti
+  // (così vengono comunque portati al tavolo anche dopo il conto).
+  _cleanKitchenKeepUnserved(t);
   renderSala();
+}
+// Handle solo le righe SENZA piatti pronti-non-serviti; quelle con un piatto done&&!served restano
+// visibili al cameriere (status ready/pending) finché non le serve.
+async function _cleanKitchenKeepUnserved(t){
+  if(!realOnline) return;
+  try{
+    const { data, error } = await sb.from('orders').select('id,order_details')
+      .eq('table_number', t).in('status',['pending','ready']);
+    if(error || !data) return;
+    const ids = data.filter(r=>{
+      let items=[]; try{ items = JSON.parse(r.order_details||'[]'); }catch(e){}
+      return !items.some(it=>it.done && !it.served);   // tieni le righe con piatti pronti da servire
+    }).map(r=>r.id);
+    if(ids.length){
+      const { error:e2 } = await sb.from('orders').update({status:'handled'}).in('id', ids);
+      if(e2) console.warn('[Jun Pay] clean cucina:', e2.message);
+    }
+  }catch(e){ console.warn('[Jun Pay] clean cucina:', e.message); }
 }
 // Riapri: annulla l'incasso e ripristina il confine precedente → riappare il conto
 function salaReopen(t){
@@ -1710,7 +1785,7 @@ function salaAskReset(t, e){
   closeSalaDetail();
   _resetAsk = t;
   const ov = document.getElementById('reset-confirm');
-  document.getElementById('reset-confirm-tav').textContent = t;
+  document.getElementById('reset-confirm-tav').textContent = tblDisp(t);
   if(ov) ov.classList.add('open');
 }
 function salaCloseReset(){ _resetAsk=null; const ov=document.getElementById('reset-confirm'); if(ov) ov.classList.remove('open'); }
@@ -1730,7 +1805,7 @@ async function salaConfirmReset(){
   const st = salaGet(t);
   st.paid = false; st.prevPaidAt = null;
   st.paidAt = (info && info.latest) ? info.latest : Date.now();
-  st.bill = null; st.adults = null; st.kids = 0; st.extras = [];
+  st.bill = null; st.adults = null; st.kids = 0; st.toddlers = 0; st.extras = [];
   salaPersist(t);
   addLog('reset', t, null, 'Tavolo liberato manualmente');
   renderSala();
@@ -1750,6 +1825,14 @@ function salaKids(t, delta, e){
   const st = salaGet(t);
   if(st.paid) return;   // conto congelato
   st.kids = Math.max(0, Math.min(40, (st.kids||0) + delta));
+  salaPersist(t);
+  renderSala();
+}
+function salaToddlers(t, delta, e){
+  if(e) e.stopPropagation();
+  const st = salaGet(t);
+  if(st.paid) return;   // conto congelato
+  st.toddlers = Math.max(0, Math.min(40, (st.toddlers||0) + delta));
   salaPersist(t);
   renderSala();
 }
@@ -1781,13 +1864,15 @@ function openSalaDetail(t){
     : `<button onclick="salaAdults(${t},-1,event)">−</button><span>${T.adults}</span><button onclick="salaAdults(${t},1,event)">+</button>`;
   const kdStep = paid ? `<span class="sd-lock">${T.kids}</span>`
     : `<button onclick="salaKids(${t},-1,event)">−</button><span>${T.kids}</span><button onclick="salaKids(${t},1,event)">+</button>`;
+  const tdStep = paid ? `<span class="sd-lock">${T.toddlers}</span>`
+    : `<button onclick="salaToddlers(${t},-1,event)">−</button><span>${T.toddlers}</span><button onclick="salaToddlers(${t},1,event)">+</button>`;
 
   let ov = document.getElementById('sd-overlay');
   if(!ov){ ov=document.createElement('div'); ov.id='sd-overlay'; ov.addEventListener('click',e=>{ if(e.target===ov) closeSalaDetail(); }); document.body.appendChild(ov); }
   ov.innerHTML = `
     <div id="sd-box">
       <div id="sd-head" style="background:${topBg};">
-        <div class="sd-h-l"><span class="sd-h-lbl">Conto Tavolo</span><span class="sd-h-num">${t}</span></div>
+        <div class="sd-h-l"><span class="sd-h-lbl">Conto Tavolo</span><span class="sd-h-num">${tblDisp(t)}</span></div>
         <button id="sd-close" onclick="closeSalaDetail()">✕</button>
       </div>
       ${paid?`<div class="sd-paid-banner">✓ PAGATO — conto chiuso</div>`:''}
@@ -1800,12 +1885,19 @@ function openSalaDetail(t){
       </div>
       <div class="sd-cop">
         <div class="sd-cop-l">
-          <span class="sd-sec">Bambini 4-8</span>
+          <span class="sd-sec">Bimbi 4-8</span>
           <div class="sala-step">${kdStep}</div>
         </div>
         <span class="sd-cop-r">${eur(T.kids*PRICE_KID)}</span>
       </div>
-      <div class="sd-note">Adulto ${eur(PRICE_PP)} (menu 26,90 + coperto 2,00) · Bambino 4-8 ${eur(PRICE_KID)} (metà menu + coperto)</div>
+      <div class="sd-cop">
+        <div class="sd-cop-l">
+          <span class="sd-sec">Bimbi 2-3</span>
+          <div class="sala-step">${tdStep}</div>
+        </div>
+        <span class="sd-cop-r">${eur(T.toddlers*PRICE_TODDLER)}</span>
+      </div>
+      <div class="sd-note">Adulto ${eur(PRICE_PP)} (menu 26,90 + coperto 2,00) · Bimbo 4-8 ${eur(PRICE_KID)} (metà menu, no coperto) · Bimbo 2-3 ${eur(PRICE_TODDLER)} (solo coperto)</div>
       <div class="sd-sec-h">Cibo <span>· incluso, non si paga a parte</span></div>
       ${foodHtml}
       <div class="sd-sec-h">Bevande / Extra a pagamento</div>
@@ -1871,9 +1963,32 @@ function autoReloadTick(){
 setInterval(autoReloadTick, AUTO_RELOAD_MS);
 
 // ── 86ing: gestione piatti esauriti (staff) ─────────────────────────────────
-// Numeri piatto validi (dal menu): 1–284 senza buchi + alcuni speciali.
-// NB: se in futuro cambiano i piatti del menu, aggiornare questi valori.
-const SPECIAL_DISH_IDS = new Set([800,801,802,803,804,805,806,807,808,809,810,811,812,813,814,815,816,817,818,819,860,861,862,863,864,865,866,888,900,901,902,903,904,905,906,907]);
+// Numeri piatto validi (dal menu): 1–284 senza buchi + articoli speciali.
+// NB: se cambiano piatti/bevande/dolci del menu, rigenerare estraendo gli id da
+//     menuData in menu.html (regex \{ id: N ). Blocchi contigui = intervalli qui sotto.
+const SPECIAL_DISH_IDS = (() => {
+  const s = new Set();
+  const add = (a, b = a) => { for (let i = a; i <= b; i++) s.add(i); };
+  add(800, 819);            // uramaki/futomaki e speciali
+  add(860, 866); add(888);  // altri speciali
+  add(900, 916);            // bevande
+  add(930, 933);            // analcolici
+  add(940, 944);            // birre
+  add(950, 954);            // cocktail
+  add(960, 961);            // vodka
+  add(965, 967);            // rum
+  add(970, 975);            // whisky
+  add(980, 991);            // gin tonic
+  add(1000, 1005);          // franciacorta
+  add(1010);                // prosecco
+  add(1020, 1023);          // champagne
+  add(1030);                // cremant
+  add(1040, 1042);          // bollicine sfuse
+  add(1050, 1068);          // vini bianchi
+  add(1080, 1090);          // vini rossi
+  add(1200, 1223);          // dolci
+  return s;
+})();
 function isValidDishId(id){ return (Number.isInteger(id) && id >= 1 && id <= 284) || SPECIAL_DISH_IDS.has(id); }
 
 // contatore mostrato sull'icona 🚫 nell'header (quanti piatti bloccati)
