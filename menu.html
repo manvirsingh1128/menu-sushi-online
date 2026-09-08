@@ -401,6 +401,10 @@
             font-size: 0.65em; font-weight: 500; color: #aaa;
             display: block; margin-top: 2px;
         }
+        .cart-item-price {
+            font-size: 0.78em; font-weight: 800; color: #111;
+            display: block; margin-top: 3px;
+        }
         .cart-item-qty {
             display: flex; align-items: center; gap: 0;
             background: #f5f5f5; border-radius: 20px; overflow: hidden;
@@ -2785,7 +2789,7 @@
           add(1080, 1090);   // vini rossi
           return a;
         })();
-        // Avviso allergeni standard (Reg. UE 1169/2011 art. 44) — mostrato su TUTTI gli alcolici
+        // Avviso allergeni standard (Reg. UE 1169/2011 art. 44) — mostrato su TUTTE le bevande e alcolici (id 900-1199)
         const ALCOHOL_ALLERG_NOTICE = {
           it: "Le informazioni circa la presenza di sostanze o prodotti che provocano allergie o intolleranze sono riportate sull'etichetta dei prodotti preconfezionati e sono disponibili su richiesta rivolgendosi al personale.",
           en: "Information on substances or products causing allergies or intolerances is shown on the label of pre-packaged products and is available on request from our staff.",
@@ -3593,7 +3597,7 @@
             const map = {};
             menuData.forEach(cat => {
                 cat.items.forEach(item => {
-                    map[item.id] = { name: getLang(item,'name'), cat: getLang(cat,'name'), img: dishImgs[item.id] || item.img || null };
+                    map[item.id] = { name: getLang(item,'name'), cat: getLang(cat,'name'), img: dishImgs[item.id] || item.img || null, price: item.price, paid: !!item.paid };
                 });
             });
             return map;
@@ -3635,9 +3639,10 @@
                         <div class="cart-item-name">
                             ${d.name}
                             <span class="cart-item-cat">${d.cat}</span>
+                            ${d.paid && d.price ? `<span class="cart-item-price">${d.price}</span>` : ''}
                         </div>
                         <div class="cart-item-qty">
-                            <button class="ciq-btn" onclick="cartChangeQty(${id}, -1)">−</button>
+                            <button class="ciq-btn" id="ciqm-${id}" onclick="cartChangeQty(${id}, -1)">${qty === 1 ? '<i class="fas fa-trash"></i>' : '−'}</button>
                             <span class="ciq-num" id="ciq-${id}">${qty}</span>
                             <button class="ciq-btn" onclick="cartChangeQty(${id}, 1)">+</button>
                         </div>
@@ -3729,6 +3734,8 @@
             if (numEl) numEl.textContent = newQty;
             const ciqNum = document.getElementById(`ciq-${id}`);
             if (ciqNum) ciqNum.textContent = newQty;
+            const ciqMinus = document.getElementById(`ciqm-${id}`);
+            if (ciqMinus) ciqMinus.innerHTML = newQty === 1 ? '<i class="fas fa-trash"></i>' : '−';
             updateCartBadge();
             const total = Object.values(cart).reduce((a, b) => a + b, 0);
             const t = translations[currentLang] || translations.it;
