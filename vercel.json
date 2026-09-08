@@ -2,6 +2,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/", "destination": "/menu.html" }
+    { "source": "/", "destination": "/t.html" },
+    { "source": "/sera", "destination": "/menu.html" },
+    { "source": "/pranzo", "destination": "/web-Menu-pranzo-21x30-1.pdf" }
   ]
 }

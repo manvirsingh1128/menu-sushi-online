@@ -13,6 +13,7 @@ ARCHIVIO-sviluppo/
 *.MOV
 # sorgenti menu del ristorante — NON pubblicare sul web (Vercel)
 *.pdf
+!web-Menu-pranzo-21x30-1.pdf
 *.docx
 *.txt
 # tooling di deploy e progetto Android — non servono sul sito

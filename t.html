@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex">
+<title>Jun — Menu</title>
+<script>
+/* Router per orario (ora italiana Europe/Rome) — un solo QR per tavolo:
+   junordini.it/t?t=N  →  pranzo (PDF) / cena (menu AYCE) / chiuso
+   Orari ristorante: Mar–Dom  Pranzo 12:00–14:45 · Cena 18:45–23:00 · Lunedì chiuso
+   Finestre menu: 15 min prima apertura, +25 dopo chiusura pranzo; la cena va fino alle 00:00. */
+(function(){
+  function romeNow(){
+    // ora italiana robusta (gestisce automaticamente l'ora legale)
+    try { return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Rome' })); }
+    catch(e){ return new Date(); }
+  }
+  var now  = romeNow();
+  var day  = now.getDay();                         // 0=Dom 1=Lun 2=Mar ... 6=Sab
+  var mins = now.getHours()*60 + now.getMinutes();
+
+  var LUNCH_START  = 11*60 + 45;   // 11:45 (12:00 − 15')
+  var LUNCH_END    = 15*60 + 10;   // 15:10 (14:45 + 25')
+  var DINNER_START = 18*60 + 30;   // 18:30 (18:45 − 15')
+  var DINNER_END   = 24*60;        // 00:00 (cena estesa fino a mezzanotte)
+
+  var mode = 'closed';
+  if (day !== 1) {                                 // lunedì (1) sempre chiuso
+    if (mins >= LUNCH_START && mins <= LUNCH_END)      mode = 'pranzo';
+    else if (mins >= DINNER_START && mins < DINNER_END) mode = 'sera';
+  }
+
+  var params = new URLSearchParams(location.search);
+  var t = params.get('t');
+
+  if (mode === 'sera') {
+    var u = '/sera?k=jun2025' + (t ? ('&t=' + encodeURIComponent(t)) : '');
+    location.replace(u);
+  } else if (mode === 'pranzo') {
+    location.replace('/pranzo');
+  }
+  // mode === 'closed' → resta su questa pagina (mostra il messaggio sotto)
+  window.__junClosed = (mode === 'closed');
+})();
+</script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; }
+  body {
+    background:#0f1115; color:#f5f5f5;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; padding:32px 22px; text-align:center;
+  }
+  .wrap { max-width:360px; width:100%; }
+  .logo { font-size:2.6em; font-weight:800; letter-spacing:2px; margin-bottom:6px; }
+  .logo span { color:#e11d2a; }
+  .sub { font-size:0.8em; letter-spacing:3px; color:#9aa0a8; text-transform:uppercase; margin-bottom:34px; }
+  .closed-badge {
+    display:inline-block; background:#e11d2a; color:#fff; font-weight:700;
+    font-size:0.78em; letter-spacing:1px; padding:7px 16px; border-radius:999px;
+    text-transform:uppercase; margin-bottom:18px;
+  }
+  h1 { font-size:1.35em; font-weight:700; margin-bottom:10px; }
+  p.msg { font-size:0.92em; color:#c8ccd2; line-height:1.5; margin-bottom:26px; }
+  .hours {
+    background:#171a20; border:1px solid #24272e; border-radius:16px;
+    padding:16px 18px; text-align:left; font-size:0.86em;
+  }
+  .hours .h-title { font-weight:700; margin-bottom:10px; font-size:0.92em; color:#f5f5f5; }
+  .hours .h-row { display:flex; justify-content:space-between; padding:4px 0; color:#c8ccd2; }
+  .hours .h-row.closed-day { color:#e26a70; }
+  .hours .h-row b { font-weight:600; color:#f5f5f5; }
+  .loading { color:#9aa0a8; font-size:0.9em; }
+</style>
+</head>
+<body>
+  <div class="wrap" id="content" style="display:none;">
+    <div class="logo">JU<span>N</span></div>
+    <div class="sub">Restaurant</div>
+    <div class="closed-badge">Chiuso</div>
+    <h1>Al momento siamo chiusi</h1>
+    <p class="msg">Il menu è disponibile durante gli orari di apertura. Ti aspettiamo!</p>
+    <div class="hours">
+      <div class="h-title">Orari di apertura</div>
+      <div class="h-row"><b>Mar – Dom</b><span>12:00–14:45 · 18:45–23:00</span></div>
+      <div class="h-row closed-day"><b>Lunedì</b><span>Chiuso</span></div>
+    </div>
+  </div>
+  <div class="loading" id="loading">Caricamento menu…</div>
+  <script>
+    // Mostra il messaggio "chiuso" solo se non stiamo reindirizzando
+    if (window.__junClosed) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = '';
+    }
+  </script>
+</body>
+</html>
