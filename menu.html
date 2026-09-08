@@ -2785,6 +2785,14 @@
           add(1080, 1090);   // vini rossi
           return a;
         })();
+        // Avviso allergeni standard (Reg. UE 1169/2011 art. 44) — mostrato su TUTTI gli alcolici
+        const ALCOHOL_ALLERG_NOTICE = {
+          it: "Le informazioni circa la presenza di sostanze o prodotti che provocano allergie o intolleranze sono riportate sull'etichetta dei prodotti preconfezionati e sono disponibili su richiesta rivolgendosi al personale.",
+          en: "Information on substances or products causing allergies or intolerances is shown on the label of pre-packaged products and is available on request from our staff.",
+          fr: "Les informations concernant la présence de substances ou produits provoquant des allergies ou intolérances sont indiquées sur l'étiquette des produits préemballés et disponibles sur demande auprès du personnel.",
+          zh: "有关引起过敏或不耐受的物质或产品的信息，标示在预包装产品的标签上，并可向工作人员索取。"
+        };
+        function alcoholNotice(){ return ALCOHOL_ALLERG_NOTICE[currentLang] || ALCOHOL_ALLERG_NOTICE.it; }
         // Dolci: tag "Homemade" e "Fresco pasticceria" (da DOLCI.txt)
         const HOMEMADE_IDS = [1200,1201,1202,1209,1211,1212,1213,1214,1215];
         const FRESCO_IDS = [1220,1221,1222];
@@ -3355,7 +3363,9 @@
                     const priceHtml = item.paid ? `<span class="dish-price">${item.price}</span>` : '';
                     // riga allergeni visibile sulla card (come nel menu PDF)
                     const _allNames = (item.allergens || []).map(a => (t.allergenNames && t.allergenNames[a]) || a);
-                    const allergenListHtml = (isDessert && cat.footer)
+                    const allergenListHtml = (item.id >= 900 && item.id < 1200)
+                        ? `<p class="dish-allerg dish-allerg-clip"><i class="fas fa-triangle-exclamation"></i><span>${alcoholNotice()}</span></p>`
+                        : (isDessert && cat.footer)
                         ? `<p class="dish-allerg dish-allerg-clip"><i class="fas fa-triangle-exclamation"></i><span>${getLang(cat,'footer')}</span></p>`
                         : (_allNames.length
                         ? `<p class="dish-allerg"><i class="fas fa-triangle-exclamation"></i><span><span class="lbl">${t.allergTag || 'Allergeni'}:</span> ${_allNames.join(', ')}</span></p>`
@@ -4041,7 +4051,11 @@
             const pillsHtml = present.map(a =>
                 `<span class="di-allergen-pill"><i class="fas ${a.icon}"></i>${(tA.allergenNames && tA.allergenNames[a.key]) || a.label}</span>`
             ).join('');
-            if (diIsDessert) {
+            if (item.id >= 900 && item.id < 1200) {
+                // Bevande e alcolici: solo avviso allergeni standard completo (niente allergeni specifici)
+                inlineWrap.innerHTML = `<p class="di-maycontain">${alcoholNotice()}</p>`;
+                allerSection.style.display = '';
+            } else if (diIsDessert) {
                 // Dolci: testo completo "può contenere" (+ eventuali pill specifiche)
                 const dCat = menuData.find(c => c.id === 'dolci');
                 inlineWrap.innerHTML = `<p class="di-maycontain">${getLang(dCat, 'footer')}</p>` + pillsHtml;
@@ -4056,7 +4070,7 @@
             // allergeni anche nel popup dettagli
             const allerWrap = document.getElementById('price-allergens-wrap');
             const allerGrid = document.getElementById('price-allergens-grid');
-            if (present.length) {
+            if (present.length && !(item.id >= 900 && item.id < 1200)) {
                 allerGrid.innerHTML = present.map(a =>
                     `<div class="di-allergen-chip present"><i class="fas ${a.icon}"></i>${(tA.allergenNames && tA.allergenNames[a.key]) || a.label}</div>`
                 ).join('');
