@@ -234,6 +234,9 @@
         }
         .dish-right { position: relative; flex-shrink: 0; }
         .dish-img-wrap { position: relative; width: 88px; height: 88px; }
+        /* Disclaimer "immagine sintetica" (AI) — piccolo e grigio, IN ALTO sull'immagine (in basso coprirebbe il +) */
+        .synth-tag { position:absolute; top:3px; left:3px; z-index:3; font-size:8px; line-height:1; color:#8a8a8a; background:rgba(255,255,255,0.82); padding:2px 4px; border-radius:4px; letter-spacing:.02em; pointer-events:none; }
+        .synth-tag-hero { position:absolute; top:10px; left:10px; font-size:10px; padding:3px 8px; border-radius:6px; color:#fff; background:rgba(0,0,0,0.5); z-index:5; letter-spacing:.02em; }
         .dish-img-placeholder {
             width: 88px; height: 88px; border-radius: 12px; background: #f0f0f0;
             display: flex; align-items: center; justify-content: center;
@@ -592,14 +595,14 @@
             width: 100%; max-width: 420px;
             background: #fff;
             border-radius: 24px;
-            max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+            max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
             box-shadow: 0 24px 80px rgba(0,0,0,0.28);
             position: relative;
         }
 
         /* HERO placeholder */
         #di-hero {
-            width: 100%; height: 180px; flex-shrink: 0;
+            width: 100%; height: 140px; flex-shrink: 0;
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             border-radius: 24px 24px 0 0;
             position: relative; overflow: hidden;
@@ -628,16 +631,16 @@
 
         /* BODY */
         #di-body {
-            padding: 24px 22px 28px;
+            padding: 16px 20px 20px;
             display: flex; flex-direction: column; gap: 0;
         }
 
         #di-name {
-            font-size: 1.45em; font-weight: 800; color: #0a0a0a;
-            margin: 0 0 5px; padding: 0 30px 0 0; border: none !important;
+            font-size: 1.15em; font-weight: 800; color: #0a0a0a;
+            margin: 0 0 4px; padding: 0 30px 0 0; border: none !important;
             letter-spacing: -0.04em; line-height: 1.2;
         }
-        #di-desc { font-size: 0.86em; color: #777; margin: 0 0 16px; line-height: 1.6; }
+        #di-desc { font-size: 0.84em; color: #777; margin: 0 0 12px; line-height: 1.5; }
 
         /* MAX1 */
         #di-max1-notice {
@@ -692,22 +695,22 @@
         }
 
         /* ALLERGENI NEL POPUP */
-        #di-allergens-section { margin-bottom: 18px; }
+        #di-allergens-section { margin-bottom: 12px; }
         #di-allergens-label {
-            font-size: 0.72em; font-weight: 700; color: #555;
+            font-size: 0.66em; font-weight: 700; color: #555;
             text-transform: uppercase; letter-spacing: 0.08em;
-            margin-bottom: 7px;
+            margin-bottom: 5px;
         }
         #di-allergens-inline {
-            display: flex; flex-wrap: wrap; gap: 6px;
+            display: flex; flex-wrap: wrap; gap: 5px;
         }
         .di-allergen-pill {
-            display: flex; align-items: center; gap: 7px;
+            display: flex; align-items: center; gap: 5px;
             background: #fdecea; border-radius: 20px;
-            padding: 8px 15px 8px 12px;
-            font-size: 0.95em; font-weight: 700; color: #c62828;
+            padding: 5px 11px 5px 9px;
+            font-size: 0.8em; font-weight: 700; color: #c62828;
         }
-        .di-allergen-pill i { font-size: 1.05em; }
+        .di-allergen-pill i { font-size: 0.95em; }
 
         /* LINK DETTAGLI SOTTILISSIMO */
         #di-details-link {
@@ -2123,7 +2126,8 @@
                     { id: 903, name: 'Coca-Cola Zero', nameEn: 'Coca-Cola Zero', nameZh: '零度可乐', nameFr: 'Coca-Cola Zero', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
                     { id: 904, name: 'Fanta', nameEn: 'Fanta', nameZh: '芬达', nameFr: 'Fanta', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
                     { id: 905, name: 'Sprite', nameEn: 'Sprite', nameZh: '雪碧', nameFr: 'Sprite', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
-                    { id: 906, name: 'The', nameEn: 'Iced Tea', nameZh: '冰红茶', nameFr: 'Thé Glacé', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
+                    { id: 906, name: 'Estathè Limone', nameEn: 'Iced Tea Lemon', nameZh: '柠檬冰红茶', nameFr: 'Thé Glacé Citron', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
+                    { id: 917, name: 'Estathè Pesca', nameEn: 'Iced Tea Peach', nameZh: '桃子冰红茶', nameFr: 'Thé Glacé Pêche', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
                     { id: 907, name: 'Schweppes', nameEn: 'Schweppes', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
                     { id: 908, name: 'Chinotto', nameEn: 'Chinotto', desc: 'Lattina 0.33l', descEn: 'Can 0.33l', price: '€3.50', paid: true, allergens: [] },
                     { id: 909, name: 'Coca-Cola 1L', nameEn: 'Coca-Cola 1L', desc: 'Bottiglia 1 litro', descEn: 'Bottle 1 litre', price: '€7.00', paid: true, allergens: [] },
@@ -2808,7 +2812,27 @@
         function dishMaxPP(id){ return _maxppById.get(Number(id)) || 0; }   // 0 = illimitato
 
         // Mappa dish ID → path immagine
+        // Bevande con immagine SINTETICA (generata con AI): mostrano la scritta "immagine sintetica".
+        const SYNTH_IMG_IDS = new Set([900,901,912,930,931,932,933,940,941,950,951,952,953,954,961,967,975,1040,1041,1042,1066,1067,1068,1088,1089,1090]);
         const dishImgs = {
+  // ── BEVANDE (immagini locali, scaricate sul sito — NON tracciano il cliente) ──
+  902: "img/bev_902.webp", 903: "img/bev_903.webp",
+  904: "img/bev_904.jpg", 905: "img/bev_905.jpg", 906: "img/bev_906.jpg", 907: "img/bev_907.jpg", 908: "img/bev_908.jpg", 909: "img/bev_909.jpg",
+  913: "img/bev_913.jpg", 914: "img/bev_914.jpg", 915: "img/bev_915.jpg", 916: "img/bev_916.jpg", 917: "img/bev_917.jpg",
+  942: "img/bev_942.png", 943: "img/bev_943.jpg", 944: "img/bev_944.png",
+  960: "img/bev_960.png", 965: "img/bev_965.png", 966: "img/bev_966.jpg",
+  971: "img/bev_971.jpg", 972: "img/bev_972.jpg", 973: "img/bev_973.png", 974: "img/bev_974.jpg",
+  980: "img/bev_980.jpg", 981: "img/bev_981.jpg", 982: "img/bev_982.jpg", 983: "img/bev_983.png", 984: "img/bev_984.jpg", 985: "img/bev_985.jpg",
+  986: "img/bev_986.jpg", 987: "img/bev_987.jpg", 988: "img/bev_988.jpg", 989: "img/bev_989.jpg", 990: "img/bev_990.jpg", 991: "img/bev_991.jpg",
+  1000: "img/bev_1000.jpg", 1001: "img/bev_1001.jpg", 1002: "img/bev_1002.jpg", 1003: "img/bev_1003.png", 1004: "img/bev_1004.png", 1005: "img/bev_1005.jpg",
+  1010: "img/bev_1010.jpg", 1020: "img/bev_1020.jpg", 1021: "img/bev_1021.jpg", 1022: "img/bev_1022.webp", 1023: "img/bev_1023.png",
+  1030: "img/bev_1030.png",
+  1050: "img/bev_1050.jpg", 1051: "img/bev_1050.jpg", 1052: "img/bev_1052.png", 1053: "img/bev_1053.jpg", 1054: "img/bev_1054.jpg", 1055: "img/bev_1055.jpg", 1056: "img/bev_1056.jpg",
+  1057: "img/bev_1057.jpg", 1058: "img/bev_1058.jpg", 1059: "img/bev_1059.jpg", 1060: "img/bev_1060.jpg", 1061: "img/bev_1061.jpg",
+  1062: "img/bev_1062.jpg", 1063: "img/bev_1063.jpg", 1064: "img/bev_1064.png", 1065: "img/bev_1065.jpg",
+  1080: "img/bev_1080.jpg", 1081: "img/bev_1081.png", 1082: "img/bev_1082.jpg", 1083: "img/bev_1083.jpg", 1084: "img/bev_1084.jpg",
+  1085: "img/bev_1085.jpg", 1086: "img/bev_1086.jpg", 1087: "img/bev_1087.jpg",
+  // ── CIBO ──
   1: "img/d_1.jpg",
   2: "img/d_2.jpg",
   3: "img/d_4.jpg",
@@ -3349,6 +3373,9 @@
                     }
 
                     const imgSrc = dishImgs[item.id] || item.img || null;
+                    const isBevImg = !!(imgSrc && imgSrc.includes('bev_'));   // bevanda: mostra INTERA su sfondo bianco (non tagliata/zoomata)
+                    // bevande senza foto (es. immagini sintetiche rimosse) → rese come i dolci: "+" centrato, niente icona
+                    const noPhoto = isDessert || (!imgSrc && item.id >= 900 && item.id < 1200);
                     card.innerHTML = `
                         <div class="dish-info" onclick="openDishInfo(${item.id})">
                             ${tagsHtml}
@@ -3360,8 +3387,9 @@
                             ${allergenWarnHtml}
                         </div>
                         <div class="dish-right">
-                            <div class="dish-img-wrap${isDessert ? ' noimg' : ''}">
-                                ${isDessert ? '' : (imgSrc ? `<img src="${imgSrc}" class="dish-img-placeholder" style="object-fit:cover;border-radius:12px;" onclick="openDishInfo(${item.id})" onerror="this.onerror=null;this.src=this.src.replace(/\\.(jpe?g|png|webp)(\\?.*)?$/i,'.svg')">` : `<div class="dish-img-placeholder" onclick="openDishInfo(${item.id})"><i class="fas fa-bowl-rice"></i></div>`)}
+                            <div class="dish-img-wrap${noPhoto ? ' noimg' : ''}">
+                                ${noPhoto ? '' : (imgSrc ? `<img src="${imgSrc}" class="dish-img-placeholder" style="object-fit:${isBevImg?'contain':'cover'};background:${isBevImg?'#fff':'transparent'};border-radius:12px;" onclick="openDishInfo(${item.id})" onerror="this.onerror=null;this.src=this.src.replace(/\\.(jpe?g|png|webp)(\\?.*)?$/i,'.svg')">` : `<div class="dish-img-placeholder" onclick="openDishInfo(${item.id})"><i class="fas fa-bowl-rice"></i></div>`)}
+                                ${(!isDessert && imgSrc && SYNTH_IMG_IDS.has(item.id)) ? '<span class="synth-tag">immagine sintetica</span>' : ''}
                                 <button class="btn-add" id="add-${item.id}" onclick="addItem(${item.id})">+</button>
                             </div>
                             <div class="qty-controls" id="qty-${item.id}">
@@ -3966,17 +3994,25 @@
             const icon = document.getElementById('di-hero-icon');
             hero.querySelectorAll('img').forEach(el => el.remove());
             const heroImgSrc = dishImgs[item.id] || item.img || null;
+            const heroIsBev = !!(heroImgSrc && heroImgSrc.includes('bev_'));
             if (heroImgSrc) {
                 hero.style.height = '';
                 icon.style.display = 'none';
                 const img = document.createElement('img');
                 img.src = heroImgSrc;
-                img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:24px 24px 0 0;';
+                img.style.cssText = 'width:100%;height:100%;object-fit:'+(heroIsBev?'contain':'cover')+';background:'+(heroIsBev?'#fff':'transparent')+';border-radius:24px 24px 0 0;';
+                img.onerror = function(){ img.onerror=null; img.src = img.src.replace(/\.(jpe?g|png|webp)(\?.*)?$/i, '.svg'); };
                 hero.insertBefore(img, hero.querySelector('button'));
-            } else if (diIsDessert) {
-                // Dolci senza foto: banner compatto con icona dolce ben visibile (non vuoto)
+                if (SYNTH_IMG_IDS.has(item.id)) {
+                    const st = document.createElement('span');
+                    st.className = 'synth-tag synth-tag-hero';
+                    st.textContent = 'immagine sintetica';
+                    hero.insertBefore(st, hero.querySelector('button'));
+                }
+            } else if (diIsDessert || (item.id >= 900 && item.id < 1200)) {
+                // Dolci / bevande senza foto: banner compatto con icona ben visibile (non vuoto)
                 hero.style.height = '120px';
-                icon.className = 'fas fa-ice-cream';
+                icon.className = diIsDessert ? 'fas fa-ice-cream' : 'fas fa-wine-glass';
                 icon.style.opacity = '0.5';
                 icon.style.display = '';
             } else {

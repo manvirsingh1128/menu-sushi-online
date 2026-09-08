@@ -35,7 +35,8 @@
   .card .qr{ background:#fff; padding:6px; }
   .card .qr img, .card .qr canvas{ display:block; }
   .card .scan{ font-size:.72rem; color:#555; font-weight:600; }
-  .card .logo{ font-weight:800; font-size:.95rem; letter-spacing:.02em; }
+  .card .logo-band{ padding:4px 0 2px; display:flex; align-items:center; justify-content:center; }
+  .card .logo-img{ height:46px; width:auto; max-width:88%; display:block; }
   @media print{
     header, .controls, .hint{ display:none !important; }
     body{ background:#fff; }
@@ -104,10 +105,10 @@
     const card = document.createElement('div');
     card.className = 'card' + (isB ? ' card-b' : '');
     card.innerHTML = `
-      <div class="logo">俊 JUN</div>
+      <div class="logo-band"><img class="logo-img" src="../img/jun-logo-dark.svg" alt="Jun"></div>
       <div class="tav"><small>Tavolo</small>${num}${isB ? ' <span style="color:#2563eb;">· B</span>' : ''}</div>
       <div class="qr" id="${id}"></div>
-      <div class="scan">${isB ? 'Secondo gruppo · conto separato' : 'Inquadra per ordinare'}</div>`;
+      <div class="scan">Inquadra per ordinare</div>`;
     grid.appendChild(card);
     new QRCode(document.getElementById(id), {
       text: url, width:180, height:180,

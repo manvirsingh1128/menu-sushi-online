@@ -18,3 +18,5 @@ ARCHIVIO-sviluppo/
 # tooling di deploy e progetto Android — non servono sul sito
 Sviluppo-Deploy/
 App-Android/
+# launcher locale di test (non va sul sito)
+AVVIA-TEST-JUN.bat
