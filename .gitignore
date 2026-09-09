@@ -21,3 +21,6 @@ Sviluppo-Deploy/
 App-Android/
 # launcher locale di test (non va sul sito)
 AVVIA-TEST-JUN.bat
+# script di test/simulazione locali (possono contenere token) — MAI committare
+_sim_*.js
+_gen_*.py

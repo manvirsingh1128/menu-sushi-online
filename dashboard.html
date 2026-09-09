@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
 <title>Jun — Cucina</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
@@ -300,11 +301,17 @@ body.kfull #divider, body.kfull #sidebar{display:none;}
 
 /* ── Richiesta cameriere ── */
 .req-card{
+  position:relative;
   background:#f7f3ec;border-radius:3px;overflow:hidden;
   box-shadow:3px 3px 10px rgba(0,0,0,.5);color:#111;
   transition:opacity .3s,transform .3s;
   flex-shrink:0;   /* NON comprimere: la sidebar SCORRE invece di schiacciare le card */
 }
+.req-count{position:absolute;top:5px;right:6px;z-index:2;background:#e63946;color:#fff;font-size:.78em;font-weight:900;padding:1px 8px;border-radius:11px;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+.req-card.urgent{animation:reqpulse 1s ease-in-out infinite;}
+@keyframes reqpulse{0%,100%{box-shadow:0 0 0 2px #e63946,3px 3px 10px rgba(0,0,0,.5);}50%{box-shadow:0 0 0 6px rgba(230,57,70,.6),3px 3px 10px rgba(0,0,0,.5);}}
+.serve-dual{display:inline-block;font-size:.68em;font-weight:800;padding:1px 7px;border-radius:9px;background:#e0e7ff;color:#3730a3;vertical-align:middle;margin-left:4px;}
+.serve-dual.wait{background:#fee2e2;color:#b91c1c;}
 .req-top{
   background:#b8860b;color:#fff;padding:6px 12px;
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
@@ -556,6 +563,37 @@ const SB_URL  = "https://mtjsxtdubfsqtyvwgdrt.supabase.co";
 const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anN4dGR1YmZzcXR5dndnZHJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTE5MzcsImV4cCI6MjEwMjk4NzkzN30.P4ufwf0G111YKGxFpx9jyj5RTxRX10CsFUVfmWYZpmA";
 const sb = supabase.createClient(SB_URL, SB_ANON);
 
+// ── LOGIN STAFF (Supabase Auth) — le scritture (conti/ordini/esauriti) richiedono autenticazione ──
+// Il cliente (menu.html) resta anonimo e può solo inserire ordini; solo lo staff loggato modifica.
+async function _staffAuthGate(){
+  try{ const { data } = await sb.auth.getSession(); if(!data || !data.session) _showStaffLogin(); }
+  catch(e){ _showStaffLogin(); }
+}
+async function _staffLogin(){
+  const em=document.getElementById('sl-email'), pw=document.getElementById('sl-pw'), er=document.getElementById('sl-err'), bt=document.getElementById('sl-btn');
+  er.style.display='none'; bt.disabled=true; bt.textContent='Accesso…';
+  const { error } = await sb.auth.signInWithPassword({ email:(em.value||'').trim(), password: pw.value||'' });
+  if(error){ er.textContent='Accesso non riuscito: '+error.message; er.style.display='block'; bt.disabled=false; bt.textContent='Entra'; return; }
+  location.reload();   // ricarica: la sessione ora è attiva e le scritture useranno il JWT staff
+}
+function _showStaffLogin(){
+  if(document.getElementById('staff-login')){ document.getElementById('staff-login').style.display='flex'; return; }
+  const ov=document.createElement('div'); ov.id='staff-login';
+  ov.style.cssText='position:fixed;inset:0;background:#0f1115;z-index:2000000;display:flex;align-items:center;justify-content:center;padding:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
+  ov.innerHTML='<div style="background:#171a20;border:1px solid #24272e;border-radius:18px;width:100%;max-width:320px;padding:28px 24px;color:#f5f5f5;">'
+    +'<div style="font-size:1.3em;font-weight:800;margin-bottom:4px;">Jun · Accesso staff</div>'
+    +'<div style="color:#9aa0a8;font-size:0.85em;margin-bottom:18px;">Entra per usare la postazione.</div>'
+    +'<input id="sl-email" type="email" placeholder="Email" autocomplete="username" style="width:100%;box-sizing:border-box;padding:13px 15px;margin-bottom:10px;background:#0f1115;border:1.5px solid #2a2e36;border-radius:12px;color:#fff;font-size:1em;outline:none;">'
+    +'<input id="sl-pw" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:13px 15px;margin-bottom:10px;background:#0f1115;border:1.5px solid #2a2e36;border-radius:12px;color:#fff;font-size:1em;outline:none;">'
+    +'<div id="sl-err" style="display:none;color:#ff6b6b;font-size:0.82em;margin-bottom:10px;"></div>'
+    +'<button id="sl-btn" style="width:100%;padding:13px;background:#e11d2a;color:#fff;border:none;border-radius:12px;font-size:1em;font-weight:700;cursor:pointer;">Entra</button></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#sl-btn').addEventListener('click', _staffLogin);
+  ov.querySelector('#sl-pw').addEventListener('keydown', e=>{ if(e.key==='Enter') _staffLogin(); });
+  setTimeout(()=>{ const e=document.getElementById('sl-email'); if(e) e.focus(); },120);
+}
+document.addEventListener('DOMContentLoaded', _staffAuthGate);
+
 // ── TAVOLI REALI + SPLIT A/B ───────────────────────────────────────────────
 // Tavoli fisici del ristorante: 2-15, 18-21, 30-40 (i 30-40 esterni). NON esistono 1, 16-17, 22-29.
 const REAL_TABLES = (()=>{ const a=[]; for(let i=2;i<=15;i++)a.push(i); for(let i=18;i<=21;i++)a.push(i); for(let i=30;i<=40;i++)a.push(i); return a; })();
@@ -688,17 +726,31 @@ function queuePush(item){
     localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
   }catch(e){}
 }
+let _flushing = false;
 async function queueFlush(){
+  if(_flushing || !realOnline) return;
+  let q;
+  try{ q = JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]'); }catch(e){ return; }
+  if(!q.length) return;
+  _flushing = true;
+  const remaining = [];
   try{
-    const q = JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');
-    if(!q.length) return;
     for(const item of q){
       const { id, ...patch } = item;              // patch = tutti i campi tranne id (status e/o order_details)
-      await sb.from('orders').update(patch).eq('id', id);
+      try{
+        const { error } = await sb.from('orders').update(patch).eq('id', id);
+        if(error) remaining.push(item);           // fallito → RITENTA al prossimo giro (non perdere l'azione)
+      }catch(e){ remaining.push(item); }
     }
-    localStorage.removeItem(QUEUE_KEY);
-    console.log('[Jun KDS] coda offline sincronizzata:', q.length, 'aggiornamenti');
-  }catch(e){ console.warn('[Jun KDS] flush fallito:', e.message); }
+  } finally {
+    try{
+      if(remaining.length) localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+      else localStorage.removeItem(QUEUE_KEY);
+    }catch(e){}
+    _flushing = false;
+  }
+  const done = q.length - remaining.length;
+  if(done) console.log('[Jun KDS] coda offline sincronizzata:', done, 'aggiornamenti' + (remaining.length ? ' ('+remaining.length+' da ritentare)' : ''));
 }
 function setOffline(offline){
   const lbl   = document.getElementById('offline-label');
@@ -903,41 +955,79 @@ function updateSendBtn(ticket){
   btn.classList.toggle('partial', sel > 0);
 }
 
+// Preserva le spunte (selezione effimera DOM) attraverso un re-render: il poll da 1s
+// ricostruisce le card e senza questo azzererebbe la selezione in corso del cuoco/cameriere.
+// Chiave = orderId:idx (in cucina l'id è sulla card, al cameriere è data-oid sull'item).
+function _snapshotDoneSel(){
+  const set = new Set();
+  const board = document.getElementById('board'); if(!board) return set;
+  board.querySelectorAll('.tk-item.done, .serve-it.done').forEach(el=>{
+    const card = el.closest('.ticket');
+    const oid = el.dataset.oid || (card && card.dataset.id);
+    const idx = el.dataset.idx;
+    if(oid!=null && idx!=null) set.add(oid+':'+idx);
+  });
+  return set;
+}
+function _restoreDoneSel(set){
+  if(!set || !set.size) return;
+  const board = document.getElementById('board'); if(!board) return;
+  board.querySelectorAll('.tk-item, .serve-it').forEach(el=>{
+    const card = el.closest('.ticket');
+    const oid = el.dataset.oid || (card && card.dataset.id);
+    const idx = el.dataset.idx;
+    if(oid!=null && idx!=null && set.has(oid+':'+idx)) el.classList.add('done');
+  });
+  board.querySelectorAll('.ticket').forEach(t=>updateSendBtn(t));
+}
+
 // ── Chiamate cameriere (sidebar) — cameriere + owner ─────────────────────────
 const _waiterIta = { explanation:'Spiegazione sui piatti', drinks:'Ordine bevande', bill:'Richiesta conto', other:'Altra assistenza', call:'Chiamata cameriere' };
+let _waiterCount = 0;
 function renderWaiterCalls(){
   if(STATION !== 'cameriere' && !EXPO) return;
   const side = document.getElementById('sidebar');
   if(!side) return;
+  const calls = [...activeOrders.values()].filter(r => r.waiter_request && r.status === 'pending');
+  // Dedup per tavolo: più chiamate pending dello stesso tavolo → UNA card con contatore
+  // (evita che un cliente impaziente riempia la sidebar con la stessa richiesta).
+  const byTable = {};
+  calls.forEach(r => {
+    const t = r.table_number;
+    const ts = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+    const g = byTable[t] = byTable[t] || { table:t, ids:[], ts:Infinity, labelTs:0, label:'Assistenza' };
+    g.ids.push(r.id);
+    if(ts < g.ts) g.ts = ts;                       // ordina per chiamata più VECCHIA in cima
+    if(ts >= g.labelTs){ g.labelTs = ts; g.label = r.customer_notes || _waiterIta[r.waiter_request] || 'Assistenza'; }
+  });
   side.innerHTML = '';
-  [...activeOrders.values()]
-    .filter(r => r.waiter_request && r.status === 'pending')
-    .sort((a,b)=> new Date(a.created_at||0) - new Date(b.created_at||0))
-    .forEach(r => side.appendChild(buildReqCard(r)));
+  Object.values(byTable).sort((a,b)=> a.ts - b.ts).forEach(g => side.appendChild(buildReqCard(g)));
+  if(_engineInited && calls.length > _waiterCount) beep();   // suona quando arriva una NUOVA chiamata
+  _waiterCount = calls.length;
   updateUrgIndicator();
 }
-function buildReqCard(order){
+function buildReqCard(g){
   const div = document.createElement('div');
-  div.className = `req-card${newSinceReconnect.has(order.id) ? ' recovered' : ''}`;
-  const tsVal = order.created_at ? new Date(order.created_at).getTime() : Date.now();
-  div.dataset.id = order.id; div.dataset.ts = tsVal;
-  const label = order.customer_notes || _waiterIta[order.waiter_request] || 'Assistenza';
-  const ora = new Date(tsVal).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  div.className = `req-card${g.ids.some(id=>newSinceReconnect.has(id)) ? ' recovered' : ''}`;
+  div.dataset.id = g.ids[0]; div.dataset.ts = g.ts;
+  const ora = new Date(g.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const badge = g.ids.length > 1 ? `<span class="req-count">×${g.ids.length}</span>` : '';
   div.innerHTML = `
-    <div class="req-top"><span class="req-tavolo-label">Tavolo</span><span class="req-tavolo-num">${tblDisp(order.table_number)}</span><span class="req-time">${ora}</span></div>
+    <div class="req-top"><span class="req-tavolo-label">Tavolo</span><span class="req-tavolo-num">${tblDisp(g.table)}</span>${badge}<span class="req-time">${ora}</span></div>
     <hr class="tk-sep">
-    <div class="req-body">${label}</div>
+    <div class="req-body">${escHtml(g.label)}</div>
     <button class="req-btn">Gestita</button>`;
-  div.querySelector('.req-btn').addEventListener('click', ()=> waiterHandled(order.id, order.table_number, label));
+  div.querySelector('.req-btn').addEventListener('click', ()=> waiterHandled(g.ids, g.table, g.label));
   return div;
 }
-async function waiterHandled(id, tav, label){
-  activeOrders.delete(id); snapSave();
+async function waiterHandled(ids, tav, label){
+  ids = Array.isArray(ids) ? ids : [ids];
+  ids.forEach(id => activeOrders.delete(id)); snapSave();
   markLocalAction();   // non far riapparire la richiesta gestita al poll da 1s
   addLog('req', tav, null, label);
   renderWaiterCalls();
-  if(navigator.onLine){ const { error } = await sb.from('orders').update({status:'handled'}).eq('id', id); if(error) console.warn('[Jun KDS] gestita:', error.message); }
-  else queuePush({ id, status:'handled' });
+  if(navigator.onLine){ const { error } = await sb.from('orders').update({status:'handled'}).in('id', ids); if(error){ console.warn('[Jun KDS] gestita:', error.message); ids.forEach(id=>queuePush({ id, status:'handled' })); } }
+  else ids.forEach(id => queuePush({ id, status:'handled' }));
 }
 
 // ── CUCINA: le mie righe pending, invio a scaglioni (seleziona → INVIA) ──────
@@ -945,6 +1035,7 @@ let _kitchenCount = 0;
 function renderKitchen(){
   const board = document.getElementById('board');
   if(!board) return;
+  const _sel = _snapshotDoneSel();
   board.querySelectorAll('.ticket').forEach(t => t.remove());
   const rows = [...activeOrders.values()]
     .filter(r => !r.waiter_request && normStation(r.station) === STATION && r.status === 'pending')
@@ -952,6 +1043,7 @@ function renderKitchen(){
     .sort((a,b)=> new Date(a.created_at||0) - new Date(b.created_at||0));
   rows.forEach(r => board.appendChild(buildKitchenCard(r)));
   initMasonry();
+  _restoreDoneSel(_sel);
   updateEmptyState();
   if(_engineInited && rows.length > _kitchenCount) beep();
   _kitchenCount = rows.length;
@@ -969,7 +1061,7 @@ function buildKitchenCard(row){
       <span class="tk-qty">${it.qty}x</span>
       <span class="tk-name">${it.name || ''}${it.code ? ` <span class="tk-code">${it.code}</span>` : ''}</span>
     </div>${it.note ? `<div class="tk-item-note">📝 ${escHtml(it.note)}</div>` : ''}`).join('');
-  const notaHtml = row.customer_notes ? `<div class="tk-nota">${row.customer_notes}</div>` : '';
+  const notaHtml = row.customer_notes ? `<div class="tk-nota">${escHtml(row.customer_notes)}</div>` : '';
   div.innerHTML = `
     <div class="tk-top">
       <span class="tk-tavolo-label">Tavolo</span>
@@ -1002,7 +1094,7 @@ async function kitchenSend(rowId, ticketEl){
   renderKitchen();
   const patch = { order_details: row.order_details };
   if(complete) patch.status = 'ready';
-  if(navigator.onLine){ const { error } = await sb.from('orders').update(patch).eq('id', rowId); if(error) console.warn('[Jun KDS] invio:', error.message); }
+  if(navigator.onLine){ const { error } = await sb.from('orders').update(patch).eq('id', rowId); if(error){ console.warn('[Jun KDS] invio:', error.message); queuePush({ id: rowId, ...patch }); } }
   else queuePush({ id: rowId, ...patch });
 }
 
@@ -1062,6 +1154,13 @@ function updateTimers(){
     tk.classList.toggle('urgent',m>=7);
     const id = tk.dataset.ts+'_'+tk.dataset.id;
     if(m>=7 && !_alerted.has(id)){ _alerted.add(id); beep(); }
+  });
+  // Chiamate cameriere: urgenza + re-beep dopo 3 min se nessuno le ha ancora gestite.
+  document.querySelectorAll('.req-card[data-ts]').forEach(rc=>{
+    const m=Math.floor(Math.max(0,(now-parseInt(rc.dataset.ts))/1000)/60);
+    rc.classList.toggle('urgent', m>=3);
+    const id = 'req_'+rc.dataset.ts+'_'+rc.dataset.id;
+    if(m>=3 && !_alerted.has(id)){ _alerted.add(id); beep(); }
   });
   updateUrgIndicator();
 }
@@ -1123,29 +1222,42 @@ let _serveCount = 0;
 function renderServe(){
   const board = document.getElementById('board');
   if(!board) return;
+  const _sel = _snapshotDoneSel();
   board.querySelectorAll('.ticket').forEach(t => t.remove());
+  // C10 — DUAL: un piatto spezzato su 2 postazioni (es. Poké) genera 2 copie con lo STESSO
+  // ticket_group+code. Mappo lo stato delle due metà per NON far servire mezza porzione.
+  const _dual = {};   // key tg|code → { stations:Set, done:0, total:0 }
+  [...activeOrders.values()].filter(r => !r.waiter_request && r.station).forEach(r => {
+    ordItems(r).forEach(it => {
+      const k = (r.ticket_group||'')+'|'+(it.code||'');
+      const d = _dual[k] = _dual[k] || { stations:new Set(), done:0, total:0 };
+      d.stations.add(normStation(r.station)); d.total++; if(it.done) d.done++;
+    });
+  });
   const byTable = {};
   [...activeOrders.values()].filter(r => !r.waiter_request && r.station).forEach(r => {
     ordItems(r).forEach((it, idx) => {
       if(it.done && !it.served){
         const t = r.table_number;
         (byTable[t] = byTable[t] || { plates:[], notes:new Set(), created:new Date(r.created_at||Date.now()).getTime() });
-        byTable[t].plates.push({ oid:r.id, idx, qty:it.qty, name:it.name, note:it.note||null, station:normStation(r.station) });
+        byTable[t].plates.push({ oid:r.id, idx, qty:it.qty, name:it.name, code:it.code, tg:r.ticket_group, note:it.note||null, station:normStation(r.station) });
         if(r.customer_notes) byTable[t].notes.add(r.customer_notes);
       }
     });
   });
   const tables = Object.keys(byTable).sort((a,b)=> tblBase(a)-tblBase(b) || (+a)-(+b));
   let total = 0;
-  tables.forEach(t => { total += byTable[t].plates.length; board.appendChild(buildServeCard(t, byTable[t])); });
+  tables.forEach(t => { total += byTable[t].plates.length; board.appendChild(buildServeCard(t, byTable[t], _dual)); });
   initMasonry();
+  _restoreDoneSel(_sel);
   updateEmptyState();
   if(_engineInited && total > _serveCount) beep();
   _serveCount = total;
 }
-function buildServeCard(t, info){
+function buildServeCard(t, info, _dual){
+  _dual = _dual || {};
   const col = tableColor(t);
-  const notaHtml = info.notes.size ? `<div class="tk-nota">📝 ${[...info.notes].join(' · ')}</div>` : '';
+  const notaHtml = info.notes.size ? `<div class="tk-nota">📝 ${[...info.notes].map(escHtml).join(' · ')}</div>` : '';
   const byStation = {};
   info.plates.forEach(p => { const s = p.station || '?'; (byStation[s] = byStation[s] || []).push(p); });
   const ord = ['cuoco','griglia','tempura','maki1','maki2','chef-sushi','bar'];
@@ -1153,10 +1265,17 @@ function buildServeCard(t, info){
   const itemsHtml = sts.map(s => `
     <div class="serve-grp">
       <div class="serve-grp-lbl">${STATION_ICON[s]||'📍'} ${STATION_LABELS[s]||s}</div>
-      ${byStation[s].map(p=>`
+      ${byStation[s].map(p=>{
+        const d = _dual[(p.tg||'')+'|'+(p.code||'')];
+        const isDual = d && d.stations.size >= 2;
+        const dualBadge = isDual ? (d.done < d.total
+          ? ' <span class="serve-dual wait">⏳ attendi altra metà</span>'
+          : ' <span class="serve-dual">↔ 2 parti · servire insieme</span>') : '';
+        return `
         <div class="tk-item serve-it" data-oid="${p.oid}" data-idx="${p.idx}" onclick="toggleDone(this)">
-          <span class="tk-check">✓</span><span class="tk-qty">${p.qty}x</span><span class="tk-name">${p.name}</span>
-        </div>${p.note ? `<div class="tk-sub-note">📝 ${escHtml(p.note)}</div>` : ''}`).join('')}
+          <span class="tk-check">✓</span><span class="tk-qty">${p.qty}x</span><span class="tk-name">${p.name}${dualBadge}</span>
+        </div>${p.note ? `<div class="tk-sub-note">📝 ${escHtml(p.note)}</div>` : ''}`;
+      }).join('')}
     </div>`).join('');
   const div = document.createElement('div');
   div.className = `ticket ${col} serve-card`;
@@ -1201,7 +1320,7 @@ async function serveSend(cardEl){
   markLocalAction();   // non far revertire il servito ottimistico al poll da 1s
   renderServe();
   for(const u of updates){
-    if(navigator.onLine){ const { error } = await sb.from('orders').update(u.patch).eq('id', u.oid); if(error) console.warn('[Jun Cameriere] servito:', error.message); }
+    if(navigator.onLine){ const { error } = await sb.from('orders').update(u.patch).eq('id', u.oid); if(error){ console.warn('[Jun Cameriere] servito:', error.message); queuePush({ id:u.oid, ...u.patch }); } }
     else queuePush({ id:u.oid, ...u.patch });
   }
 }
@@ -1246,7 +1365,7 @@ function buildOwnerCard(g){
     return `<div class="tk-item"><span class="tk-qty">${icon}</span><span class="tk-name">${lbl}</span></div>${dishes}`;
   }).join('');
   const notes = [...new Set(g.rows.map(r=>r.customer_notes).filter(Boolean))];
-  const notaHtml = notes.length ? `<div class="tk-nota">${notes.join(' · ')}</div>` : '';
+  const notaHtml = notes.length ? `<div class="tk-nota">${notes.map(escHtml).join(' · ')}</div>` : '';
   const banner = allReady ? `<div class="tk-nota" style="background:#16a34a;color:#fff;font-weight:800;text-align:center;">PRONTO DA SERVIRE</div>` : '';
   const div = document.createElement('div');
   div.className = `ticket ${col} expo-card`;
@@ -1288,7 +1407,7 @@ function openExpoDetail(t){
     return `<div class="xd-st"><span class="xd-st-h">${icon} ${STATION_ICON[s]||''} ${STATION_LABELS[s]||s}</span>${itemsHtml}</div>`;
   }).join('');
   const notes = [...new Set(rows.map(r=>r.customer_notes).filter(Boolean))];
-  const notaHtml = notes.length ? `<div class="xd-nota">📝 ${notes.join(' · ')}</div>` : '';
+  const notaHtml = notes.length ? `<div class="xd-nota">📝 ${notes.map(escHtml).join(' · ')}</div>` : '';
   const col = tableColor(t);
   const colorMap = {c1:'#e63946',c2:'#2563eb',c3:'#16a34a',c4:'#d97706',c5:'#7c3aed',c6:'#0891b2'};
   let ov = document.getElementById('xd-overlay');
@@ -1369,9 +1488,10 @@ function subscribeRealtime(){
 // cambiato → nessuno sfarfallio e non cancella le selezioni in corso quando tutto è uguale.
 let _lastSig = '';
 let _suppressPollUntil = 0;   // dopo un'azione locale: non revertire l'update ottimistico
-function markLocalAction(){ _suppressPollUntil = Date.now() + 2000; }
+function markLocalAction(){ _suppressPollUntil = Date.now() + 5000; }   // 5s: copre la latenza DB su WiFi debole (evita revert dell'invio ottimistico)
 async function periodicRefresh(){
   if(!realOnline || document.visibilityState !== 'visible') return;
+  queueFlush();   // svuota la coda offline anche senza una transizione di rete (blip brevi)
   if(Date.now() < _suppressPollUntil) return;
   let q = sb.from('orders').select('*');
   if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
@@ -1486,7 +1606,10 @@ function salaGet(t){
   if(s.bill===undefined) s.bill = null;
   return s;
 }
-function eur(n){ return '€' + n.toFixed(2).replace('.', ','); }
+function eur(n){ n = +n; if(!isFinite(n)) n = 0; return '€' + n.toFixed(2).replace('.', ','); }
+// Importo di un extra reso robusto: accetta anche stringhe con virgola ("3,50") e valori corrotti dal DB
+// (un amount stringa cadeva in NaN→0 e la voce spariva dal totale pur restando visibile in lista).
+function _extraAmt(e){ const n = (typeof (e&&e.amount)==='string') ? parseFloat(e.amount.replace(',','.')) : +(e&&e.amount); return isFinite(n) ? n : 0; }
 const _salaColors = {c1:'#e63946',c2:'#2563eb',c3:'#16a34a',c4:'#d97706',c5:'#7c3aed',c6:'#0891b2'};
 
 function setSalaMode(on){
@@ -1567,7 +1690,7 @@ function salaTotals(t){
   // tavolo PAGATO: mostra il conto CONGELATO al momento del pagamento (non ricalcola)
   if(st.paid && st.bill){
     const b = st.bill;
-    const extras = (b.extras||[]).reduce((s,e)=>s+(+e.amount||0),0);
+    const extras = (b.extras||[]).reduce((s,e)=>s+_extraAmt(e),0);
     const tod = b.toddlers||0;
     return { adults:b.adults||0, kids:b.kids||0, toddlers:tod, people:(b.adults||0)+(b.kids||0)+tod, est:b.adults||0,
              coperti:b.coperti||0, drinks:b.drinksTotal||0, extras, total:b.total||0, occupied:true };
@@ -1579,7 +1702,7 @@ function salaTotals(t){
   const toddlers = st.toddlers || 0;
   const people = adults + kids + toddlers;
   const drinks = info ? info.drinksTotal : 0;
-  const extras = (st.extras||[]).reduce((s,e)=>s+(+e.amount||0),0);
+  const extras = (st.extras||[]).reduce((s,e)=>s+_extraAmt(e),0);
   // Adulto = menu+coperto (28,90) · Bimbo 4-8 = metà menu, NIENTE coperto (13,45) · Bimbo 2-3 = SOLO coperto (2,00)
   const coperti = adults * PRICE_PP + kids * PRICE_KID + toddlers * PRICE_TODDLER;
   const occupied = !!info || st.adults!=null || (st.kids>0) || (st.toddlers>0) || st.paid || (st.extras&&st.extras.length>0);
@@ -1609,8 +1732,9 @@ async function renderSala(){
       const knownSids = (st.bill && st.bill.sessionIds) || [];
       const postSids  = Object.keys(info._sid || {});
       const newGroup  = postSids.some(sid => sid !== '__legacy__' && !knownSids.includes(sid));
-      const hasNewFood = !!(info.food && info.food.length > 0);
-      if(newGroup && hasNewFood){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.toddlers=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
+      // Gruppo NUOVO al tavolo (sconosciuto) → riapri SEMPRE, anche se ha ordinato solo bevande:
+      // sono nuovi clienti, non devono vedere il conto (pagato) del gruppo precedente.
+      if(newGroup){ st.paid=false; st.bill=null; st.adults=null; st.kids=0; st.toddlers=0; st.extras=[]; st.prevPaidAt=null; salaPersist(t); }
     }
     const newFoodAfterPaid = !!(st.paid && info && info.food && info.food.length > 0);
     const T = salaTotals(t);
@@ -1686,7 +1810,7 @@ async function renderSala(){
 // Sostituisce il vecchio refresh di sicurezza a 15s. ──
 let _lastSalaSig = '';
 let _suppressSalaUntil = 0;   // dopo un'azione locale non revertire l'update ottimistico
-function markSalaLocalAction(){ _suppressSalaUntil = Date.now() + 2500; }
+function markSalaLocalAction(){ _suppressSalaUntil = Date.now() + 5000; }
 async function periodicSalaRefresh(){
   if(!salaEnabled || !salaMode) return;
   if(!realOnline || document.visibilityState !== 'visible') return;
@@ -1724,6 +1848,16 @@ function salaAskPay(t){
   const ov = document.getElementById('pay-confirm');
   document.getElementById('pay-confirm-tav').textContent = tblDisp(t);
   document.getElementById('pay-confirm-tot').textContent = eur(T.total);
+  // C4a: se i coperti sono STIMATI (adulti non confermati a mano) avvisa forte di verificare,
+  // altrimenti un tavolo da 6 che ordina da 1 telefono verrebbe incassato come 1 adulto.
+  const warn = document.getElementById('pay-box-warn');
+  if(warn){
+    const st = salaGet(t);
+    if(st.adults == null){
+      warn.style.display = '';
+      warn.innerHTML = `⚠️ Coperti STIMATI: <b>${T.adults}</b> adult${T.adults===1?'o':'i'}. Verifica il numero reale al tavolo prima di incassare!`;
+    } else { warn.style.display = 'none'; }
+  }
   if(ov) ov.classList.add('open');
 }
 function salaClosePay(){ _payAsk = null; const ov=document.getElementById('pay-confirm'); if(ov) ov.classList.remove('open'); }
@@ -1759,7 +1893,10 @@ async function _cleanKitchenKeepUnserved(t){
     if(error || !data) return;
     const ids = data.filter(r=>{
       let items=[]; try{ items = JSON.parse(r.order_details||'[]'); }catch(e){}
-      return !items.some(it=>it.done && !it.served);   // tieni le righe con piatti pronti da servire
+      // Handle SOLO le righe interamente servite. Tieni tutto ciò che ha ancora un piatto
+      // non servito: sia i piatti PRONTI da portare, sia quelli ANCORA IN COTTURA (altrimenti
+      // pagando mentre la cucina lavora si buttano via i piatti dell'ultimo giro).
+      return items.length > 0 && items.every(it=>it.served);
     }).map(r=>r.id);
     if(ids.length){
       const { error:e2 } = await sb.from('orders').update({status:'handled'}).in('id', ids);
@@ -1772,7 +1909,8 @@ function salaReopen(t){
   const st = salaGet(t);
   st.paid = false;
   st.bill = null;
-  st.paidAt = st.prevPaidAt || null;
+  // se non c'è un confine precedente NON azzerare paidAt (altrimenti riappaiono ordini di gruppi già usciti nelle ultime 8h)
+  st.paidAt = (st.prevPaidAt != null) ? st.prevPaidAt : st.paidAt;
   st.prevPaidAt = null;
   salaPersist(t);
   renderSala();
@@ -1857,7 +1995,7 @@ function openSalaDetail(t){
   const drinksHtml = drinkArr.length
     ? drinkArr.map(d=>`<div class="xd-it"><span class="xd-q">${d.qty}x</span><span class="sd-name">${d.name}</span><span class="sd-price">${eur(d.price)}</span></div>`).join('')
     : `<div class="xd-it xd-empty">— nessuna bevanda —</div>`;
-  const extrasHtml = exList.map((e,i)=>`<div class="xd-it"><span class="sd-name">${e.label||'Extra'}</span><span class="sd-price">${eur(+e.amount||0)}</span>${paid?'':`<button class="sd-del" onclick="salaDelExtra(${t},${i})">✕</button>`}</div>`).join('');
+  const extrasHtml = exList.map((e,i)=>`<div class="xd-it"><span class="sd-name">${e.label||'Extra'}</span><span class="sd-price">${eur(_extraAmt(e))}</span>${paid?'':`<button class="sd-del" onclick="salaDelExtra(${t},${i})">✕</button>`}</div>`).join('');
   const topBg = paid ? '#3f7d3f' : (_salaColors[tableColor(t)]||'#333');
 
   const adStep = paid ? `<span class="sd-lock">${T.adults}</span>`
@@ -2161,6 +2299,7 @@ window.addEventListener('load', async () => {
   <div id="pay-box">
     <div id="pay-box-h">Incassare il Tavolo <span id="pay-confirm-tav"></span>?</div>
     <div id="pay-box-tot"><span id="pay-confirm-tot"></span></div>
+    <div id="pay-box-warn" style="display:none;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:8px;padding:8px 10px;margin:8px 0;font-weight:700;font-size:.9em;"></div>
     <div id="pay-box-sub">Conferma solo dopo aver ricevuto il pagamento.</div>
     <div id="pay-box-btns">
       <button id="pay-cancel" onclick="salaClosePay()">Annulla</button>

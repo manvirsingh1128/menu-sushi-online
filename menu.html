@@ -2059,26 +2059,35 @@
                     btn.classList.add('sel');
                 });
             });
+            let _wpSending = false;
             document.getElementById('wp-send').addEventListener('click', () => {
+                if (_wpSending) return;   // anti doppio-tap / spam
                 const selBtn  = document.querySelector('.wp-opt.sel');
                 const sel     = selBtn ? selBtn.querySelector('span') : null;
                 const reqType = selBtn ? (selBtn.dataset.type || 'other') : 'call';
-                document.getElementById('wp-ok-sub').textContent = sel ? sel.textContent : '';
-                wpMain.style.display = 'none';
-                wpOk.style.display = 'flex';
-                setTimeout(closePopup, 1500);
-                // Invia richiesta cameriere a Supabase
-                if (_sb) {
-                    _sb.from('orders').insert({
-                        table_number: tableNumber,
-                        order_details: JSON.stringify([]),
-                        customer_notes: sel ? sel.textContent : null,
-                        status: 'pending',
-                        waiter_request: reqType,
-                        station: null,
-                        ticket_group: null
-                    }).then(({ error }) => { if (error) console.warn('[Jun] cameriere:', error.message); });
-                }
+                if (!_sb) { if (typeof showInfoToast === 'function') showInfoToast('Connessione assente, riprova tra poco.'); return; }
+                _wpSending = true;
+                const sendBtn = document.getElementById('wp-send');
+                const _savedHTML = sendBtn ? sendBtn.innerHTML : '';
+                if (sendBtn) { sendBtn.disabled = true; sendBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>'; }
+                const _reset = () => { _wpSending = false; if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = _savedHTML; } };
+                // Invia richiesta cameriere a Supabase e ATTENDI l'esito: niente "fatto" finto se fallisce.
+                _sb.from('orders').insert({
+                    table_number: tableNumber,
+                    order_details: JSON.stringify([]),
+                    customer_notes: sel ? sel.textContent : null,
+                    status: 'pending',
+                    waiter_request: reqType,
+                    station: null,
+                    ticket_group: null
+                }).then(({ error }) => {
+                    if (error) { console.warn('[Jun] cameriere:', error.message); _reset(); if (typeof showInfoToast === 'function') showInfoToast('Chiamata non riuscita, riprova.'); return; }
+                    _reset();
+                    document.getElementById('wp-ok-sub').textContent = sel ? sel.textContent : '';
+                    wpMain.style.display = 'none';
+                    wpOk.style.display = 'flex';
+                    setTimeout(closePopup, 1500);
+                }).catch(err => { console.warn('[Jun] cameriere (rete):', err && err.message); _reset(); if (typeof showInfoToast === 'function') showInfoToast('Chiamata non riuscita, riprova.'); });
             });
         });
 
@@ -3747,6 +3756,7 @@
         let _orderSending = false;
         let _lastOrderKey = '';
         let _lastOrderAt  = 0;
+        let _pendingTicket = null;   // {key, tg} — idempotenza: un retry dello stesso carrello riusa il ticket_group
         function cartSendOrder() {
             if(isBlocked()){ showBlockScreen(); return; }   // tavolo liberato: blocco 2h attivo
             const btn = document.getElementById('cart-cta');
@@ -3798,9 +3808,57 @@
                     (_byStation[s] = _byStation[s] || []).push(_it);
                 });
             });
-            const _tg   = newTicketGroup(tableNumber);
+            // Idempotenza: se sto RITENTANDO lo stesso identico carrello riuso lo stesso ticket_group,
+            // così un ack perso su WiFi debole (insert arrivato ma risposta persa) non genera un ordine
+            // doppio in cucina — al retry controllo prima se quel ticket_group è già stato scritto.
+            const _isRetry = !!(_pendingTicket && _pendingTicket.key === _orderKey);
+            const _tg = _isRetry ? _pendingTicket.tg : newTicketGroup(tableNumber);
+            _pendingTicket = { key: _orderKey, tg: _tg };
 
-            // Invia a Supabase (fire-and-forget, non blocca UI) — una riga per postazione (insert batch = array)
+            // Invia a Supabase e ATTENDI la conferma prima di dire "inviato":
+            // se l'insert fallisce NON svuotiamo il carrello → niente ordini persi in silenzio.
+            const _finishSuccess = (data) => {
+                _pendingTicket = null;   // invio confermato: chiudi la finestra di idempotenza
+                _anchorSessionStartServer(data); // ancora la sessione all'ora del SERVER (primo ordine)
+                // Le note per-piatto RESTANO salvate per tutta la sessione; chiudo solo gli input aperti.
+                _noteOpen.clear();
+                // accumula quantità ordinate per piatto max1/max2 (conta tra ordini successivi AYCE)
+                Object.keys(cart).forEach(id => {
+                    if (dishMaxPP(id)) {
+                        orderedMax1Items.set(parseInt(id), (orderedMax1Items.get(parseInt(id)) || 0) + cart[id]);
+                    }
+                });
+                // persiste i contatori max1 in localStorage (sopravvivono al refresh della pagina)
+                try {
+                    localStorage.setItem('jun_max1items', JSON.stringify([...orderedMax1Items]));
+                    localStorage.setItem('jun_max1cats', JSON.stringify([...orderedMax1Cats]));
+                } catch(e) {}
+                Object.keys(cart).forEach(id => {
+                    delete cart[id];
+                    const addBtn = document.getElementById(`add-${id}`);
+                    const qtyEl = document.getElementById(`qty-${id}`);
+                    const card = document.getElementById(`dish-${id}`);
+                    if (addBtn) addBtn.style.display = '';
+                    if (qtyEl) qtyEl.classList.remove('show');
+                    if (card) card.classList.remove('in-cart');
+                });
+                btn.innerHTML = _savedBtnHTML;
+                btn.disabled = false;
+                _orderSending = false;
+                updateCartBadge();
+                closeCart(() => {
+                    document.getElementById('order-confirm-overlay').classList.add('open');
+                    lockScroll();
+                });
+            };
+            const _finishError = () => {
+                // L'ordine NON è partito: lascia il carrello INTATTO e permetti il reinvio immediato.
+                _lastOrderKey = null;
+                btn.innerHTML = _savedBtnHTML;
+                btn.disabled = false;
+                _orderSending = false;
+                if (typeof showInfoToast === 'function') showInfoToast('Invio non riuscito. Controlla la connessione e riprova.');
+            };
             if (_sb && _items.length > 0) {
                 const _rows = Object.entries(_byStation).map(([station, items]) => ({
                     table_number: tableNumber,
@@ -3813,44 +3871,23 @@
                     people: tableSize,    // persone che ordinano da QUESTO telefono
                     session_id: _sessionSid()   // ID univoco del dispositivo — per sommare persone multi-telefono
                 }));
-                _sb.from('orders').insert(_rows).select('created_at').then(({ data, error }) => {
-                    if (error) { console.warn('[Jun] ordine:', error.message); return; }
-                    _anchorSessionStartServer(data); // ancora la sessione all'ora del SERVER (primo ordine)
-                });
-            }
-            // Le note per-piatto RESTANO salvate per tutta la sessione (non si svuotano dopo l'invio):
-            // se riordini lo stesso piatto la nota è già lì. Chiudo solo gli input aperti nel carrello.
-            _noteOpen.clear();
-
-            // accumula quantità ordinate per piatto max1/max2 (conta tra ordini successivi AYCE)
-            Object.keys(cart).forEach(id => {
-                if (dishMaxPP(id)) {
-                    orderedMax1Items.set(parseInt(id), (orderedMax1Items.get(parseInt(id)) || 0) + cart[id]);
+                const _doInsert = () => _sb.from('orders').insert(_rows).select('created_at').then(({ data, error }) => {
+                    if (error) { console.warn('[Jun] ordine:', error.message); _finishError(); return; }
+                    _finishSuccess(data);
+                }).catch(err => { console.warn('[Jun] ordine (rete):', err && err.message); _finishError(); });
+                if (_isRetry) {
+                    // Il tentativo precedente potrebbe essere arrivato al server: se il ticket_group esiste
+                    // già NON reinserire (era solo l'ack perso), altrimenti procedi con l'insert.
+                    _sb.from('orders').select('created_at').eq('ticket_group', _tg).limit(1).then(({ data, error }) => {
+                        if (!error && data && data.length) { _finishSuccess(data); return; }
+                        _doInsert();
+                    }).catch(() => _doInsert());
+                } else {
+                    _doInsert();
                 }
-            });
-            // persiste i contatori max1 in localStorage (sopravvivono al refresh della pagina)
-            try {
-                localStorage.setItem('jun_max1items', JSON.stringify([...orderedMax1Items]));
-                localStorage.setItem('jun_max1cats', JSON.stringify([...orderedMax1Cats]));
-            } catch(e) {}
-
-            Object.keys(cart).forEach(id => {
-                delete cart[id];
-                const addBtn = document.getElementById(`add-${id}`);
-                const qtyEl = document.getElementById(`qty-${id}`);
-                const card = document.getElementById(`dish-${id}`);
-                if (addBtn) addBtn.style.display = '';
-                if (qtyEl) qtyEl.classList.remove('show');
-                if (card) card.classList.remove('in-cart');
-            });
-            btn.innerHTML = _savedBtnHTML;
-            btn.disabled = false;
-            _orderSending = false;
-            updateCartBadge();
-            closeCart(() => {
-                document.getElementById('order-confirm-overlay').classList.add('open');
-                lockScroll();
-            });
+            } else {
+                _finishError();   // nessun client Supabase → non fingere il successo
+            }
         }
 
         function closeOrderConfirm() {
@@ -4446,6 +4483,10 @@
             const now = Date.now();
             let session = null;
             try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch {}
+
+            // Blocco 2h attivo: un dispositivo bloccato NON può rientrare ri-scansionando il QR.
+            // (Lo staff sblocca via _qrStaffEnter, che fa _clearBlock() prima di navigare.)
+            if (isBlocked()) { showBlockScreen(); return false; }
 
             if (code === VALID_CODE) {
                 const sameTableActive = session && session.table === tableParam

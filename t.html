@@ -87,13 +87,52 @@
       <div class="h-row"><b>Mar – Dom</b><span>12:00–14:45 · 18:45–23:00</span></div>
       <div class="h-row closed-day"><b>Lunedì</b><span>Chiuso</span></div>
     </div>
+    <button id="staff-btn" type="button" style="margin-top:24px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:#9aa0a8;padding:9px 20px;border-radius:999px;font-size:0.8em;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;">🔑 Accesso staff</button>
   </div>
   <div class="loading" id="loading">Caricamento menu…</div>
+
+  <!-- OVERRIDE STAFF: sblocca la pagina "Chiuso" con la password (es. orario/orologio sbagliato) -->
+  <div id="staff-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;padding:22px;">
+    <div style="background:#171a20;border:1px solid #24272e;border-radius:18px;width:100%;max-width:300px;padding:26px 22px 22px;text-align:left;">
+      <h3 style="font-size:1.05em;font-weight:700;margin-bottom:6px;">Accesso staff</h3>
+      <p style="color:#9aa0a8;font-size:0.82em;margin-bottom:16px;">Inserisci la password per aprire il menu.</p>
+      <input id="staff-pw" type="password" autocomplete="off" placeholder="Password" style="width:100%;padding:13px 15px;background:#0f1115;border:1.5px solid #2a2e36;border-radius:12px;color:#f5f5f5;font-size:1em;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:8px;">
+      <p id="staff-err" style="color:#ff6b6b;font-size:0.8em;margin-bottom:12px;display:none;">Password errata</p>
+      <div style="display:flex;gap:10px;">
+        <button id="staff-cancel" type="button" style="flex:1;padding:13px;background:rgba(255,255,255,0.06);color:#f5f5f5;border:none;border-radius:12px;font-size:0.9em;font-weight:600;cursor:pointer;font-family:inherit;">Annulla</button>
+        <button id="staff-enter" type="button" style="flex:1;padding:13px;background:#e11d2a;color:#fff;border:none;border-radius:12px;font-size:0.9em;font-weight:700;cursor:pointer;font-family:inherit;">Entra</button>
+      </div>
+    </div>
+  </div>
   <script>
     // Mostra il messaggio "chiuso" solo se non stiamo reindirizzando
     if (window.__junClosed) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('content').style.display = '';
+
+      // Override staff: la stessa password del menu (JUN321@) apre comunque il menu cena,
+      // così un blocco per orario/orologio sbagliato si può togliere come gli altri blocchi.
+      var ADMIN_PW = 'JUN321@';
+      var ov  = document.getElementById('staff-overlay');
+      var pw  = document.getElementById('staff-pw');
+      var err = document.getElementById('staff-err');
+      function openStaff(){ err.style.display='none'; pw.value=''; ov.style.display='flex'; setTimeout(function(){ pw.focus(); }, 80); }
+      function closeStaff(){ ov.style.display='none'; }
+      function tryStaff(){
+        if (pw.value === ADMIN_PW) {
+          var t = new URLSearchParams(location.search).get('t');
+          location.replace('/sera?k=jun2025' + (t ? ('&t=' + encodeURIComponent(t)) : ''));
+        } else {
+          err.style.display='block'; pw.style.borderColor='#ff6b6b';
+          setTimeout(function(){ pw.style.borderColor='#2a2e36'; }, 1200);
+          pw.value=''; pw.focus();
+        }
+      }
+      document.getElementById('staff-btn').addEventListener('click', openStaff);
+      document.getElementById('staff-cancel').addEventListener('click', closeStaff);
+      document.getElementById('staff-enter').addEventListener('click', tryStaff);
+      ov.addEventListener('click', function(e){ if (e.target === ov) closeStaff(); });
+      pw.addEventListener('keydown', function(e){ if (e.key === 'Enter') tryStaff(); });
     }
   </script>
 </body>
