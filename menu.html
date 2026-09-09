@@ -3194,6 +3194,20 @@
         const TBL_B_OFFSET = 1000;
         function tblBase(t){ t=+t||0; return t>=TBL_B_OFFSET ? t-TBL_B_OFFSET : t; }
         function tblValid(t){ return REAL_TABLES.includes(tblBase(t)); }
+        // Interpreta il tavolo scritto a mano dallo staff in vari formati: "5", "2B", "2 b",
+        // oppure il codice interno "1002". Ritorna il numero interno (N per A, N+1000 per B) o null.
+        function parseTableInput(raw){
+            if(raw==null) return null;
+            const s = String(raw).trim().toUpperCase().replace(/\s+/g,'');
+            const m = s.match(/^(\d+)(B)?$/);
+            if(!m) return null;
+            const n = parseInt(m[1],10);
+            if(isNaN(n)) return null;
+            const isB  = !!m[2] || n >= TBL_B_OFFSET;
+            const base = n >= TBL_B_OFFSET ? n - TBL_B_OFFSET : n;
+            if(!REAL_TABLES.includes(base)) return null;
+            return isB ? base + TBL_B_OFFSET : base;
+        }
         let tableNumber = REAL_TABLES[0];
         const orderedMax1Cats = new Map();  // cat.id → qty ordinata (per badge "già ordinato")
         const orderedMax1Items = new Map(); // itemId → 1 se già ordinato (blocco per piatto)
@@ -4710,9 +4724,9 @@
         };
 
         window._qrStaffEnter = function() {
-            const t = parseInt(document.getElementById('qr-staff-table').value, 10);
             const inp = document.getElementById('qr-staff-table');
-            if (!t || !tblValid(t)) {
+            const t = parseTableInput(inp.value);   // accetta "2", "2B", "1002"
+            if (!t) {
                 inp.style.borderColor = '#ff6b6b';
                 setTimeout(() => { inp.style.borderColor = 'rgba(255,255,255,0.12)'; }, 1200);
                 return;
@@ -4851,7 +4865,7 @@
             <div id="qr-staff-step2" style="display:none;">
                 <h3 style="color:#fff;font-size:1.1em;font-weight:700;margin:0 0 6px;letter-spacing:-0.02em;">Numero tavolo</h3>
                 <p style="color:rgba(255,255,255,0.38);font-size:0.8em;margin:0 0 18px;">Inserisci il numero del tavolo del cliente.</p>
-                <input id="qr-staff-table" type="number" min="1" max="1040" placeholder="Es. 5 (o 1018 per il gruppo B)" onkeydown="if(event.key==='Enter')_qrStaffEnter()" style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-size:1.3em;font-weight:700;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:16px;text-align:center;">
+                <input id="qr-staff-table" type="text" inputmode="text" autocapitalize="characters" maxlength="6" placeholder="Es. 5 oppure 2B" onkeydown="if(event.key==='Enter')_qrStaffEnter()" style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-size:1.3em;font-weight:700;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:16px;text-align:center;">
                 <button onclick="_qrStaffEnter()" style="width:100%;padding:14px;background:#fff;color:#111;border:none;border-radius:12px;font-size:0.95em;font-weight:700;cursor:pointer;font-family:inherit;">Entra nel menu</button>
             </div>
         </div>
