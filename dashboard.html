@@ -620,7 +620,7 @@ const STATION_ALIAS = {};
 const normStation = s => STATION_ALIAS[s] || s;
 const isKitchen = KITCHEN.includes(STATION);
 // Cucina = solo ordini a tutto schermo: nasconde divider + sidebar richieste
-if(isKitchen && document.body) document.body.classList.add('kfull');
+if((isKitchen || IS_BAR) && document.body) document.body.classList.add('kfull');
 
 // Favicon emoji per postazione (resta dopo il redirect dei file delle postazioni)
 const STATION_ICON = { cuoco:'🍜', griglia:'🔥', tempura:'🍤', maki1:'🍣', maki2:'🍙', 'chef-sushi':'🍱', 'cameriere-cucina':'🛎️', 'cameriere-sushi':'🛎️', bar:'🍹', cameriere:'🛎️', expo:'🧭', owner:'📊' };
@@ -818,7 +818,7 @@ function cronLoad(){
 }
 
 function cronRender(entry){
-  const labels={pronto:'Ordine pronto',req:'Richiesta gestita',nuovo:'Nuovo ordine',pagato:'Conto pagato',reset:'Tavolo liberato'};
+  const labels={pronto:'Ordine pronto',servito:'Bevanda servita',req:'Richiesta gestita',nuovo:'Nuovo ordine',pagato:'Conto pagato',reset:'Tavolo liberato'};
   document.getElementById('cron-empty').style.display='none';
   const div=document.createElement('div');
   div.className='cron-item';
@@ -914,10 +914,11 @@ function relevant(row){
   if(row.waiter_request) return (STATION === 'cameriere' || EXPO) && row.status === 'pending';
   if(!row.station) return false;
   const _st = normStation(row.station);
-  if(isKitchen) return _st === STATION && row.status === 'pending';
-  // Cameriere d'area / Bar: solo le righe della propria area (in preparazione o pronte)
+  // Bar = board come la cucina: vede SOLO le proprie bevande pending e le chiude direttamente
+  // (senza passare dai camerieri). Cucina uguale.
+  if(isKitchen || IS_BAR) return _st === STATION && row.status === 'pending';
+  // Cameriere d'area: solo le righe della propria area (in preparazione o pronte)
   if(CAM_AREA) return STATION_AREA[_st] === CAM_AREA && (row.status === 'pending' || row.status === 'ready');
-  if(IS_BAR)   return STATION_AREA[_st] === 'bar' && (row.status === 'pending' || row.status === 'ready');
   if(STATION === 'cameriere' || EXPO) return row.status === 'pending' || row.status === 'ready';
   return false;
 }
@@ -933,7 +934,7 @@ const _flash = new Set();          // id nuovi → animazione is-new una volta
 let _renderTimer = null;
 function scheduleRender(){ clearTimeout(_renderTimer); _renderTimer = setTimeout(renderAll, 60); }
 function renderAll(){
-  if(isKitchen)                                renderKitchen();
+  if(isKitchen || IS_BAR)                      renderKitchen();   // il Bar usa la board della cucina
   else if(STATION === 'cameriere' || CAM_AREA) renderServe();
   else if(EXPO)                                renderOwner();
   renderWaiterCalls();
@@ -951,6 +952,7 @@ function updateSendBtn(ticket){
   if(!btn) return;
   const sel = ticket.querySelectorAll('.tk-item.done').length;
   if(btn.classList.contains('serve-all')) btn.textContent = sel > 0 ? `✓ SERVI (${sel})` : '✓ PORTA TUTTO';
+  else if(IS_BAR)                          btn.textContent = sel > 0 ? `✓ SERVITO (${sel})` : '✓ SERVITO';
   else                                     btn.textContent = sel > 0 ? `INVIA (${sel})` : 'PRONTO';
   btn.classList.toggle('partial', sel > 0);
 }
@@ -985,7 +987,7 @@ function _restoreDoneSel(set){
 const _waiterIta = { explanation:'Spiegazione sui piatti', drinks:'Ordine bevande', bill:'Richiesta conto', other:'Altra assistenza', call:'Chiamata cameriere' };
 let _waiterCount = 0;
 function renderWaiterCalls(){
-  if(STATION !== 'cameriere' && !EXPO) return;
+  if((STATION !== 'cameriere' && !EXPO) || IS_BAR) return;   // il Bar è una board, non mostra le chiamate cameriere
   const side = document.getElementById('sidebar');
   if(!side) return;
   const calls = [...activeOrders.values()].filter(r => r.waiter_request && r.status === 'pending');
@@ -1071,11 +1073,12 @@ function buildKitchenCard(row){
     <hr class="tk-sep">
     <div class="tk-items">${itemsHtml}</div>
     ${notaHtml}
-    <button class="btn-pronto">PRONTO</button>`;
+    <button class="btn-pronto">${IS_BAR ? '✓ SERVITO' : 'PRONTO'}</button>`;
   div.querySelector('.btn-pronto').addEventListener('click', function(){ kitchenSend(row.id, div); });
   return div;
 }
-// Invia i piatti selezionati (o tutti). done=true; se tutti done → riga 'ready'.
+// Invia i piatti selezionati (o tutti). Cucina: done=true; se tutti done → riga 'ready' (poi la serve il cameriere).
+// BAR: done+served=true e, se tutto servito, riga 'handled' → la bevanda esce DIRETTAMENTE, senza passare dai camerieri.
 async function kitchenSend(rowId, ticketEl){
   const row = activeOrders.get(rowId);
   if(!row) return;
@@ -1084,16 +1087,18 @@ async function kitchenSend(rowId, ticketEl){
   const sel = shown.filter(el => el.classList.contains('done'));
   const idxs = (sel.length ? sel : shown).map(el => +el.dataset.idx).filter(i => !isNaN(i));
   if(!idxs.length) return;
-  idxs.forEach(i => { if(items[i]) items[i].done = true; });
-  const complete = items.every(it => it.done);
+  idxs.forEach(i => { if(items[i]){ items[i].done = true; if(IS_BAR) items[i].served = true; } });
   row.order_details = JSON.stringify(items);
-  if(complete) row.status = 'ready';
+  const patch = { order_details: row.order_details };
+  if(IS_BAR){
+    if(items.every(it => it.served)){ row.status = 'handled'; patch.status = 'handled'; }   // bar: chiusura diretta
+  } else {
+    if(items.every(it => it.done)){ row.status = 'ready'; patch.status = 'ready'; }
+  }
   applyRow(row); snapSave();
   markLocalAction();   // non far revertire l'invio ottimistico al poll da 1s (finché il DB non conferma)
-  addLog('pronto', row.table_number, idxs.map(i=>({qty:items[i].qty+'x', name:items[i].name})), row.customer_notes||null);
+  addLog(IS_BAR ? 'servito' : 'pronto', row.table_number, idxs.map(i=>({qty:items[i].qty+'x', name:items[i].name})), row.customer_notes||null);
   renderKitchen();
-  const patch = { order_details: row.order_details };
-  if(complete) patch.status = 'ready';
   if(navigator.onLine){ const { error } = await sb.from('orders').update(patch).eq('id', rowId); if(error){ console.warn('[Jun KDS] invio:', error.message); queuePush({ id: rowId, ...patch }); } }
   else queuePush({ id: rowId, ...patch });
 }
