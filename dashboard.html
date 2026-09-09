@@ -1876,14 +1876,34 @@ function salaAskPay(t){
 }
 function salaClosePay(){ _payAsk = null; const ov=document.getElementById('pay-confirm'); if(ov) ov.classList.remove('open'); }
 // Conferma incasso: fissa il CONFINE all'orario dell'ultimo ordine (server) e CONGELA il conto
-function salaConfirmPay(){
+// Mini-toast non bloccante (evita alert() che congela il tablet KDS)
+function salaToast(msg){
+  let el = document.getElementById('sala-toast');
+  if(!el){ el = document.createElement('div'); el.id = 'sala-toast';
+    el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:3000;background:#111;color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.4);max-width:90vw;text-align:center;';
+    document.body.appendChild(el); }
+  el.textContent = msg; el.style.display = 'block';
+  clearTimeout(el._t); el._t = setTimeout(()=>{ el.style.display = 'none'; }, 3200);
+}
+async function salaConfirmPay(){
   const t = _payAsk; if(t==null) return;
   salaClosePay();
+  // ANTI-RACE + confine corretto: prima di congelare, rileggi FRESCO dal DB.
+  // (1) se un altro tablet ha già incassato → non incassare di nuovo.
+  // (2) ricarica gli ordini freschi così una bevanda arrivata all'ultimo istante rientra nel conto.
+  if(realOnline && sb){
+    try{
+      const { data } = await sb.from('sala_state').select('*').eq('table_number', t).maybeSingle();
+      if(data && data.paid){ salaState[t] = _salaRowToState(data); salaToast('Tavolo ' + tblDispSala(t) + ' già incassato da un collega.'); renderSala(); return; }
+    }catch(_){}
+    try{ await buildSalaData(); }catch(_){}
+  }
   const st = salaGet(t);
   const info = _salaByTable[t];
   const T = salaTotals(t);
   st.prevPaidAt = st.paidAt || null;                              // per l'annulla (Riapri)
-  st.paidAt = (info && info.latest) ? info.latest : Date.now();   // confine = orario server dell'ultimo ordine
+  // confine = orario dell'ultimo ordine (server); se per qualche motivo manca, usa ora locale
+  st.paidAt = (info && info.latest) ? info.latest : Date.now();
   st.adults = T.adults; st.kids = T.kids; st.toddlers = T.toddlers; // blocca i coperti
   st.bill = { total:T.total, adults:T.adults, kids:T.kids, toddlers:T.toddlers, coperti:T.coperti,
               drinks: info ? info.drinks.slice() : [], drinksTotal:T.drinks,
