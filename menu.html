@@ -3194,6 +3194,7 @@
         const TBL_B_OFFSET = 1000;
         function tblBase(t){ t=+t||0; return t>=TBL_B_OFFSET ? t-TBL_B_OFFSET : t; }
         function tblValid(t){ return REAL_TABLES.includes(tblBase(t)); }
+        function tblLabelB(t){ return tblBase(t) + ((+t||0) >= TBL_B_OFFSET ? 'B' : ''); }  // "3" oppure "3B"
         // Interpreta il tavolo scritto a mano dallo staff in vari formati: "5", "2B", "2 b",
         // oppure il codice interno "1002". Ritorna il numero interno (N per A, N+1000 per B) o null.
         function parseTableInput(raw){
@@ -4232,7 +4233,7 @@
 
         function _obUpdate() {
             document.getElementById('ob-people-num').textContent = _obPeople;
-            document.getElementById('ob-table-num').textContent  = tblBase(_obTable); // il cliente vede "18", mai 1018
+            document.getElementById('ob-table-num').textContent  = tblLabelB(_obTable); // mostra anche la B (es. "3B")
         }
 
         function _dismissSplash(cb) {
@@ -4329,7 +4330,7 @@
                 document.getElementById('ob-table-stepper').style.display = 'none';
                 const lockedDiv = document.getElementById('ob-table-locked');
                 lockedDiv.style.display = 'flex';
-                document.getElementById('ob-table-locked-num').textContent = tblBase(_qrTable);
+                document.getElementById('ob-table-locked-num').textContent = tblLabelB(_qrTable);
             }
 
             let saved = null;
