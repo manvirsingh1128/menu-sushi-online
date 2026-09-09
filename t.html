@@ -35,10 +35,11 @@
   var t = params.get('t');
 
   if (mode === 'sera') {
-    var u = '/sera?k=jun2025' + (t ? ('&t=' + encodeURIComponent(t)) : '');
+    // percorsi RELATIVI ai file reali → funzionano sia su GitHub Pages sia sul dominio
+    var u = 'menu.html?k=jun2025' + (t ? ('&t=' + encodeURIComponent(t)) : '');
     location.replace(u);
   } else if (mode === 'pranzo') {
-    location.replace('/pranzo');
+    location.replace('web-Menu-pranzo-21x30-1.pdf');
   }
   // mode === 'closed' → resta su questa pagina (mostra il messaggio sotto)
   window.__junClosed = (mode === 'closed');
@@ -121,7 +122,7 @@
       function tryStaff(){
         if (pw.value === ADMIN_PW) {
           var t = new URLSearchParams(location.search).get('t');
-          location.replace('/sera?k=jun2025' + (t ? ('&t=' + encodeURIComponent(t)) : ''));
+          location.replace('menu.html?k=jun2025' + (t ? ('&t=' + encodeURIComponent(t)) : ''));
         } else {
           err.style.display='block'; pw.style.borderColor='#ff6b6b';
           setTimeout(function(){ pw.style.borderColor='#2a2e36'; }, 1200);
