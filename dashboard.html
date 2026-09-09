@@ -603,6 +603,15 @@ const TBL_B_OFFSET = 1000;
 function tblBase(t){ t=+t||0; return t>=TBL_B_OFFSET ? t-TBL_B_OFFSET : t; }   // 1018 -> 18
 function tblIsB(t){ return (+t||0) >= TBL_B_OFFSET; }                          // 1018 -> true
 function tblDisp(t){ return tblBase(t) + (tblIsB(t) ? ' · B' : ''); }          // 1018 -> "18 · B"
+// Come tblDisp ma, sul tavolo A, aggiunge "· A" SOLO se il gemello B è occupato (così quando un
+// tavolo è diviso l'operatore non confonde A e B nei popup di conto/incasso/reset).
+function tblDispSala(t){
+  t = +t;
+  if(tblIsB(t)) return tblBase(t) + ' · B';
+  const b = t + TBL_B_OFFSET;
+  const bOcc = (typeof _salaByTable !== 'undefined' && _salaByTable[b]) || (typeof salaState !== 'undefined' && salaState[b] && salaTotals(b).occupied);
+  return bOcc ? (t + ' · A') : String(t);
+}
 
 // ── Postazione (vista decisa da ?station=) ─────────────────────────────────
 const STATION = new URLSearchParams(location.search).get('station');
@@ -911,7 +920,7 @@ function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/
 // La riga appartiene a QUESTA vista?
 function relevant(row){
   if(!row) return false;
-  if(row.waiter_request) return (STATION === 'cameriere' || EXPO) && row.status === 'pending';
+  if(row.waiter_request) return !IS_BAR && (STATION === 'cameriere' || EXPO) && row.status === 'pending';   // il Bar non gestisce chiamate cameriere
   if(!row.station) return false;
   const _st = normStation(row.station);
   // Bar = board come la cucina: vede SOLO le proprie bevande pending e le chiude direttamente
@@ -1439,8 +1448,8 @@ async function loadPending(wasKnown = null){
     return;
   }
   let q = sb.from('orders').select('*');
-  if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
-  else if(isKitchen){ q = q.eq('status','pending').eq('station', STATION); }
+  if(isKitchen || IS_BAR){ q = q.eq('status','pending').eq('station', STATION); }   // Bar come cucina: query mirata
+  else if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
   else { q = q.eq('status','pending'); }
   q = q.order('created_at',{ ascending:true });
   const { data, error } = await q;
@@ -1499,8 +1508,8 @@ async function periodicRefresh(){
   queueFlush();   // svuota la coda offline anche senza una transizione di rete (blip brevi)
   if(Date.now() < _suppressPollUntil) return;
   let q = sb.from('orders').select('*');
-  if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
-  else if(isKitchen){ q = q.eq('status','pending').eq('station', STATION); }
+  if(isKitchen || IS_BAR){ q = q.eq('status','pending').eq('station', STATION); }   // Bar come cucina: query mirata
+  else if(STATION === 'cameriere' || EXPO){ q = q.in('status',['pending','ready']); }
   else { q = q.eq('status','pending'); }
   q = q.order('created_at',{ ascending:true });
   const { data, error } = await q;
@@ -1781,7 +1790,7 @@ async function renderSala(){
         ${postPaidHtml}
         ${fadeOpen}
         <div class="sala-top" style="background:${topBg};">
-          <div class="sala-tav"><span class="sala-tav-lbl">Tavolo</span><span class="sala-tav-num">${ tblIsB(t) ? (tblBase(t)+' · B') : (_ids.includes(t+TBL_B_OFFSET) ? (t+' · A') : t) }</span></div>
+          <div class="sala-tav"><span class="sala-tav-lbl">Tavolo</span><span class="sala-tav-num">${tblDispSala(t)}</span></div>
           <span class="sala-state">${stateLbl}</span>
         </div>
         <div class="sala-body">
@@ -1851,7 +1860,7 @@ function salaAskPay(t){
   if(!T.occupied) return;      // niente da incassare su tavolo vuoto
   _payAsk = t;
   const ov = document.getElementById('pay-confirm');
-  document.getElementById('pay-confirm-tav').textContent = tblDisp(t);
+  document.getElementById('pay-confirm-tav').textContent = tblDispSala(t);
   document.getElementById('pay-confirm-tot').textContent = eur(T.total);
   // C4a: se i coperti sono STIMATI (adulti non confermati a mano) avvisa forte di verificare,
   // altrimenti un tavolo da 6 che ordina da 1 telefono verrebbe incassato come 1 adulto.
@@ -1928,7 +1937,7 @@ function salaAskReset(t, e){
   closeSalaDetail();
   _resetAsk = t;
   const ov = document.getElementById('reset-confirm');
-  document.getElementById('reset-confirm-tav').textContent = tblDisp(t);
+  document.getElementById('reset-confirm-tav').textContent = tblDispSala(t);
   if(ov) ov.classList.add('open');
 }
 function salaCloseReset(){ _resetAsk=null; const ov=document.getElementById('reset-confirm'); if(ov) ov.classList.remove('open'); }
@@ -2015,7 +2024,7 @@ function openSalaDetail(t){
   ov.innerHTML = `
     <div id="sd-box">
       <div id="sd-head" style="background:${topBg};">
-        <div class="sd-h-l"><span class="sd-h-lbl">Conto Tavolo</span><span class="sd-h-num">${tblDisp(t)}</span></div>
+        <div class="sd-h-l"><span class="sd-h-lbl">Conto Tavolo</span><span class="sd-h-num">${tblDispSala(t)}</span></div>
         <button id="sd-close" onclick="closeSalaDetail()">✕</button>
       </div>
       ${paid?`<div class="sd-paid-banner">✓ PAGATO — conto chiuso</div>`:''}
