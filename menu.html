@@ -4341,7 +4341,7 @@
 
             if (saved) {
                 tableSize   = saved.people || 1;
-                tableNumber = saved.table  || REAL_TABLES[0];
+                tableNumber = tblValid(saved.table) ? saved.table : REAL_TABLES[0];   // non fidarsi di un tavolo residuo non valido
                 document.getElementById('people-label').textContent = tableSize;
                 // ripristina contatori max1 (persiste tra refresh nella stessa sessione)
                 try {
@@ -4493,7 +4493,9 @@
         async function checkSession() {
             const params = new URLSearchParams(window.location.search);
             const code = params.get('k');
-            const tableParam = parseInt(params.get('t'), 10) || null;
+            // parseTableInput valida il tavolo (null se inesistente → niente ordini orfani) e accetta
+            // sia il codice numerico "1002" sia la forma "2B" in un eventuale link.
+            const tableParam = parseTableInput(params.get('t'));
             const now = Date.now();
             let session = null;
             try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch {}
@@ -4749,6 +4751,9 @@
                 const p = new URLSearchParams(data);
                 k = p.get('k'); t = p.get('t');
             }
+            // Il QR fisico del tavolo (junordini.it/t?t=1002) porta solo il tavolo, non la k:
+            // se il tavolo è valido iniettiamo la k (avere davanti il QR del tavolo = prova di presenza).
+            if (t && !k && parseTableInput(t)) k = VALID_CODE;
             if (k && t) {
                 stopQRScanner();
                 // Naviga all'URL con i parametri QR → checkSession() li processa
